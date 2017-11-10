@@ -1,0 +1,202 @@
+Sub 合并于总表() '将多个工作簿下的工作表依次对应合并到本工作簿下的工作表，即第一张工作表对应合并到第一张，第二张对应合并到第二张……
+On Error Resume Next
+Dim x As Variant, x1 As Variant, w As Workbook, wsh As Worksheet
+Dim t As Workbook, ts As Worksheet, i As Integer, l As Integer, h As Long
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+
+x = Application.GetOpenFilename(FileFilter:="Excel文件 (*.xls; *.xlsx),*.xls; *.xlsx,所有文件(*.*),*.*", _
+       Title:="Excel选择", MultiSelect:=True) '选择要被合并的簿
+rBiaoTou = Application.InputBox("请输入表格内容所在的行号", "开始", ActiveCell.Row, , , , , 3)
+If rBiaoTou = False Then
+    rBiaoTou = ActiveCell.Row
+End If
+Set t = ActiveWorkbook 't是总表
+xNum = 1 '用来计算复制到第几个工作簿了
+For Each x1 In x
+    If x1 = False Then '如果点了取消就结束
+        GoTo endsub
+    End If
+    Set w = Workbooks.Open(x1) 'w是要合并的工作簿
+        For i = 1 To w.Sheets.Count '逐表合并
+            If i > t.Sheets.Count Then '如果合并工作簿里的表比总表多
+                t.Sheets.Add After:=t.Sheets(t.Sheets.Count) '保证总簿的表数量够
+                t.Sheets(i).Name = w.Sheets(i).Name '增加的表名字相同
+            End If
+            Set ts = t.Sheets(wsh.Name)
+            Set wsh = w.Sheets(i)
+            'l = ts.UsedRange.SpecialCells(xlCellTypeLastCell).Column
+            'h = ts.UsedRange.SpecialCells(xlCellTypeLastCell).Row
+            For rBiaoWei = rBiaoTou To wsh.UsedRange.SpecialCells(xlCellTypeLastCell).Row '找表格尾部
+                If wsh.Cells(rBiaoWei, 1).MergeCells Then
+                    wsh.Rows(rBiaoTou & ":" & rBiaoWei).Copy ts.Cells(h + 1, 1)
+                    GoTo nexti
+                End If
+            Next rBiaoWei
+            wsh.Rows(rBiaoTou & ":" & rBiaoWei).Copy ts.Cells(h + 1, 1)
+                                        'If xNum = 1 Then '如果这是第一个工作簿，连表头一起复制过来
+                                                  'If l = 1 And h = 1 And ts.Cells(1, 1) = "" Then
+                                                 '  wsh.Rows("1:" & wsh.Range(biaotou).End(xlDown).Row).Copy ts.Cells(1, 1)
+                                                '  Else
+                                                 '  wsh.Rows("1:" & wsh.Range(biaotou).End(xlDown).Row).Copy ts.Cells(1 + h, 1)
+                                                 ' End If
+                                        'Else '否则只复制表头下的内容
+                                                   'If i = 4 Then
+                                                   'wsh.Rows("5:" & wsh.Range(biaotou).End(xlDown).Row).Copy ts.Cells(h + 1, 1)
+                                                   'ElseIf i = 6 Then
+                                                   'wsh.Rows("7:" & wsh.Range(biaotou).End(xlDown).Row).Copy ts.Cells(h + 1, 1)
+                                                   'Else
+                                                   'wsh.Rows("6:" & wsh.Range(biaotou).End(xlDown).Row).Copy ts.Cells(h + 1, 1)
+                                                   'End If
+                                            'wsh.Rows(rBiaoTou & ":" & wsh.Range(biaotou).End(xlDown).Row).Copy ts.Cells(h + 1, 1)
+                                        'End If
+                         'Next
+nexti:
+        Next i
+    w.Close
+    xNum = xNum + 1
+Next x1
+endsub:
+Application.ScreenUpdating = True
+Application.DisplayAlerts = True
+End Sub
+Sub xx()
+biaotou = Application.InputBox("请输入表格内容所在的第一格", "正文第一格", ActiveCell.Address, , , , , 3)
+If biaotou = False Then
+biaotou = ActiveCell.Address
+Debug.Print biaotou
+End If
+
+
+End Sub
+Sub Macro14()
+'
+For rBiaoWei = 6 To 40
+    If Cells(rBiaoWei, 1).MergeCells Then
+        Debug.Print Cells(rBiaoWei - 2, 1)
+        GoTo endsu
+    End If
+Next rBiaoWei
+endsu:
+End Sub
+Sub 获取有字的格子()
+For i = 1 To 3
+nam = Sheets(i).Name
+Debug.Print Sheets("aa").Name
+Next i
+End Sub
+
+Sub 合并当前目录下所有工作簿的全部工作表()
+    Dim MyPath, MyName, AWbName
+    Dim Wb As Workbook, WbN As String
+    Dim G As Long
+    Dim Num As Long
+    Dim BOX As String
+    flag = 0
+    
+    Application.ScreenUpdating = False
+    MyPath = ActiveWorkbook.Path
+    MyName = Dir(MyPath & "\" & "*.xls")
+    AWbName = ActiveWorkbook.Name
+    Num = 0
+    
+    Do While MyName <> ""
+        If MyName <> AWbName Then
+            Set Wb = Workbooks.Open(MyPath & "\" & MyName)
+            Num = Num + 1
+            With Workbooks(1).ActiveSheet
+                For G = 1 To Sheets.Count
+                    If flag = 0 Then
+                        Wb.Sheets(G).UsedRange.Copy .Cells(.Range("A65536").End(xlUp).Row, 1)
+                        flag = 1
+                    Else
+                        Wb.Sheets(G).Range("a2", Wb.Sheets(G).Cells.SpecialCells(xlCellTypeLastCell)).Copy .Cells(.Range("A65536").End(xlUp).Row + 1, 1)
+
+                    End If
+                Next
+                WbN = WbN & Chr(13) & Wb.Name
+                Wb.Close False
+            End With
+        End If
+        MyName = Dir
+    Loop
+        Range("A1").Select
+        
+        
+    Application.ScreenUpdating = True
+    MsgBox "共合并了" & Num & "个工作薄下的全部工作表。如下：" & Chr(13) & WbN, vbInformation, "提示"
+End Sub
+
+
+
+
+合并油料表
+
+Sub 合并于总表() '将多个工作簿下的工作表依次对应合并到本工作簿下的工作表，即第一张工作表对应合并到第一张，第二张对应合并到第二张……
+'On Error Resume Next
+Dim x As Variant, x1 As Variant, w As Workbook, wsh As Worksheet
+Dim t As Workbook, ts As Worksheet, i As Integer, l As Integer, h As Long
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
+
+x = Application.GetOpenFilename(FileFilter:="Excel文件 (*.xls; *.xlsx),*.xls; *.xlsx,所有文件(*.*),*.*", _
+       Title:="Excel选择", MultiSelect:=True) '选择要被合并的簿
+rBiaoTou = Application.InputBox("请输入表格内容所在的行号", "开始", ActiveCell.Row, , , , , 3)
+If rBiaoTou = False Then
+    rBiaoTou = ActiveCell.Row
+End If
+Set t = ActiveWorkbook 't是总表
+xNum = 1 '用来计算复制到第几个工作簿了
+For Each x1 In x
+    If x1 = False Then '如果点了取消就结束
+        GoTo endsub
+    End If
+    Set w = Workbooks.Open(x1) 'w是要合并的工作簿
+        For i = 1 To w.Sheets.Count '逐表合并
+            If i > t.Sheets.Count Then '如果合并工作簿里的表比总表多
+                t.Sheets.Add After:=t.Sheets(t.Sheets.Count) '保证总簿的表数量够
+                t.Sheets(i).Name = w.Sheets(i).Name '增加的表名字相同
+            End If
+            Set wsh = w.Sheets(i)
+            Set ts = t.Sheets(wsh.Name)
+            l = ts.UsedRange.SpecialCells(xlCellTypeLastCell).Column
+            h = ts.UsedRange.SpecialCells(xlCellTypeLastCell).Row
+            For rBiaoWei = 35 To wsh.UsedRange.SpecialCells(xlCellTypeLastCell).Row '找表格尾部
+                If wsh.Cells(rBiaoWei, 1).MergeCells Then
+
+
+                    wsh.Activate
+                    Range(Cells(rBiaoTou, 1), Cells(rBiaoWei, 17)).Copy
+                    ts.Activate
+                    Cells(h + 1, 2).Activate
+                    ActiveSheet.Paste
+                    GoTo nexti
+                End If
+            Next rBiaoWei
+            wsh.Rows(rBiaoTou & ":" & rBiaoWei).Copy ts.Cells(h + 1, 2)
+                                        'If xNum = 1 Then '如果这是第一个工作簿，连表头一起复制过来
+                                                  'If l = 1 And h = 1 And ts.Cells(1, 1) = "" Then
+                                                 '  wsh.Rows("1:" & wsh.Range(biaotou).End(xlDown).Row).Copy ts.Cells(1, 1)
+                                                '  Else
+                                                 '  wsh.Rows("1:" & wsh.Range(biaotou).End(xlDown).Row).Copy ts.Cells(1 + h, 1)
+                                                 ' End If
+                                        'Else '否则只复制表头下的内容
+                                                   'If i = 4 Then
+                                                   'wsh.Rows("5:" & wsh.Range(biaotou).End(xlDown).Row).Copy ts.Cells(h + 1, 1)
+                                                   'ElseIf i = 6 Then
+                                                   'wsh.Rows("7:" & wsh.Range(biaotou).End(xlDown).Row).Copy ts.Cells(h + 1, 1)
+                                                   'Else
+                                                   'wsh.Rows("6:" & wsh.Range(biaotou).End(xlDown).Row).Copy ts.Cells(h + 1, 1)
+                                                   'End If
+                                            'wsh.Rows(rBiaoTou & ":" & wsh.Range(biaotou).End(xlDown).Row).Copy ts.Cells(h + 1, 1)
+                                        'End If
+                         'Next
+nexti:
+        Next i
+    w.Close
+    xNum = xNum + 1
+Next x1
+endsub:
+Application.ScreenUpdating = True
+Application.DisplayAlerts = True
+End Sub

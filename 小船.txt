@@ -1,0 +1,320 @@
+Sub 小船总表一键搞定()
+'
+' 小船一键
+'
+
+'
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+
+x = Application.GetOpenFilename(FileFilter:="Excel文件 (*.xls; *.xlsx),*.xls; *.xlsx,所有文件(*.*),*.*", _
+       Title:="选择小船表", MultiSelect:=True) '选择要被合并的簿
+If TypeName(x) <> "Variant()" Then
+    Exit Sub
+End If
+'shipNamArr = Array("鼎衡1", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17", "鼎衡18", "鼎衡2", "鼎衡3", "建兴32", "鼎衡5", "鼎衡7", "鼎衡9")
+Dim cmts(15, 10) As Variant
+iShip = 0
+shipComment = ""
+zongComment = 0
+lujin = ActiveWorkbook.Path
+For Each x1 In x
+iShip = iShip + 1
+    zong = ActiveWorkbook.Name
+    shipBk = Workbooks.Open(x1).Name
+    shipNam = Left(shipBk, InStr(2, shipBk, ".") - 1)
+    Workbooks(zong).Activate
+    For Each biaobiao In Sheets
+        biaobiao.Cells.Replace "１", "1"
+    Next
+    Workbooks(shipBk).Activate
+    For Each biaobiao In Sheets
+        biaobiao.Cells.Replace "１", "1"
+    Next
+    Workbooks(zong).Activate
+    For Each rng In Workbooks(zong).Sheets("时间管理统计表").Range("a5:a22")
+        If Len(shipNam) = 3 Then
+            If Mid(rng.Value, 4, 1) = Chr(10) Then
+                If Trim(Left(rng.Value, 3)) = shipNam Then
+                    zongshiRow = rng.Row
+                    Exit For
+                End If
+            End If
+        Else
+            If Trim(Left(rng.Value, 4)) = shipNam Then
+                zongshiRow = rng.Row
+                Exit For
+            End If
+        End If
+    Next rng
+    For Each rng In Workbooks(zong).Sheets("业务管理统计表").Range("a2:a19")
+        If rng.Value = shipNam Then
+            zongguanrow = rng.Row
+            Exit For
+        End If
+    Next rng
+    For Each rng In Workbooks(zong).Sheets("航次增效统计表").Range("a4:a19")
+        If rng.Value = shipNam Then
+            zongtongrow = rng.Row
+            Exit For
+        End If
+    Next rng
+
+ '总表的航次增效报表要根据分表的数量来调整，在后面
+'开始查找分表然后复制
+countComment = 0
+    Workbooks(shipBk).Sheets("时间管理统计表").Activate
+    For Each rng In Workbooks(shipBk).Sheets("时间管理统计表").Range("a2:a19")
+        If Len(shipNam) = 3 Then
+            If Mid(rng.Value, 4, 1) = Chr(10) Then
+                If Trim(Left(rng.Value, 3)) = shipNam Then '判断原表有无批注并记录
+                    For Each rngSj In Range(Cells(rng.Row, 1), Cells(rng.Row, 112))
+                        If rngSj.Comment Is Nothing Then
+                        Else
+                            countComment = countComment + 1
+                        End If
+                    Next rngSj
+                    
+                    If countcopy = 1 Then
+                        Workbooks(shipBk).Sheets("时间管理统计表").Rows(rng.Row).Copy
+                        Workbooks(zong).Sheets("时间管理统计表").Rows(zongshiRow + countcopy).Insert Shift:=xlDown
+                        countcopy = countcopy + 1
+                    Else
+                        Workbooks(shipBk).Sheets("时间管理统计表").Rows(rng.Row).Copy Workbooks(zong).Sheets("时间管理统计表").Rows(zongshiRow)
+                        countcopy = 1
+                    End If
+                End If
+            End If
+        Else
+            If Trim(Left(rng.Value, 4)) = shipNam Then
+                For Each rngSj In Range(Cells(rng.Row, 1), Cells(rng.Row, 112)) '判断原表有无批注并记录
+                    If rngSj.Comment Is Nothing Then
+                    Else
+                        countComment = countComment + 1
+                    End If
+                Next rngSj
+                If countcopy > 1 Then
+                    Workbooks(shipBk).Sheets("时间管理统计表").Rows(rng.Row).Copy
+                    Workbooks(zong).Sheets("时间管理统计表").Rows(zongshiRow + countcopy).Insert Shift:=xlDown
+                    countcopy = countcopy + 1
+                Else
+                    Workbooks(shipBk).Sheets("时间管理统计表").Rows(rng.Row).Copy Workbooks(zong).Sheets("时间管理统计表").Rows(zongshiRow)
+                    countcopy = 1
+                End If
+            End If
+        End If
+    Next rng
+    countcopy = 0
+    If countComment = 0 Then '如果原表无批注，就注明无批注
+        Workbooks(shipBk).Sheets("时间管理统计表").Cells(rng.Row, 1).AddComment Text:="原表无批注"
+    End If
+    shipComment = shipComment & " " & shipNam & ":" & countComment & "个批注" & Chr(10)
+    zongComment = zongComment + countComment
+    For Each rng In Workbooks(shipBk).Sheets("业务管理统计表").Range("a2:f2") '找到多航次营运那一列
+        If InStr(rng.Value, "多航次营运") Then
+            colduo = rng.Column
+            Exit For
+        End If
+    Next rng
+    Workbooks(shipBk).Sheets("业务管理统计表").Activate
+    For Each rng In Workbooks(shipBk).Sheets("业务管理统计表").Range("a2:a18") '找到本船所在的行
+        If rng.Value = shipNam Then
+            If Workbooks(shipBk).Sheets("业务管理统计表").Cells(rng.Row, colduo) = "" Then
+                Workbooks(zong).Sheets("业务管理统计表").Cells(zongguanrow, 2) = "原表空"
+                Exit For
+            Else
+                Workbooks(shipBk).Sheets("业务管理统计表").Cells(rng.Row, colduo).Copy Workbooks(zong).Sheets("业务管理统计表").Cells(zongguanrow, 2)
+                Exit For
+            End If
+        End If
+    Next rng
+    Workbooks(shipBk).Sheets("航次增效报表").Activate
+    For Each rng In Workbooks(shipBk).Sheets("航次增效报表").Range("a2:a180") '分表航次增效报表找本船
+        i = rng.Row
+        
+            If rng.Text = shipNam Then
+                rySize = rng.MergeArea.Rows.Count
+                rend = i + rySize - 1
+                For e = i To rend
+                    rMaxe = e
+                    If Workbooks(shipBk).Sheets("航次增效报表").Cells(e, 5) = "" Then
+                        rMaxe = e - 1
+                        Exit For
+                    End If
+                Next e
+ii:
+                For ii = i To rend
+                    rMaxii = ii
+                    If Workbooks(shipBk).Sheets("航次增效报表").Cells(ii, 9) = "" Then
+                        rMaxii = ii - 1
+                        Exit For
+                    End If
+                Next ii
+m:
+                For m = i To rend
+                    rMaxm = m
+                    If Workbooks(shipBk).Sheets("航次增效报表").Cells(m, 13) = "" Then
+                        rMaxm = m - 1
+                        Exit For
+                    End If
+                Next m
+rma:
+                rMax = WorksheetFunction.Max(rMaxe, rMaxii, rMaxm)
+                rMin = i
+                Exit For
+            End If
+    Next rng
+over:
+    
+    For Each rng In Workbooks(zong).Sheets("航次增效报表").Range("a2:a180") '总表增效报表找位置
+        i = rng.Row
+        If rng.Text = shipNam Then
+            rzSize = rng.MergeArea.Rows.Count
+            charu = rySize - rzSize
+                If charu > 0 Then
+                    For konghang = 1 To charu
+                        Workbooks(zong).Sheets("航次增效报表").Cells(i + 1, 2).EntireRow.Insert , CopyOrigin:=xlFormatFromLeftOrAbove
+                    Next konghang
+                End If
+            Workbooks(shipBk).Sheets("航次增效报表").Activate
+            Workbooks(shipBk).Sheets("航次增效报表").Range(Cells(rMin, 2), Cells(rMax, 13)).Copy
+            Workbooks(zong).Sheets("航次增效报表").Activate
+            Cells(i, 2).Activate
+            ActiveSheet.Paste
+            Cells(i, 2).Activate
+            
+        Exit For
+        End If
+    Next rng
+hangcitongji:
+Workbooks(shipBk).Sheets("航次增效统计表").Activate
+    For Each rng In Workbooks(shipBk).Sheets("航次增效统计表").Range("a3:a18")
+        If rng.Value = shipNam Then
+
+            If Not Workbooks(shipBk).Sheets("航次增效统计表").Cells(rng.Row, 2) > 0 Then
+                Workbooks(zong).Sheets("航次增效统计表").Cells(zongtongrow, 2) = "空"
+            Else
+                Workbooks(shipBk).Sheets("航次增效统计表").Cells(rng.Row, 2).Copy Workbooks(zong).Sheets("航次增效统计表").Cells(zongtongrow, 2)
+            End If
+            
+            If Not Workbooks(shipBk).Sheets("航次增效统计表").Cells(rng.Row, 4) > 0 Then
+                Workbooks(zong).Sheets("航次增效统计表").Cells(zongtongrow, 4) = "空"
+            Else
+                Workbooks(shipBk).Sheets("航次增效统计表").Cells(rng.Row, 4).Copy Workbooks(zong).Sheets("航次增效统计表").Cells(zongtongrow, 4)
+            End If
+            
+            If Not Workbooks(shipBk).Sheets("航次增效统计表").Cells(rng.Row, 6) > 0 Then
+                Workbooks(zong).Sheets("航次增效统计表").Cells(zongtongrow, 6) = "空"
+            Else
+                Workbooks(shipBk).Sheets("航次增效统计表").Cells(rng.Row, 6).Copy Workbooks(zong).Sheets("航次增效统计表").Cells(zongtongrow, 6)
+            End If
+            
+            Exit For
+        End If
+    Next rng
+tongrow:
+Windows(shipBk).Close
+Next x1
+'整理函数
+Windows(zong).Activate
+Sheets("时间管理统计表").Select
+For Each rngShip In Range("a5:a22")
+    If rngShip = "说　明" Then
+        zongweiRow = rngShip.Row - 1
+    End If
+Next rngShip
+zongshiRow = 5
+
+Range("l" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]=0,0,RC[-2]/RC[-1])"
+Range("N" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]=""NO TKC"",1000,RC[-2]-RC[-1])"
+Range("S" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]-RC[-5]<0,0,RC[-1]-RC[-4])"
+Range("V" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]=0,0,RC[-2]/RC[-1])"
+Range("X" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]=""NO TKC"",1000,RC[-2]-RC[-1])"
+Range("AC" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]-RC[-5]<0,0,RC[-1]-RC[-4])"
+Range("AF" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]=0,0,RC[-2]/RC[-1])"
+Range("AH" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]=""NO TKC"",1000,RC[-2]-RC[-1])"
+Range("AM" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]-RC[-5]<0,0,RC[-1]-RC[-4])"
+Range("AP" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]=0,0,RC[-2]/RC[-1])"
+Range("AR" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]=""NO TKC"",1000,RC[-2]-RC[-1])"
+Range("AW" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]-RC[-5]<0,0,RC[-1]-RC[-4])"
+Range("AZ" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]=0,0,RC[-2]/RC[-1])"
+Range("BB" & CStr(zongshiRow)).FormulaR1C1 = "=IF(RC[-1]=""NO TKC"",1000,RC[-2]-RC[-1])"
+Range("BG" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-1]-RC[-4]"
+Range("BH" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-41]+RC[-31]+RC[-21]+RC[-11]+RC[-1]"
+Range("CD" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-1]/RC[-2]"
+Range("CF" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-2]-RC[-1]"
+Range("CH" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-1]/RC[-6]"
+Range("CJ" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-2]-RC[-1]"
+Range("CL" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-1]/RC[-10]"
+Range("CR" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-6]-RC[-1]"
+Range("CT" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-1]/RC[-18]"
+Range("CV" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-2]-RC[-1]"
+Range("CX" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-1]/RC[-22]"
+Range("CZ" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-2]-RC[-1]"
+Range("DA" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-21]+RC[-17]+RC[-9]+RC[-5]+RC[-1]"
+Range("DE" & CStr(zongshiRow)).FormulaR1C1 = "=SUM(RC[-49],RC[-4],RC[-2],RC[-1])"
+Range("DG" & CStr(zongshiRow)).FormulaR1C1 = "=RC[-2]*RC[-1]"
+
+
+Cells(zongshiRow, 12).AutoFill Destination:=Range(Cells(zongshiRow, 12), Cells(zongweiRow, 12)), Type:=xlFillDefault
+Cells(zongshiRow, 14).AutoFill Destination:=Range(Cells(zongshiRow, 14), Cells(zongweiRow, 14)), Type:=xlFillDefault
+Cells(zongshiRow, 19).AutoFill Destination:=Range(Cells(zongshiRow, 19), Cells(zongweiRow, 19)), Type:=xlFillDefault
+Cells(zongshiRow, 22).AutoFill Destination:=Range(Cells(zongshiRow, 22), Cells(zongweiRow, 22)), Type:=xlFillDefault
+Cells(zongshiRow, 24).AutoFill Destination:=Range(Cells(zongshiRow, 24), Cells(zongweiRow, 24)), Type:=xlFillDefault
+Cells(zongshiRow, 29).AutoFill Destination:=Range(Cells(zongshiRow, 29), Cells(zongweiRow, 29)), Type:=xlFillDefault
+Cells(zongshiRow, 32).AutoFill Destination:=Range(Cells(zongshiRow, 32), Cells(zongweiRow, 32)), Type:=xlFillDefault
+Cells(zongshiRow, 34).AutoFill Destination:=Range(Cells(zongshiRow, 34), Cells(zongweiRow, 34)), Type:=xlFillDefault
+Cells(zongshiRow, 39).AutoFill Destination:=Range(Cells(zongshiRow, 39), Cells(zongweiRow, 39)), Type:=xlFillDefault
+Cells(zongshiRow, 42).AutoFill Destination:=Range(Cells(zongshiRow, 42), Cells(zongweiRow, 42)), Type:=xlFillDefault
+Cells(zongshiRow, 44).AutoFill Destination:=Range(Cells(zongshiRow, 44), Cells(zongweiRow, 44)), Type:=xlFillDefault
+Cells(zongshiRow, 49).AutoFill Destination:=Range(Cells(zongshiRow, 49), Cells(zongweiRow, 49)), Type:=xlFillDefault
+Cells(zongshiRow, 52).AutoFill Destination:=Range(Cells(zongshiRow, 52), Cells(zongweiRow, 52)), Type:=xlFillDefault
+Cells(zongshiRow, 54).AutoFill Destination:=Range(Cells(zongshiRow, 54), Cells(zongweiRow, 54)), Type:=xlFillDefault
+Cells(zongshiRow, 59).AutoFill Destination:=Range(Cells(zongshiRow, 59), Cells(zongweiRow, 59)), Type:=xlFillDefault
+Cells(zongshiRow, 60).AutoFill Destination:=Range(Cells(zongshiRow, 60), Cells(zongweiRow, 60)), Type:=xlFillDefault
+Cells(zongshiRow, 82).AutoFill Destination:=Range(Cells(zongshiRow, 82), Cells(zongweiRow, 82)), Type:=xlFillDefault
+Cells(zongshiRow, 84).AutoFill Destination:=Range(Cells(zongshiRow, 84), Cells(zongweiRow, 84)), Type:=xlFillDefault
+Cells(zongshiRow, 86).AutoFill Destination:=Range(Cells(zongshiRow, 86), Cells(zongweiRow, 86)), Type:=xlFillDefault
+Cells(zongshiRow, 88).AutoFill Destination:=Range(Cells(zongshiRow, 88), Cells(zongweiRow, 88)), Type:=xlFillDefault
+Cells(zongshiRow, 90).AutoFill Destination:=Range(Cells(zongshiRow, 90), Cells(zongweiRow, 90)), Type:=xlFillDefault
+Cells(zongshiRow, 96).AutoFill Destination:=Range(Cells(zongshiRow, 96), Cells(zongweiRow, 96)), Type:=xlFillDefault
+Cells(zongshiRow, 98).AutoFill Destination:=Range(Cells(zongshiRow, 98), Cells(zongweiRow, 98)), Type:=xlFillDefault
+Cells(zongshiRow, 100).AutoFill Destination:=Range(Cells(zongshiRow, 100), Cells(zongweiRow, 100)), Type:=xlFillDefault
+Cells(zongshiRow, 102).AutoFill Destination:=Range(Cells(zongshiRow, 102), Cells(zongweiRow, 102)), Type:=xlFillDefault
+Cells(zongshiRow, 104).AutoFill Destination:=Range(Cells(zongshiRow, 104), Cells(zongweiRow, 104)), Type:=xlFillDefault
+Cells(zongshiRow, 105).AutoFill Destination:=Range(Cells(zongshiRow, 105), Cells(zongweiRow, 105)), Type:=xlFillDefault
+Cells(zongshiRow, 109).AutoFill Destination:=Range(Cells(zongshiRow, 109), Cells(zongweiRow, 109)), Type:=xlFillDefault
+Cells(zongshiRow, 111).AutoFill Destination:=Range(Cells(zongshiRow, 111), Cells(zongweiRow, 111)), Type:=xlFillDefault
+'最后统一格式
+    Rows("16").Copy
+    Rows("5:16").PasteSpecial Paste:=xlPasteFormats, Operation:=xlNone, _
+        SkipBlanks:=False, Transpose:=False
+    Application.CutCopyMode = False
+    Cells(5, 1).Select
+
+    Sheets("业务管理统计表").Select
+    Rows("14").Copy
+    Rows("3:14").PasteSpecial Paste:=xlPasteFormats, Operation:=xlNone, _
+        SkipBlanks:=False, Transpose:=False
+    Application.CutCopyMode = False
+    Cells(3, 1).Select
+
+    Sheets("航次增效统计表").Select
+    Rows("16").Copy
+    Rows("5:16").PasteSpecial Paste:=xlPasteFormats, Operation:=xlNone, _
+        SkipBlanks:=False, Transpose:=False
+    Application.CutCopyMode = False
+    Cells(5, 1).Select
+
+' 改时间 Macro
+Sheets("时间管理统计表").Range("B1:P1") = Format(Date, "船舶月度时间管理统计及奖金计算表（yyyy年mm月）　")
+Sheets("航次增效报表").Range("C1:N1") = Format(Date, "船舶月度节能增效报表(yyyy年mm月）")
+Sheets("航次增效统计表").Range("B1:I1") = Format(Date, "船舶月度节能增效及奖金计算表(yyyy年mm月）")
+Sheets("业务管理计划核算表").Range("M1") = Format(Date, "yyyy年mm月")
+
+Sheets("时间管理统计表").Select
+MsgBox shipComment
+MsgBox "总计： " & zongComment
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
+End Sub

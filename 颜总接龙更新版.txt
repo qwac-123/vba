@@ -1,0 +1,268 @@
+Sub 处理颜总的接龙报名()
+'
+' 处理颜总的接龙报名 宏
+'
+
+'
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+
+Set tou = ActiveCell
+
+If tou = "" Then
+    MsgBox "请选中名单第一名"
+    GoTo endsub:
+End If
+If Left(tou.Text, InStr(1, tou.Text, ".") - 1) <> 1 Then
+    MsgBox "请选中名单第一名"
+    GoTo endsub:
+Else
+    If Cells(tou.Row + 1, tou.Column) = "" Then
+        Set wei = tou
+    Else
+        Set wei = tou.End(xlDown)
+    End If
+End If
+
+
+    Range(tou, wei).Select
+    Selection.Replace What:="，", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:=".", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="．", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="(", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="（", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="、", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="。", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="，", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="：", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:=":", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="已", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="费", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+For i = tou.Row To wei.Row
+Set rng1 = Cells(i, 1)
+    strin = rng1.Text
+    spcNum = InStr(2, rng1, " ")
+    If InStr(4, rng1, "位") Then
+        weiNum = InStr(4, rng1, "位")
+        rng1.Value = Left(strin, spcNum) & Mid(strin, weiNum + 1, Len(strin) - weiNum)
+    End If
+Next i
+Range(tou, wei).Select
+        'A列按空格数据分列
+    Selection.TextToColumns Destination:=tou, DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=True, Tab:=False, _
+        Semicolon:=False, Comma:=False, Space:=True, Other:=False, OtherChar _
+        :="(", FieldInfo:=Array(Array(1, 1), Array(2, 1), Array(3, 1)), _
+        TrailingMinusNumbers:=True
+        '关掉数据分列
+    Selection.TextToColumns Destination:=tou, DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=True, Tab:=False, _
+        Semicolon:=False, Comma:=False, Space:=False, Other:=False, OtherChar _
+        :="", FieldInfo:=Array(Array(1, 1), Array(2, 1), Array(3, 1)), _
+        TrailingMinusNumbers:=True
+touRow = tou.Row
+weiRow = wei.Value
+
+For i = touRow To touRow + weiRow - 1
+    If i > touRow Then
+        '名单第二名及以后的付费信息放到第一名的后面列里，然后在最后放回到相对应的名字后
+        Cells(touRow, i - touRow + 3) = Cells(i, Cells(i, 2).End(xlToRight).Column).Text
+    End If
+    b = Cells(i + 1, 1).Value
+    a = Cells(i, 1).Value
+    If b = "" Then
+        GoTo shouwei:
+    End If
+    diff = b - a
+    crtRow = i
+    If diff > 1 Then
+    '插入空行，加入序列号，加入人名
+        For cishu = 1 To b - a - 1
+            Rows(i + 1 & ":" & i + 1).Select
+            Selection.Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
+            Cells(i + 1, 1).Value = Cells(i, 1).Value + 1
+            Cells(i + 1, 2) = "=INDIRECT(ADDRESS(" & crtRow & "," & cishu + 2 & "))"
+            i = i + 1
+       Next cishu
+    End If
+    Next i
+shouwei:
+
+Set name1 = Cells(touRow, 2)
+Set name2 = Cells(tou.End(xlDown).Row, 2)
+    Range(name1, name2).Copy
+    Range(name1, name2).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    Application.CutCopyMode = False
+For i = touRow + 1 To touRow + tou.End(xlDown).Value - 1
+Cells(i, 3) = Cells(touRow, i - touRow + 3)
+Next i
+Set name1 = Cells(touRow, 4)
+Set name2 = Cells(tou.End(xlDown).Row, 100)
+Range(name1, name2).ClearContents
+endsub:
+Application.ScreenUpdating = True
+Application.DisplayAlerts = True
+End Sub
+
+
+
+Sub 处理颜总的接龙报名()
+'
+' 处理颜总的接龙报名 宏
+'
+
+'
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+
+Set tou = ActiveCell
+dizhi = tou.Address
+'Set tou = Application.InputBox("1：:", "输入第一名所在单元格名称", dizhi, , , , , 8)
+If tou = "" Then
+    MsgBox "请选中名单第一名"
+    GoTo endsub:
+End If
+If Left(tou.Text, InStr(1, tou.Text, ".") - 1) <> 1 Then
+    MsgBox "请选中名单第一名"
+    GoTo endsub:
+Else
+    If Cells(tou.Row + 1, tou.Column) = "" Then
+        Set wei = tou
+    Else
+        Set wei = tou.End(xlDown)
+    End If
+End If
+
+
+    Range(tou, wei).Select
+    Selection.Replace What:="，", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:=".", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="．", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="(", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="（", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="、", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="。", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="，", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="：", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:=":", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="已", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="费", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="给", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+For i = tou.Row To wei.Row
+Set rng1 = Cells(i, 1)
+    strin = rng1.Text
+    spcNum = InStr(2, rng1, " ")
+    If InStr(4, rng1, "位") Then
+        weiNum = InStr(4, rng1, "位")
+        rng1.Value = Left(strin, spcNum) & Mid(strin, weiNum + 1, Len(strin) - weiNum)
+    End If
+Next i
+Range(tou, wei).Select
+        'A列按空格数据分列
+    Selection.TextToColumns Destination:=tou, DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=True, Tab:=False, _
+        Semicolon:=False, Comma:=False, Space:=True, Other:=False, OtherChar _
+        :="(", FieldInfo:=Array(Array(1, 1), Array(2, 1), Array(3, 1)), _
+        TrailingMinusNumbers:=True
+        '关掉数据分列
+    Selection.TextToColumns Destination:=tou, DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=True, Tab:=False, _
+        Semicolon:=False, Comma:=False, Space:=False, Other:=False, OtherChar _
+        :="", FieldInfo:=Array(Array(1, 1), Array(2, 1), Array(3, 1)), _
+        TrailingMinusNumbers:=True
+touRow = tou.Row
+weiRow = wei.Value
+
+For i = touRow To touRow + weiRow - 1
+    If i > touRow Then
+        '名单第二名及以后的付费信息放到第一名的后面列里，然后在最后放回到相对应的名字后
+        Cells(touRow, i - touRow + 3) = Cells(i, Cells(i, 2).End(xlToRight).Column).Text
+    End If
+    b = Cells(i + 1, 1).Value
+    a = Cells(i, 1).Value
+    If b = "" Then
+        GoTo shouwei:
+    End If
+    diff = b - a
+    crtRow = i
+    If diff > 1 Then
+    '插入空行，加入序列号，加入人名
+        For cishu = 1 To b - a - 1
+            Rows(i + 1 & ":" & i + 1).Select
+            Selection.Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
+            Cells(i + 1, 1).Value = Cells(i, 1).Value + 1
+           ' cells(i+1,2) =
+            Cells(i + 1, 2) = "=INDIRECT(ADDRESS(" & crtRow & "," & cishu + 2 & "))"
+            i = i + 1
+       Next cishu
+    End If
+    Next i
+shouwei:
+
+Set name1 = Cells(touRow, 2)
+Set name2 = Cells(tou.End(xlDown).Row, 2)
+    Range(name1, name2).Copy
+    Range(name1, name2).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    Application.CutCopyMode = False
+For i = touRow + 1 To touRow + tou.End(xlDown).Value - 1
+Cells(i, 3) = Cells(touRow, i - touRow + 3)
+Next i
+Set name1 = Cells(touRow, 4)
+Set name2 = Cells(tou.End(xlDown).Row, 100)
+Range(name1, name2).ClearContents
+endsub:
+Application.ScreenUpdating = True
+Application.DisplayAlerts = True
+End Sub

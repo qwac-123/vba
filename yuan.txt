@@ -1,0 +1,31 @@
+    
+    Windows("PERSONAL.xlsb").Activate
+    Windows("Book3").Activate
+    Windows("DH15燃润料航次报表V1701.xls").Activate
+    ActiveWindow.SmallScroll Down:=-6
+    Range("B37:C40").Select
+    Selection.Copy
+    Windows("Book3").Activate
+    Range("B1").Select
+    ActiveSheet.Paste
+    Windows("DH15燃润料航次报表V1701.xls").Activate
+    Application.CutCopyMode = False
+    ActiveWindow.Close
+    Windows("DH15燃润料航次报表V1703.xls").Activate
+    Range("A37:C40").Select
+    Selection.Copy
+    Windows("Book3").Activate
+    Range("A5").Select
+    ActiveSheet.Paste
+    Windows("DH15燃润料航次报表V1703.xls").Activate
+    Application.CutCopyMode = False
+    ActiveWindow.Close
+    Windows("DH15燃润料航次报表V1705.xls").Activate
+    Range("A37:C40").Select
+    Selection.Copy
+    Windows("Book3").Activate
+    Range("A9").Select
+    ActiveSheet.Paste
+    Windows("DH15燃润料航次报表V1705.xls").Activate
+    Application.CutCopyMode = False
+    ActiveWindow.Close

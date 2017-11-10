@@ -1,0 +1,7 @@
+Range("f" & i) = Mid(Range("S" & i), Find("(", Range("S" & i)) + 1, Find("-", Range("S" & i)) - Find("(", Range("S" & i)) - 1)
+Range("g" & i) = ""
+Range("h" & i) = Mid(Range("S" & i), Find("-", Range("S" & i)) + 1, Find(" ", Range("S" & i), 13) - Find("-", Range("S" & i)) - 1)
+Range("i" & i) = ""
+Range("l" & i) = Range("f" & i)
+Range("m" & i) = Mid(Range("S" & i), Find("T", Range("S" & i)) + 2, Find(")", Range("S" & i)) - Find("T", Range("S" & i)) - 2)
+Range("n" & i) = Mid(Range("S" & i), Find("T", Range("S" & i)) - 5, 6)

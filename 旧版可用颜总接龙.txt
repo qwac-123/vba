@@ -1,0 +1,116 @@
+
+Sub 处理颜总的接龙报名()
+'
+' 处理颜总的接龙报名 宏
+'
+
+'
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+
+Set tou = ActiveCell
+
+    Range(tou, tou.End(xlDown)).Select
+    Selection.Replace What:="，", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:=".", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="．", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="(", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="（", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:=")", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="）", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="、", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="。", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="，", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="：", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:=":", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="已", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="付", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="费", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+For i = tou.Row To tou.End(xlDown).Row
+Set rng1 = Cells(i, 1)
+    strin = rng1.Text
+    spcNum = InStr(2, rng1, " ")
+    If InStr(4, rng1, "位") Then
+       Cells(i, 1) = Left(strin, spcNum) & Mid(strin, InStr(4, rng1, "位") + 1, Len(strin) - InStr(4, strin, "位"))
+    Debug.Print rng1
+    End If
+Next i
+Range(tou, tou.End(xlDown)).Select
+        'A列按空格数据分列
+    Selection.TextToColumns Destination:=tou, DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=True, Tab:=False, _
+        Semicolon:=False, Comma:=False, Space:=True, Other:=False, OtherChar _
+        :="(", FieldInfo:=Array(Array(1, 1), Array(2, 1), Array(3, 1)), _
+        TrailingMinusNumbers:=True
+        '关掉数据分列
+    Selection.TextToColumns Destination:=tou, DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=True, Tab:=False, _
+        Semicolon:=False, Comma:=False, Space:=False, Other:=False, OtherChar _
+        :="", FieldInfo:=Array(Array(1, 1), Array(2, 1), Array(3, 1)), _
+        TrailingMinusNumbers:=True
+        
+
+begin = tou.Row
+ending = tou.End(xlDown).Value
+For i = begin To begin + ending - 1
+If i > begin Then
+Cells(begin, i - begin + 3) = Cells(i, Cells(i, 2).End(xlToRight).Column).Text
+End If
+b = Range("a" & i + 1).Value
+a = Range("a" & i).Value
+diff = b - a
+ crtRow = i
+   If diff > 1 Then
+    For cishu = 1 To b - a - 1
+    Rows(i + 1 & ":" & i + 1).Select
+    Selection.Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
+    Cells(i + 1, 1).Value = Cells(i, 1).Value + 1
+    Cells(i + 1, 2) = "=INDIRECT(ADDRESS(" & crtRow & "," & cishu + 2 & "))"
+    i = i + 1
+    Next cishu
+   End If
+   
+Next i
+Set name1 = Cells(tou.Row, 2)
+    Range(name1, Cells(tou.End(xlDown).Row, 2)).Copy
+    Range(name1, Cells(tou.End(xlDown).Row, 2)).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    Application.CutCopyMode = False
+For i = begin + 1 To begin + tou.End(xlDown).Value - 1
+Cells(i, 3) = Cells(begin, i - begin + 3)
+Next i
+Set name1 = Cells(tou.Row, 4)
+Range(name1, Cells(tou.End(xlDown).Row, tou.End(xlDown).Row)).ClearContents
+Application.ScreenUpdating = True
+Application.DisplayAlerts = True
+End Sub
