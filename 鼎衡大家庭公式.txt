@@ -1,0 +1,5 @@
+大家庭D4:E16条件格式1：=LEFT(D4)=IF( MID($F4,2,1)="泊",MID($F4,3,1),IF(RIGHT($F4)="货",LEFT($F4),""))
+大家庭D4:E16条件格式2：=MID(D4,FIND("+",D4,3)+1,1)=IF( MID($F4,2,1)="泊",MID($F4,3,1),IF(RIGHT($F4)="货",LEFT($F4),""))
+大家庭G4=IFERROR(IF(SUM(ISNUMBER(FIND({"张家港","连云港","鲅鱼圈","仙人岛"},K4))*1),"预计抵达"&MID(K4,FIND("开往",K4)+2,3),"预计抵达"&MID(K4,FIND("开往",K4)+2,2)&" ")&IF(ISNUMBER(--MID(K4,FIND("/",K4,FIND("ETA",K4))+1,2)),MID(K4,FIND("/",K4,FIND("ETA",K4))+1,2),MID(K4,FIND("/",K4,FIND("ETA",K4))+1,1))&"号"&IF(ISNUMBER(--MID(K4,FIND("/",K4,FIND("ETA",K4))-4,4)),MID(K4,FIND("/",K4,FIND("ETA",K4))-4,4)&"LT",MID(K4,FIND("/",K4,FIND("ETA",K4))-6,6)),"")
+
+大家庭F4=IF(G4<>"","开往"&MID(G4,5,3),IF(H4<>"","锚泊"&MID(H4,5,3),IF(COUNT(FIND("靠泊",K4)),IF(SUM(ISNUMBER(FIND({"张家港","连云港","鲅鱼圈","仙人岛"},K4))*1),MID(K4,FIND("靠泊",K4),5),MID(K4,FIND("靠泊",K4),4)),L4&"完货")))

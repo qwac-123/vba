@@ -1,0 +1,46 @@
+
+
+Sub 动态表ROB()
+'
+' 检测并分列O4:O15
+'
+'
+Dim i As Integer
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+For i = 4 To 15 Step 1
+If Len(Range("o" & i)) > 15 Then
+    '分列rob
+    Range("o" & i).TextToColumns Destination:=Range("o" & i), DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=True, _
+        Semicolon:=False, Comma:=False, Space:=False, Other:=True, OtherChar _
+        :="/", FieldInfo:=Array(1, 1), TrailingMinusNumbers:=True
+    
+End If
+Next i
+'关闭分列
+    Range("o4").TextToColumns Destination:=Range("o4"), DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=True, _
+        Semicolon:=False, Comma:=False, Space:=False, Other:=False, OtherChar _
+        :="", FieldInfo:=Array(1, 1), TrailingMinusNumbers:=0
+'恢复rob格式
+    Range("O16").Copy
+    Range("O4:R16").PasteSpecial Paste:=xlPasteFormats, Operation:=xlNone, _
+        SkipBlanks:=False, Transpose:=False
+    Application.CutCopyMode = False
+    
+
+    Sheets("agent info.").Range("H1:I1").FormulaR1C1 = "=IF(RC=0,TEXT(NOW(),""yyyy年m月d日 aaaa""&"")""),RC)"
+    Sheets("coordinate info.").Range("D1").FormulaR1C1 = "=IF(RC=0,TEXT(NOW(),""yyyy年m月d日 aaaa""&"")""),RC)"
+'开始处理经纬度
+    Sheets("Vessel Status").Range("L35").Select
+Application.ScreenUpdating = True
+Application.DisplayAlerts = True
+'保存今天
+loca = "\\192.168.0.223\航运在线\3.2、操作部\4 船舶动态表\" & Format(Date, "yyyy\\mm月")
+fula = loca & Format(Date, "\\船舶动态（yyyy-mm-dd）.xl\sx")
+    ChDir loca
+    ActiveWorkbook.SaveAs Filename:= _
+        fula, _
+        FileFormat:=xlOpenXMLWorkbook, CreateBackup:=False
+End Sub

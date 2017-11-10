@@ -1,0 +1,67 @@
+Sub 处理船舶动态()
+'
+' 处理船舶动态 Macro
+' 将船舶动态信息贴在K1格，首尾相接，然后进行处理
+'
+
+'
+    Range("K2").Select
+    Selection.Copy
+    Range("J4").Select
+    ActiveSheet.Paste
+    Range("K3").Select
+    'Application.CutCopyMode = False
+    Selection.Copy
+    Range("J6").Select
+    ActiveSheet.Paste
+    Range("K4:K5").Select
+    'Application.CutCopyMode = False
+    Selection.Copy
+    'ActiveWindow.SmallScroll Down:=3
+    Range("J12").Select
+    ActiveSheet.Paste
+    Range("K7").Select
+    'Application.CutCopyMode = False
+    Selection.Copy
+    Range("J5").Select
+    ActiveSheet.Paste
+    Range("K8").Select
+    'Application.CutCopyMode = False
+    Selection.Copy
+    'ActiveWindow.SmallScroll Down:=3
+    Range("J14").Select
+    ActiveSheet.Paste
+    Range("K9").Select
+    'Application.CutCopyMode = False
+    Selection.Copy
+    Range("J11").Select
+    ActiveSheet.Paste
+    Range("K10").Select
+    'Application.CutCopyMode = False
+    Selection.Copy
+    Range("J15").Select
+    ActiveSheet.Paste
+    Range("K12:K15").Select
+    'Application.CutCopyMode = False
+    Selection.Copy
+    'ActiveWindow.SmallScroll Down:=-3
+    Range("J7").Select
+    ActiveSheet.Paste
+    'ActiveWindow.SmallScroll Down:=-3
+    Columns("K:K").Select
+    Application.CutCopyMode = False
+    Selection.ClearContents
+    Range("J4").Select
+    'ActiveWindow.SmallScroll Down:=9
+    Range("J4:J15").Select
+    Selection.Replace What:=":", Replacement:="：", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:=" ", Replacement:="", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.TextToColumns Destination:=Range("J4"), DataType:=xlDelimited, _
+        TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=True, _
+        Semicolon:=False, Comma:=False, Space:=False, Other:=True, OtherChar _
+        :="：", FieldInfo:=Array(Array(1, 1), Array(2, 1)), TrailingMinusNumbers:=True
+End Sub

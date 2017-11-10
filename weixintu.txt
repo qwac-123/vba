@@ -1,0 +1,38 @@
+"auto";
+
+
+var appName = rawInput("输入运行的程序");
+launchApp(appName);
+
+for(i=0;i<999;i++){
+id("bao").packageName("com.tencent.mm").clickable().className("android.view.View").click()
+sleep(200)
+//heng zong heng zong shijian
+swipe(50,500,800,500,100)
+sleep(200)
+}
+events.observekey();
+events.onKeyDown("volume_up",function(event){
+toast(
+
+bounds (930,1644,1026,1740)
+下载图片按钮：
+android.view.View
+
+//下载图片按钮：
+id("bao").packageName("com.tencent.mm").clickable().className("android.view.View").click()
+
+//点红包：
+id("a8q").packageName("com.tencent.mm").clickable().className("android.widget.LinearLayout").click()
+//收红包
+id("bq6").packageName("com.tencent.mm").clickable().className("android.widget.Button").click()
+
+com.stardust.autojs.runtime.api.UiSelector@cfc9b43
+packageName 
+
+//播放视频按钮
+id("bba").packageName("com.tencent.mm").clickable().className("android.widget.ImageView").click()
+bounds(450,870,630,1050)
+//长按后
+id("hi").packageName("com.tencent.mm").clickable().className("android.widget.LinearLayout").
+bounds(0,1524,1080,1668)
