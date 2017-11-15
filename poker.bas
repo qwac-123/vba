@@ -43,14 +43,20 @@ For i = 0 To 3
 Next i
 End Function
 Function shuffle()
-uBond = 51
+Dim wushier(52)
+Dim k
+For k = 0 To 51
+    wushier(k) = k '一个0-51的数组
+Next k
+uBond = 52
 lBond = 0
-For k = 0 To 51  '循环产生52个不重复随机数
-    paixu = Int(Rnd * uBond + lBond)    'lBond到uBond之间随机整数，包含uBond、lBond
-    shuffleDeck(k) = paixu   '随机到的值一个个放到新数组里
-    'temparr(paixu) = temparr(lBond)     '用lbond的数覆盖掉paixu的数
-    lBond = lBond + 1                   '缩圈
-    uBond = uBond - 1
+For k = 0 To 51  '循环产生52个不重复随机数，做成一个数组shuffleDeck
+    If uBond > 0 Then
+        paixu = Int(Rnd * uBond)     '[0,uBond-1] 之间随机整数
+        shuffleDeck(k) = wushier(paixu) '随机到的值一个个放到新数组里
+        wushier(paixu) = wushier(uBond - 1) '把最后一个值挪到随机到的位置
+        uBond = uBond - 1                  '舍弃掉最后一个数
+    End If
 Next k
 End Function
 Function deal()
@@ -67,14 +73,8 @@ End Function
 Function flop()
 For i = 0 To 2
     Cells(9, 3 + i) = deck(shuffleDeck(deckCard))
+    communityCards(i) = shuffleDeck(deckCard)
     deckCard = deckCard + 1
-'    For Each rng In rngFlops           东西复制不进去
-'        rng = deck(shuffleDeck(deckCard))
-'        communityCards(i) = shuffleDeck(deckCard)
-'        deckCard = deckCard + 1
-'        Exit For
-'    Next
-communityCards(i) = shuffleDeck(deckCard)
 Next
 
 End Function
@@ -86,6 +86,7 @@ End Function
 Function river()
 rngRiver = deck(shuffleDeck(deckCard))
 communityCards(4) = shuffleDeck(deckCard)
+
 End Function
 Function compareCards()
 Dim zongpai(7)
