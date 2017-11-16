@@ -1,5 +1,6 @@
 Attribute VB_Name = "大家庭和动态表"
 Sub 开始今天上午的工作()
+'v1.2增加了向上滚屏代码
 'v1.1 删掉了部分无用代码，现在打开动态表会正确显示在船舶状态表
 ''v1.0
 '打开动态表和大家庭并显示动态表
@@ -17,12 +18,14 @@ End If
     Workbooks.Open Filename:= _
         "\\192.168.0.223\\航运在线\\3.2、操作部\\4 船舶动态表\\" & Format(Date - zuotian, "yyyy\\mm月\\船舶动态（yyyy-mm-dd）.xl\sx")
 Sheets(1).Activate
+ActiveWindow.SmallScroll Up:=20
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 Workbooks(Format(Date - zuotian, "船舶动态（yyyy-mm-dd）.xl\sx")).Activate
 End Sub
-Sub 大家庭动态()
-''v1.0
+Function 大家庭动态()
+'v1.1 预计靠泊时间也写了一个简陋的函数进去
+'v1.0
 ' 处理船舶动态 Macro
 ' 将船舶动态信息贴在K1格，首尾相接，然后整理到J列并分列，后接/分列去处理rob数据
 '
@@ -30,7 +33,7 @@ Sub 大家庭动态()
 '
 If Range("k1") = "" Then
 MsgBox "k1格是空的，是不是你已经点过一次了"
-Exit Sub
+Exit Function
 End If
 
 
@@ -87,7 +90,8 @@ Range("a4:a15").Copy Range("j4:j15")
 Range("a1") = "上海鼎衡船队动态信息一览表 " & Format(Date, "yyyy年m月d日 aaaa") '更新日期 Range("G1:I1").FormulaR1C1 = "=IF(RC=0,TEXT(NOW(),""yyyy年m月d日 aaaa""),RC)"
     Range("F4:F15").FormulaR1C1 = _
         "=IF(RC[1]<>"""",""开往""&MID(RC[1],5,3),IF(RC[2]<>"""",""锚泊""&MID(RC[2],5,3),IF(COUNT(FIND(""靠泊"",RC[5])),IF(SUM(ISNUMBER(FIND({""张家港"",""连云港"",""鲅鱼圈"",""仙人岛""},RC[5]))*1),MID(RC[5],FIND(""靠泊"",RC[5]),5),MID(RC[5],FIND(""靠泊"",RC[5]),4)),RC[6]&""完货"")))"
-    Range("h4:h15") = ""
+    Range("h4:h15").FormulaR1C1 = _
+        "=IF(ISTEXT(RC[5]),""预计靠泊""&RC[5],"""")"
     
     
 
@@ -109,11 +113,10 @@ Application.DisplayAlerts = True
     ActiveWorkbook.SaveAs Filename:= _
         Format(Date, "F:\\工作文档\\动态表（鼎衡大家庭）\\mm月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx"), FileFormat:= _
         xlOpenXMLWorkbook, CreateBackup:=False
-End Sub
-
+End Function
 Function check_wk船舶动态()
 'v1.0
-'On Error Resume Next
+On Error Resume Next '如果没这句话，涉及 wkjin 语句会报错
 If Weekday(Date, vbMonday) = 1 Then '如果今天是周一，就打开周五的；否则就打开昨天的
     zuotian = 3
 Else
@@ -129,10 +132,28 @@ If Len(wkjin.Name) > 0 Then
     End If
 End If
 End Function
+Function check_wk大家庭动态()
+'v1.0
+On Error Resume Next '如果没这句话，涉及 wkjin 语句会报错
+If Weekday(Date, vbMonday) = 1 Then '如果今天是周一，就打开周五的；否则就打开昨天的
+    zuotian = 3
+Else
+    zuotian = 1
+End If
+Set wkjin = Workbooks(Format(Date, "动态表（鼎衡大家庭）（yyyy-mm-dd）.xl\sx"))
+Set wkzuo = Workbooks(Format(Date - zuotian, "动态表（鼎衡大家庭）（yyyy-mm-dd）.xl\sx"))
+If Len(wkjin.Name) > 0 Then
+    If Err.Number = 9 Then '如果wkjin打开了，就激活
+        wkjin.Activate
+    Else                    '否则就激活另一个
+        wkzuo.Activate
+    End If
+End If
+End Function
 
 Sub bbb动态表ISMSROB()
 '
-' 处理ISMSROB
+'v2处理ISMSROB
 'v1.1
 '删掉了了agent info表里面时间信息前的一个空格
 'v1.0
@@ -239,7 +260,7 @@ Application.DisplayAlerts = True
         "\\192.168.0.223\\航运在线\\3.2、操作部\\4 船舶动态表\\" & Format(Date, "yyyy\\mm月\\船舶动态（yyyy-mm-dd）.xl\sx"), _
         FileFormat:=xlOpenXMLWorkbook, CreateBackup:=False
 End Sub
-Sub 大家庭下航次()
+Function 大家庭下航次()
 r = ActiveCell.Row
 Set loadP = Cells(r, 4)
 Set discP = Cells(r, 5)
@@ -247,8 +268,10 @@ Set NextV = Cells(r, 9)
 Cells(r, 4) = Left(NextV.Value, InStr(3, NextV.Value, "-") - 1)
 Cells(r, 5) = Right(NextV.Value, Len(NextV.Value) - InStr(3, NextV.Value, "-"))
 NextV = "待告"
-End Sub
+End Function
 Sub aaa快速下航次()
+'v1.1下下航次能够粘贴回下航次格子
+'v1.0
 Dim kaishi, jieshu, i As Integer, str, abc As String
 Dim r
 Dim c
@@ -278,6 +301,12 @@ Application.DisplayAlerts = 0
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     Selection.Replace What:="--", Replacement:="-", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="  ", Replacement:=" ", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.Replace What:="　", Replacement:=" ", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     Selection.Replace What:="，", Replacement:="", LookAt:=xlPart, _
@@ -319,11 +348,11 @@ str = "V" & str
 End If
 
 If Mid(str, 6, 1) = "&" Then
-xiahangci = Right(str, Len(str) - 6)
+xiahangci1 = Right(str, Len(str) - 6)
 str = Left(str, 5) & Right(str, Len(str) - 10) '如果V1234&有＆就把&后复制挪走
 End If
 If Len(str) > 49 Then
-xiahangci = Right(str, Len(str) - InStr(17, str, "V1") + 1)
+xiahangci2 = Right(str, Len(str) - InStr(17, str, "V1") + 1)
 str = Trim(Left(str, InStr(17, str, "V1") - 1)) '如果太长，说明有两个航次信息，后面的航次信息挪走
 End If
 If Mid(str, 6, 1) = " " Then
@@ -402,7 +431,7 @@ Cells(r, 13) = Mid(Cells(r, 19), cargo, lencar)
 
 Cells(r, 14) = Mid(Cells(r, 19), quanti, 6)
 
-Cells(r, 19) = ""
+Cells(r, 19) = xiahangci1 & xiahangci2
 Cells(r, c) = Left(str, 5)
 endsub:
 '航次更新结束
