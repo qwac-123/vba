@@ -16,6 +16,7 @@ Dim rngTurn As Object
 Dim rngRiver As Object
 Function TexasHoldem()
 'v0.2 171116 现在可以判定同花
+'v0.1 洗牌发牌理顺最后牌组
 Cells(16, 3) = "chips:"
 Set rngHumMoney = Cells(16, 4)
 Set rngFlops = Range("c9:e9")
@@ -123,13 +124,13 @@ For player = 0 To 0
         zongpai(i) = communityCards(tableCard)
         i = i + 1
     Next tableCard
-    Call insertSort '把牌按照点数从大到小，从黑桃到方片排序
- 
+    
+    Call insertSort
     For i = 0 To 6
-    Debug.Print zongpai(i), deck(zongpai(i))
+    'Debug.Print zongpai(i), deck(zongpai(i))
     Next i
     'Debug.Print player; ":", pattern(player)
-       Call rules '比量牌组
+    Call rules '比量牌组
 Next player
 Debug.Print " "
 End Function
@@ -160,14 +161,15 @@ For i = 0 To 6
         End If
     Next j
 Next i
-
-'pattern(player) = 1
 End Function
 Sub c()
+For i = 0 To 100
 Call TexasHoldem
+Next i
 End Sub
 Function rules()
-Dim typePat(9) '统计能组成的牌型
+'v0.1 判断同花顺（失败
+Dim typePat(10) '0-9十个统计能组成的牌型
 Dim suits(4) '统计这7张牌里面各个花色的数量
 Dim flushCards(4) '四个花色，把牌连起来
 
@@ -183,16 +185,22 @@ straightFlush = 0
 For i = 0 To 6
     rankZi = zongpai(i) Mod 13 '牌组中第i张牌的点数
     suitZi = Int(zongpai(i) / 13)
-    If i < 6 Then
-    j = i + 1
-        rankZj = zongpai(j) Mod 13 '0是2,12是A
-        suitZj = Int(zongpai(j) / 13) '0是方片Diamonds,3是黑桃Spades
-    End If
+    
     
     suits(suitZi) = suits(suitZi) + 1
-    If suits(suitZi) < 6 Then
-        flushCards(suitZi) = flushCards(suitZi) & zongpai(i)
-    End If
+     '后面的还是得要，因为后面可能成小的同花顺 '后面的不要了，因为牌是按点数排好序的，后面的小牌可以不管
+    flushCards(suitZi) = flushCards(suitZi) & zongpai(i) '整理同花的牌
+    
+    
+'    For j = i + 1 To 6
+'    If i = 6 Then
+'        Exit For
+'    End If
+'
+'    rankZj = zongpai(j) Mod 13 '0是2,12是A
+'    suitZj = Int(zongpai(j) / 13) '0是方片Diamonds,3是黑桃Spades
+    
+    
     
 '    If Application.WorksheetFunction.Max(flushCards) = 5 Then '判断是否同花
 '        pattern(player, 1) = 1
@@ -209,26 +217,51 @@ For i = 0 To 6
 '            isFour = True
 '    End If
 Next i
+
+countStraightFlush = 0
+For suitZi = 0 To 3 '四个花色
+    If Len(flushCards(suitZi)) >= 10 Then '如果至少有五张同花，就选出同花
+        For i = 1 To Len(flushCards(suitZi))
+            preCard = Mid(flushCards(suitZi), i, 2) '当前牌
+            If i + 2 <= Len(flushCards(suitZi)) Then
+                posCard = Mid(flushCards(suitZi), i + 2, 2) '下一张牌
+                If preCard - posCard = 1 Then '如果是顺子
+                    countStraightFlush = countStraightFlush + 1 '数有几张同花顺了
+                    pattern(player) = pattern(player) & preCard
+                    If countStraightFlush = 4 Then 'pre是第四张，pos是第五张，都比过了，都加进去了，且是顺子,就把后一张牌加进去
+                        If Left(pattern(player), 2) = 51 Then '开头是sA,判断皇家同花顺或同花顺
+                            pattern(player) = 9 & pattern(player) & posCard '是皇家同花顺9Royal Flush
+                        Else
+                            pattern(player) = 8 & pattern(player) & posCard '8straight flush
+                        Exit For
+                        End If
+                    ElseIf i + 2 = Len(flushCards(suitZi)) Then 'AKQJ9,看到最后一张不是顺子
+                        pattern(player) = 5 & Left(flushCards(suitZi), 10) '最大的五张同花牌 5flush
+                    End If
+                Else
+                    countStraight = 0
+                    pattern(player) = ""
+                End If
+            End If
+        Next i
+    End If
+Next suitZi
+
+        'Debug.Print pattern(player)
     
-    For suitZi = 0 To 4
-        If Len(flushCards(suitZi)) = 10 Then
-        Debug.Print flushCards(suitZi)
-        Exit For
-        End If
-    Next
+
 'pattern(player) = Application.WorksheetFunction.Max(typePat)
 'final:
-'royal flush:       sT,sJ,sQ,sK,sA
-
-'straight flush:    56789s
-'4 of a kind:       AAAAx
-'full house:        AAAKK
-'flush:             479TKs
-'straight:          56789o  'bicycle:A2345  'broadway:TJQKA
-'3 of a kind:       AAAxx
-'two pairs          AAKKx
-'one pair           AAxxx
-'high card          xxxxx
+'9royal flush:       sT,sJ,sQ,sK,sA(only)
+'8straight flush:    56789s
+'74 of a kind:       AAAAx
+'6full house:        AAAKK
+'5flush:             479TKs
+'4straight:          56789o  'bicycle:A2345  'broadway:TJQKA
+'33 of a kind:       AAAxx
+'2two pairs          AAKKx
+'1one pair           AAxxx
+'0high card          xxxxx
 
 'hand:
 'suited
@@ -256,7 +289,7 @@ Dim beu(5)
 bii = "51"
 For i = 0 To 5
 beu(i) = beu(i) & bii
-Debug.Print beu(i)
+Debug.Print 2 >= 2 And 2 > 1
 Next
 End Function
 Function helpme()
