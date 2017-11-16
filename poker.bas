@@ -1,24 +1,30 @@
 Attribute VB_Name = "poker"
 Dim hand(5, 2)
-Dim deck(52)
-Dim suit
-Dim rank
-Dim shuffleDeck(52) '洗好的牌
-Dim deckCard    'dealed cards
+Dim playerMoney(5)
+Dim deck(52)    '牌,如sT,d8
+Dim shuffleDeck(52) '洗好的牌,是牌的编号，51=sA,50=sK,0=d2
+Dim zongpai(7) '手牌+公共牌,编号
 Dim communityCards(5)  'cards on table
+Dim pattern(5) '每个人最后的牌型，0是high
+
+Dim deckCard As Integer    'dealed cards发出去的牌的张数
+Dim player As Integer
+
 Dim rngMoney As Object
 Dim rngFlops As Object
 Dim rngTurn As Object
 Dim rngRiver As Object
 Function TexasHoldem()
-
+'v0.2 171116 现在可以判定同花
 Cells(16, 3) = "chips:"
-Set rngMoney = Cells(16, 4)
+Set rngHumMoney = Cells(16, 4)
 Set rngFlops = Range("c9:e9")
 Set rngTurn = Cells(9, 6)
 Set rngRiver = Cells(9, 7)
+
+Call preparePlayers
 Call prepareDeck
-rngMoney = "$1000"
+rngHumMoney = "$1000"
 Call shuffle    '洗牌
 Call deal       '发牌
 'preflop
@@ -31,7 +37,14 @@ Call river
 
 Call compareCards
 End Function
+Function preparePlayers()
+For player = 0 To 4
+    playerMoney(player) = 1000
+Next player
+End Function
 Function prepareDeck()
+Dim suit
+Dim rank
 suit = Array("d", "c", "h", "s")
 rank = Array(2, 3, 4, 5, 6, 7, 8, 9, "T", "J", "Q", "K", "A")
 k = 0
@@ -46,7 +59,7 @@ Function shuffle()
 Dim wushier(52)
 Dim k
 For k = 0 To 51
-    wushier(k) = k '一个0-51的数组
+    wushier(k) = k  '一个0-51的数组
 Next k
 uBond = 52
 lBond = 0
@@ -70,13 +83,24 @@ Next player
 Range("d15") = deck(hand(0, 0))
 Range("e15") = deck(hand(0, 1))
 End Function
+Function cal()
+
+End Function
+Function raise()
+
+End Function
+Function check()
+
+End Function
+Function fold()
+
+End Function
 Function flop()
 For i = 0 To 2
     Cells(9, 3 + i) = deck(shuffleDeck(deckCard))
     communityCards(i) = shuffleDeck(deckCard)
     deckCard = deckCard + 1
 Next
-
 End Function
 Function turn()
 rngTurn = deck(shuffleDeck(deckCard))
@@ -86,34 +110,119 @@ End Function
 Function river()
 rngRiver = deck(shuffleDeck(deckCard))
 communityCards(4) = shuffleDeck(deckCard)
-
 End Function
 Function compareCards()
-Dim zongpai(7)
+
 For player = 0 To 0
     i = 0
     For handCard = 0 To 1
         zongpai(i) = hand(player, handCard)
         i = i + 1
     Next handCard
-    For i = 2 To 6
-        zongpai(i) = communityCards(i - 2)
-    Next i
+    For tableCard = 0 To 4
+        zongpai(i) = communityCards(tableCard)
+        i = i + 1
+    Next tableCard
+    Call insertSort '把牌按照点数从大到小，从黑桃到方片排序
+ 
     For i = 0 To 6
-    Debug.Print zongpai(i); "compare"
-    Next
-Next
+    Debug.Print zongpai(i), deck(zongpai(i))
+    Next i
+    'Debug.Print player; ":", pattern(player)
+       Call rules '比量牌组
+Next player
+Debug.Print " "
+End Function
+Function insertSort()
+'v1.0   把牌按照点数从大到小，从黑桃到方片排序
+For i = 0 To 6
+    For j = i + 1 To 6
+        If j > 6 Then
+            Exit For
+        End If
+        
+        rankZj = zongpai(j) Mod 13
+        suitZj = Int(zongpai(j) / 13)
+        
+        rankZi = zongpai(i) Mod 13
+        suitZi = Int(zongpai(i) / 13)
+        
+        If rankZj > rankZi Then '先比牌的点数
+            temp = zongpai(j)
+            zongpai(j) = zongpai(i)
+            zongpai(i) = temp
+        ElseIf rankZj = rankZi Then '相同就比花色
+            If suitZj > suitZi Then
+                temp = zongpai(j)
+                zongpai(j) = zongpai(i)
+                zongpai(i) = temp
+            End If
+        End If
+    Next j
+Next i
+
+'pattern(player) = 1
 End Function
 Sub c()
 Call TexasHoldem
 End Sub
 Function rules()
+Dim typePat(9) '统计能组成的牌型
+Dim suits(4) '统计这7张牌里面各个花色的数量
+Dim flushCards(4) '四个花色，把牌连起来
 
+Dim straightCards(6) '统计顺子
+Dim sameCards(6) '统计这7张牌里点数相同的牌数
+
+
+straightSuits = 0
+straightFlush = 0
+
+
+
+For i = 0 To 6
+    rankZi = zongpai(i) Mod 13 '牌组中第i张牌的点数
+    suitZi = Int(zongpai(i) / 13)
+    If i < 6 Then
+    j = i + 1
+        rankZj = zongpai(j) Mod 13 '0是2,12是A
+        suitZj = Int(zongpai(j) / 13) '0是方片Diamonds,3是黑桃Spades
+    End If
+    
+    suits(suitZi) = suits(suitZi) + 1
+    If suits(suitZi) < 6 Then
+        flushCards(suitZi) = flushCards(suitZi) & zongpai(i)
+    End If
+    
+'    If Application.WorksheetFunction.Max(flushCards) = 5 Then '判断是否同花
+'        pattern(player, 1) = 1
+'    End If
+'    If rankZi - rankZj = 1 Then '判断是否顺子
+'        straightCards(i) = straightCards(i) + 1 'i牌的顺子次数
+'        If suitZj = suitZi Then '是否是同花顺
+'        straightFlush = straightFlush + 1
+'        End If
+'        straightSuits = rankZj + 1
+'    ElseIf rankZj = rankZi Then '统计相同的牌
+'        sameCards(i) = sameCards(i) + 1
+'        If sameCards(i) = 4 Then
+'            isFour = True
+'    End If
+Next i
+    
+    For suitZi = 0 To 4
+        If Len(flushCards(suitZi)) = 10 Then
+        Debug.Print flushCards(suitZi)
+        Exit For
+        End If
+    Next
+'pattern(player) = Application.WorksheetFunction.Max(typePat)
 'final:
 'royal flush:       sT,sJ,sQ,sK,sA
+
 'straight flush:    56789s
 '4 of a kind:       AAAAx
-'full hose:         AAAKK
+'full house:        AAAKK
 'flush:             479TKs
 'straight:          56789o  'bicycle:A2345  'broadway:TJQKA
 '3 of a kind:       AAAxx
@@ -142,9 +251,18 @@ Function rules()
 'Bluff
 'Slowplay
 End Function
+Function ceee()
+Dim beu(5)
+bii = "51"
+For i = 0 To 5
+beu(i) = beu(i) & bii
+Debug.Print beu(i)
+Next
+End Function
 Function helpme()
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
+
 '玩家位置
 '1. Button--庄家位置，也被称作按钮位
 '线上游戏中第一局庄家位置由系统随机指定，线下游戏时可以大家抽牌决定，抽到最大牌的人的做第一局的庄家，以后每局庄家位置按照顺时针方向下移一位。
@@ -203,19 +321,4 @@ Application.DisplayAlerts = 1
 'free card--免费牌：指无人下注，免费看一张牌。
 'Fish--鱼：一般高水平的玩家对那些输不起，牌品差的玩家的贬意称呼。
 'Shark --鲨鱼: 一般指能够赢钱的高手?
-End Function
-Function cccee()
-Dim b(5)
-a = Array(1, 2, 1, 4, 5)
-u = 5
-l = 0
-For i = 0 To 4
-    ci = Int(Rnd * u + l)
-    b(i) = a(ci)
-    a(ci) = a(l)
-    l = l + 1
-    u = u - 1
-Next i
-'For i = 0 To 4
-
 End Function
