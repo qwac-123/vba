@@ -32,7 +32,9 @@ Dim dakaibaobiao As Variant ' 在VBA中，对于For Each m In a，若a是数组，m只能声明
 Dim baobiao As Variant '同上
 
 Dim zuoweiuzihoudejieweimeishenmeyisi
-Sub 航次报表统一整合()
+Sub ccc航次报表统一整合()
+'v1.7 现在可以正确找到航次报表的细节时间了
+'v1.6 现在可以正确找到油料表头了
 'v1.5 重做了船名输入选择
 'v1.4 增加了开头提示清除表
 'v1.3 修改了冻结拆分窗格部分
@@ -66,7 +68,7 @@ fileDir = _
 & shipName & "\" & Year(Date) & "年"
 ChDir fileDir
 dakaibaobiao = Application.GetOpenFilename(FileFilter:="Excel文件 (*.xls; *.xlsx),*.xls; *.xlsx,所有文件(*.*),*.*", _
-       Title:="Excel选择", MultiSelect:=True) '选择要被合并的簿
+       title:="Excel选择", MultiSelect:=True) '选择要被合并的簿
 
 If Not IsArray(dakaibaobiao) Then '如果点了取消就结束
     Exit Sub
@@ -104,7 +106,7 @@ If openedVoy Then
     Columns("C:C").ColumnWidth = 9.5
     Columns("D:D").ColumnWidth = 9.5
     Columns("e:i").ColumnWidth = 5.4
-    Rows.RowHeight = 12
+    Rows.RowHeight = 15
 End If
 '处理燃润料区域
 If openedOil Then
@@ -124,34 +126,32 @@ Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Sub
 Function 燃润料报表整合()
-'v2.2 修改了变量，增加找FO:功能
+'v2.2 现在能够正确找到表头位置了
 'v2.1 增加了判断是否打开过油料表
 'v2.0 从原来的sub改为sub航次报表统一整合()下的一个function
 'v1.0 油料报表整合 Macro
 Dim rngGezi As Object
-Dim rngOilHead As Object
-Dim rngOilAdd As Object
-Dim rngOilEnd As Object
+Dim rowOilHead As Long
+Dim rowOilAdd As Long
+Dim rowOilEnd As Long
     Set w = Workbooks.Open(baobiao)
     Set wsh = w.Sheets("燃油报表")
-    voy = Mid(w.Name, InStr(11, w.Name, "V") + 1, 4)
+    voy = Mid(w.name, InStr(11, w.name, "V") + 1, 4)
 For Each rngGezi In Range("b36:b44")
     If rngGezi = "FO:" Then
-        rngOilHead = Range(Cells(rngGezi.Row, 2), Cells(rngGezi.Row, 3))
+        Exit For
     End If
 Next rngGezi
-rowOilAdd = Range(Cells(rngGezi.Row + 2, 2), Cells(rngGezi.Row + 2, 3))
-rowOilEnd = Range(Cells(rngGezi.Row + 4, 2), Cells(rngGezi.Row + 4, 3))
     If ranrunDiYiCi Then
-        rngOilHead.Copy zsh.Cells(1, 12)
-        zsh.Cells(1, 11) = Mid(w.Name, 1, InStr(3, w.Name, "燃") - 1)
+        wsh.Range(Cells(rngGezi.Row, 2), Cells(rngGezi.Row, 3)).Copy zsh.Cells(1, 12)
+        zsh.Cells(1, 11) = Mid(w.name, 1, InStr(3, w.name, "燃") - 1)
         ranrunDiYiCi = False
     End If
     rowzbEnd = zsh.Cells(66666, 12).End(xlUp).Row + 1
     If Len(wsh.Range("b40").Text & wsh.Range("c40").Text) = 0 Then '判断本航次加装这一行是否有加油
-        rowOilEnd.Copy zsh.Cells(rowzbEnd, 12) '只复制航次末结存
+        wsh.Range("A42:C42").Copy zsh.Cells(rowzbEnd, 12) '只复制航次末结存
     Else
-        Union(rowOilAdd, rowOilEnd).Copy zsh.Cells(rowzbEnd, 12) '本航次加装和航次末结存
+        wsh.Range("A40:C40,A42:C42").Copy zsh.Cells(rowzbEnd, 12) '本航次加装和航次末结存
     End If
     zsh.Cells(rowzbEnd, 11) = voy
 w.Close
@@ -165,7 +165,7 @@ Function 航次报表整合()
 'v1.0 航次报表整合 Macro
     Set w = Workbooks.Open(baobiao)
     Set wsh = w.Sheets("航次报表")
-    voy = Mid(w.Name, InStr(6, w.Name, "V") + 1, 4)
+    voy = Mid(w.name, InStr(6, w.name, "V") + 1, 4)
     If hangciDiYiCi Then
         rowGangKou = wsh.Cells(8, 3).End(xlDown).Row '靠离泊时间的最后一条位置
         rowXiJieHead = rowZhaoHead() '细节的开头位置
@@ -176,7 +176,7 @@ Function 航次报表整合()
         Union(rng1, rng2).Copy zsh.Cells(1, 2)
         rng3.Copy zsh.Cells(rowGangKou - 4, 5)
         zsh.Cells(3, 1) = voy
-        zsh.Range("a1") = Mid(w.Name, 1, InStr(3, w.Name, "航") - 1) 'a1格写船名
+        zsh.Range("a1") = Mid(w.name, 1, InStr(3, w.name, "航") - 1) 'a1格写船名
         hangciDiYiCi = False
     Else
         rowzbEnd = zsh.Cells(66666, 5).End(xlUp).Row + 1
@@ -203,21 +203,28 @@ For Each rngGezi In Range("a25:a55") '找到开头的位置
 Next rngGezi
 End Function
 Function rowFindEnd()
+'v1.3 现在可以正确统计最后一行
 'v1.2 现在可以正确统计连续空行而不是累计空行，并排除隐藏单元格（dh9的）
 '
 Dim cishu
 Dim i
 Dim rngGezi As Object
 cishu = 0
-'Range(Cells(rowXiJieHead, 3), Cells(80, 3)).SpecialCells(xlCellTypeVisible).Select '选中可见单元格
 For Each rngGezi In Range(Cells(rowXiJieHead, 3), Cells(80, 3)).SpecialCells(xlCellTypeVisible)
+    Debug.Print rngGezi
     rowXiJieEnd = rngGezi.Row
+    If Cells(rowXiJieEnd, 1) = "合计Total" Then
+        rowFindEnd = rowXiJieEnd - 1 - cishu
+        Exit Function
+    End If
+    
     If Cells(rowXiJieEnd, 4) = "" Then
         cishu = cishu + 1
     Else
         cishu = 0
     End If
-    If cishu > 2 Then '如果连续3次
+    
+    If cishu > 3 Then '如果连续3次
         rowFindEnd = rowXiJieEnd - cishu
         Exit Function
     End If
