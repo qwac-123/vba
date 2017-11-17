@@ -60,14 +60,18 @@ Function shuffle()
 Dim wushier(52)
 Dim k
 For k = 0 To 51
-    wushier(k) = k  '一个0-51的数组
+    wushier(k) = k   '一个00-51的数组
 Next k
 uBond = 52
 lBond = 0
 For k = 0 To 51  '循环产生52个不重复随机数，做成一个数组shuffleDeck
     If uBond > 0 Then
-        paixu = Int(Rnd * uBond)     '[0,uBond-1] 之间随机整数
+        paixu = Int((Rnd + Right(Timer, 3) / 100) * uBond)   '[0,uBond-1] 之间随机整数
+        If paixu > 51 Then
+            paixu = Int(Rnd * uBond)
+        End If
         shuffleDeck(k) = wushier(paixu) '随机到的值一个个放到新数组里
+        'Debug.Print shuffleDeck(k)
         wushier(paixu) = wushier(uBond - 1) '把最后一个值挪到随机到的位置
         uBond = uBond - 1                  '舍弃掉最后一个数
     End If
@@ -126,13 +130,12 @@ For player = 0 To 0
     Next tableCard
     
     Call insertSort
-    For i = 0 To 6
-    'Debug.Print zongpai(i), deck(zongpai(i))
-    Next i
+'    For i = 0 To 6
+'    Debug.Print zongpai(i), deck(zongpai(i))
+'    Next i
     'Debug.Print player; ":", pattern(player)
     Call rules '比量牌组
 Next player
-Debug.Print " "
 End Function
 Function insertSort()
 'v1.0   把牌按照点数从大到小，从黑桃到方片排序
@@ -162,65 +165,102 @@ For i = 0 To 6
     Next j
 Next i
 End Function
-Sub c()
+Function zctex()
 For i = 0 To 100
 Call TexasHoldem
 Next i
-End Sub
+End Function
 Function rules()
+'v0.2   在判断牌点数rank时，保证每个牌是两位数，用字符串表示，00是2,12是A
+'       重新改写了if树，现在能够判断同花，顺，985
 'v0.1 判断同花顺（失败
-Dim typePat(10) '0-9十个统计能组成的牌型
-Dim suits(4) '统计这7张牌里面各个花色的数量
-Dim flushCards(4) '四个花色，把牌连起来
-
+'chr(48)="0"
+Dim typePat(9) '0-9十个统计能组成的牌型
+Dim suits(3) '统计这7张牌里面各个花色的数量
+Dim flushCards(3) '四个花色，把牌连起来
 Dim straightCards(6) '统计顺子
 Dim sameCards(6) '统计这7张牌里点数相同的牌数
 
-
-straightSuits = 0
+For i = 0 To 9
+    typePat(i) = ""
+Next i
+For i = 0 To 3
+    suits(i) = 0
+Next i
+For i = 0 To 3
+    flushCards(i) = ""
+Next i
+For i = 0 To 6
+    straightCards(i) = ""
+Next i
+For i = 0 To 6
+    sameCards(i) = ""
+Next i
+straightSuits = 0 '用于判断顺子的花色
 straightFlush = 0
 
+countStraightFlush = 0 '计数同花顺的个数
+countStraight = 0 '计算顺子的个数
+straightCards = "" '收集顺子牌，如kqjt9,1110090807,10位字符
+
+pattern(player) = "" '最后的牌型，牌型号开头，跟着5张牌，11位字符，如皇家同花顺就是91211100908
 
 
 For i = 0 To 6
-    rankZi = zongpai(i) Mod 13 '牌组中第i张牌的点数
-    suitZi = Int(zongpai(i) / 13)
     
+    rankZi = zongpai(i) Mod 13 '牌组中第i张牌的点数,00是2,，08是T，12是A
+    If rankZi < 10 Then
+        rankZi = "0" & rankZi
+    End If
+    suitZi = Int(zongpai(i) / 13)
     
     suits(suitZi) = suits(suitZi) + 1
      '后面的还是得要，因为后面可能成小的同花顺 '后面的不要了，因为牌是按点数排好序的，后面的小牌可以不管
-    flushCards(suitZi) = flushCards(suitZi) & zongpai(i) '整理同花的牌
+    flushCards(suitZi) = flushCards(suitZi) & rankZi '整理同花的牌
     
+    If i = 6 Then
+        Exit For
+    End If
     
-'    For j = i + 1 To 6
-'    If i = 6 Then
-'        Exit For
-'    End If
-'
-'    rankZj = zongpai(j) Mod 13 '0是2,12是A
-'    suitZj = Int(zongpai(j) / 13) '0是方片Diamonds,3是黑桃Spades
+    j = i + 1
+    rankZj = zongpai(j) Mod 13 '00是2,12是A
+    If rankZj < 10 Then
+        rankZj = "0" & rankZi
+    End If
+    suitZj = Int(zongpai(j) / 13) '0是方片Diamonds,3是黑桃Spades
     
+    If rankZi - rankZj = 1 Then   '判断是否顺子而且在范围内
+        countStraight = countStraight + 1 'i牌的顺子次数
+        straightCards = straightCards & rankZi '收集顺子的牌
+        straightSuits = straightSuits + suitZi - suitZj '统计花色，如果都是同花色，=0
+        
+        If countStraight = 4 And straightSuits = 0 Then   '4rankZi+1rankZj 5张连接张，首先是顺子
+                                    '还是个同花顺
+            If suitZi = 3 Then '是royal,黑桃的同花顺
+                    pattern(player) = 9 & straightCards & rankZj
+            Else '普通同花顺
+                    pattern(player) = 8 & straightCards & rankZj
+            End If
+        ElseIf countStraight = 4 Then
+            pattern(player) = 4 & straightCards '只是顺子
+        End If
+        
+    Else
+        countStraight = 0
+        straightCards = ""
+    End If
     
-    
-'    If Application.WorksheetFunction.Max(flushCards) = 5 Then '判断是否同花
-'        pattern(player, 1) = 1
-'    End If
-'    If rankZi - rankZj = 1 Then '判断是否顺子
-'        straightCards(i) = straightCards(i) + 1 'i牌的顺子次数
-'        If suitZj = suitZi Then '是否是同花顺
-'        straightFlush = straightFlush + 1
-'        End If
-'        straightSuits = rankZj + 1
-'    ElseIf rankZj = rankZi Then '统计相同的牌
-'        sameCards(i) = sameCards(i) + 1
-'        If sameCards(i) = 4 Then
-'            isFour = True
-'    End If
+    ElseIf rankZj = rankZi Then '统计相同的牌
+        sameCards(i) = sameCards(i) + 1
+        If sameCards(i) = 4 Then
+            isFour = True
+    End If
 Next i
 
-countStraightFlush = 0
+
 For suitZi = 0 To 3 '四个花色
     If Len(flushCards(suitZi)) >= 10 Then '如果至少有五张同花，就选出同花
+    Debug.Print flushCards(suitZi), suitZi
         For i = 1 To Len(flushCards(suitZi))
             preCard = Mid(flushCards(suitZi), i, 2) '当前牌
             If i + 2 <= Len(flushCards(suitZi)) Then
@@ -229,23 +269,37 @@ For suitZi = 0 To 3 '四个花色
                     countStraightFlush = countStraightFlush + 1 '数有几张同花顺了
                     pattern(player) = pattern(player) & preCard
                     If countStraightFlush = 4 Then 'pre是第四张，pos是第五张，都比过了，都加进去了，且是顺子,就把后一张牌加进去
-                        If Left(pattern(player), 2) = 51 Then '开头是sA,判断皇家同花顺或同花顺
+                        If Left(pattern(player), 2) = 12 And suitZi = 3 Then '开头是A,并且是3号花色（黑桃），判断皇家同花顺或同花顺
                             pattern(player) = 9 & pattern(player) & posCard '是皇家同花顺9Royal Flush
+                            Debug.Print pattern(player)
+                            Exit Function
                         Else
                             pattern(player) = 8 & pattern(player) & posCard '8straight flush
-                        Exit For
+                            Debug.Print pattern(player)
+                            Exit Function
                         End If
-                    ElseIf i + 2 = Len(flushCards(suitZi)) Then 'AKQJ9,看到最后一张不是顺子
-                        pattern(player) = 5 & Left(flushCards(suitZi), 10) '最大的五张同花牌 5flush
                     End If
                 Else
                     countStraight = 0
                     pattern(player) = ""
                 End If
+                
+                If i + 3 = Len(flushCards(suitZi)) Then 'AKQJ9,看到最后一张了而且不是9,8
+                    'goto 判断7 four 6 full
+                    pattern(player) = 5 & Left(flushCards(suitZi), 10) '最大的五张同花牌 5flush
+                    Debug.Print pattern(player), Len(pattern(player))
+                    If Len(pattern(player)) > 11 Then
+                        Debug.Print "long"
+                    End If
+                    Exit Function
+                End If
             End If
+            i = i + 1
         Next i
     End If
 Next suitZi
+
+
 
         'Debug.Print pattern(player)
     
@@ -262,6 +316,10 @@ Next suitZi
 '2two pairs          AAKKx
 '1one pair           AAxxx
 '0high card          xxxxx
+
+    
+
+
 
 'hand:
 'suited
@@ -289,7 +347,8 @@ Dim beu(5)
 bii = "51"
 For i = 0 To 5
 beu(i) = beu(i) & bii
-Debug.Print 2 >= 2 And 2 > 1
+ad = 1 = 1
+Debug.Print ad
 Next
 End Function
 Function helpme()
@@ -355,3 +414,4 @@ Application.DisplayAlerts = 1
 'Fish--鱼：一般高水平的玩家对那些输不起，牌品差的玩家的贬意称呼。
 'Shark --鲨鱼: 一般指能够赢钱的高手?
 End Function
+
