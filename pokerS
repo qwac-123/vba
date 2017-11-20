@@ -6,43 +6,71 @@ Dim shuffleDeck(52) '洗好的牌,是牌的编号，51=sA,50=sK,0=d2
 Dim zongpai(7) '手牌+公共牌,编号
 Dim communityCards(5)  'cards on table
 Dim pattern(5) '每个人最后的牌型，0是high
+Dim maxPat(4) '最大的牌型
+Dim maxPlayer(4) '最大的几个玩家
+Dim foldPlayer(4)
+Dim playerPosition(4)
 
 Dim finalSeven As String
 Dim deckCard As Integer    'dealed cards发出去的牌的张数
 Dim player As Integer
+Dim gamePlayed As Integer
+Dim SB As Integer
+Dim BB As Integer
 
-Dim rngMoney As Object
-Dim rngFlops As Object
-Dim rngTurn As Object
-Dim rngRiver As Object
+Dim pot 'dichi
+Dim callChips '跟注花费
+Dim rngHumMoney As Object
+Dim rngMoney As Range
+Dim rngHand1 As Range
+Dim rngHand2 As Range
+Dim rngFlops As Range
+Dim rngTurn As Range
+Dim rngRiver As Range
 Function TexasHoldem()
 'v0.3 171120可以比大小了
 'v0.2 171116 现在可以判定同花
 'v0.1 洗牌发牌理顺最后牌组
-Range("a1:l9").Delete
-Range("a11:l15").Delete
 
-Cells(16, 3) = "chips:"
-Set rngHumMoney = Cells(18, 4)
-Range("b18") = "chips:"
-Set rngFlops = Range("c9:e9")
-Set rngTurn = Cells(9, 6)
-Set rngRiver = Cells(9, 7)
-
+Range("a1:ak9").Clear
+Range("a12:ak15").Clear
+Cells(27, 20) = "chips:"
+Set rngHand1 = Range("v25")
+Set rngHand2 = Range("w25")
+Set rngFlops = Range("T9:V9")
+Set rngTurn = Cells(17, 23)
+Set rngRiver = Cells(17, 24)
+Cells(27, 22) = "$1000"
+Set rngHumMoney = Range("v27")
 Call preparePlayers
 Call prepareDeck
-rngHumMoney = "$1000"
-Call shuffle    '洗牌
-Call deal       '发牌
-'preflop
+BB = 10
+SB = 5
+pot = 0
+callChips = 10
+endGame = InputBox("想玩几次？", "游戏设置")
+For gamePlayed = 1 To endGame
+    For player = 0 To 4
+        If playerMoney(player) < 0 Then
+            MsgBox ("player " & player & "is defeated")
+            Exit Function
+        End If
+        playerPosition(player) = gamePlayed Mod 5
+    Next player
+    
+    Call shuffle    '洗牌
+    Call deal       '发牌
+    'preflop
+        Call raiseCallFold
+    Call flop
+        Call raiseCallFold
+    Call turn
+        Call raiseCallFold
+    Call river
+        Call raiseCallFold
+    Call compareCards
 
-Call flop
-
-Call turn
-
-Call river
-
-Call compareCards
+Next gamePlayed
 End Function
 Function preparePlayers()
 For player = 0 To 4
@@ -82,32 +110,53 @@ For k = 0 To 51  '循环产生52个不重复随机数，做成一个数组shuffl
     End If
 Next k
 End Function
+Function raiseCallFold()
+For player = 0 To 4
+    
+    Select Case playerPosition(player)
+    Case 1 '小盲注
+        callChips = BB
+        pot = pot + callChips
+        playerMoney(player) = playerMoney(player) - callChips
+    Case 2
+    Case 3
+    
+    Case Else
+    End Select
+    yourOption = InputBox("输入你的选项序号：" & vbCrLf & "1.跟注 " & callChips & vbCrLf & "2.加注" & vbCrLf & "3.弃牌", "跟牌，加注或者弃牌")
+    Select Case yourOption
+        Case 1 'call
+            pot = pot + callChips
+            playerMoney(player) = playerMoney(player) - callChips
+            Range(rngMoney(player)).Text = (player)
+        Case 2 'raise
+            raiseChips = callChips + InputBox("raise?", "加注", 2 * callChips)
+            
+    ElseIf ifRaise = 7 Then 'no
+    ElseIf ifRaise = 7 Then 'no
+        pot = pot + callChips
+    Else
+        foldPlayer(player) = "fold"
+    End Select
+Next player
+End Function
 Function deal()
 deckCard = 0
 For player = 0 To 4 '目前还是支持五个人
     For handCard = 0 To 1   'preflop发牌
+        If fold(player) = "fold" Then
+            Exit For
+        End If
         hand(player, handCard) = shuffleDeck(deckCard)
         deckCard = deckCard + 1
     Next handCard
 Next player
-Range("d15") = deck(hand(0, 0))
-Range("e15") = deck(hand(0, 1))
-End Function
-Function cal()
-
-End Function
-Function raise()
-
-End Function
-Function check()
-
-End Function
-Function fold()
-
+rngHand1 = deck(hand(0, 0))
+rngHand2 = deck(hand(0, 1))
 End Function
 Function flop()
 For i = 0 To 2
-    Cells(9, 3 + i) = deck(shuffleDeck(deckCard))
+    Cells(17, 20 + i) = deck(shuffleDeck(deckCard))
     communityCards(i) = shuffleDeck(deckCard)
     deckCard = deckCard + 1
 Next
@@ -122,8 +171,11 @@ rngRiver = deck(shuffleDeck(deckCard))
 communityCards(4) = shuffleDeck(deckCard)
 End Function
 Function compareCards()
-
-For player = 0 To 0
+countSameMax = 0
+For player = 0 To 4
+    If fold(player) = "fold" Then
+        Exit For
+    End If
     i = 0
     For handCard = 0 To 1
         zongpai(i) = hand(player, handCard)
@@ -133,27 +185,32 @@ For player = 0 To 0
         zongpai(i) = communityCards(tableCard)
         i = i + 1
     Next tableCard
-    
     Call insertSort
-
     Call rules '比量牌组
     Debug.Print player; ":", pattern(player)
+    If pattern(player) > maxPat(countSameMax) Then
+        maxPat(countSameMax) = pattern(player)
+        maxPlayer(countSameMax) = player
+    ElseIf pattern(player) = maxPat(countSameMax) Then
+        countSameMax = countSameMax + 1
+        maxPat(countSameMax) = pattern(player)
+        maxPlayer(countSameMax) = player
+    End If
 Next player
+Debug.Print maxPat, maxPlayer
+earn = pot / (countSameMax + 1)
+For i = 0 To countSameMax
+    a = MsgBox("winner is :   " & maxPlayer(i), vbOKOnly, "Winner")
+Next i
 End Function
 Function insertSort()
 'v1.0   把牌按照点数从大到小，从黑桃到方片排序
-For i = 0 To 6
+For i = 0 To 5
     For j = i + 1 To 6
-        If j > 6 Then
-            Exit For
-        End If
-        
         rankZj = zongpai(j) Mod 13
         suitZj = Int(zongpai(j) / 13)
-        
         rankZi = zongpai(i) Mod 13
         suitZi = Int(zongpai(i) / 13)
-        
         If rankZj > rankZi Then '先比牌的点数
             temp = zongpai(j)
             zongpai(j) = zongpai(i)
@@ -164,7 +221,6 @@ For i = 0 To 6
             zongpai(i) = temp
         End If
     Next j
-    Cells(18, i + 3) = zongpai(i)
 Next i
 End Function
 Function zctex()
