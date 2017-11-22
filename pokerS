@@ -43,7 +43,8 @@ Function TexasHoldem()
 
 'Range("a1:ak9").Clear
 'Range("a12:ak15").Clear
-
+gameOver = InputBox("几轮？", "游戏时间设置", 10)
+For gamePlayed = 0 To gameOver
 If gamePlayed < 1 Then
 
 
@@ -79,7 +80,7 @@ Call river 'river
 stage = 3
     Call raiseCallFold
 Call compareCards
-gamePlayed = gamePlayed + 1
+Next gamePlayed
 End Function
 Function preparecells()
 '准备表
@@ -97,22 +98,23 @@ Function preparecells()
     
     Range("T12:X12").NumberFormatLocal = ";;;"
     Range("M12:N12,N4:O4,V4:W4,AD4:AE4,AE12:AF12,AD20:AE20,V20:W20,N20:O20,T12:X12" _
-        ).NumberFormatLocal = ";;;"
+        ).NumberFormatLocal = ";;;" '发牌的代码区，藏起来不给看，正式版本里面应删除
     Range("M12:N12,N4:O4,V4:W4,AD4:AE4,AE12:AF12,AD20:AE20,V20:W20,N20:O20,T12:X12" _
-        ).Value = ""
+        ).Value = "" '清空桌面发的牌
     i = 0
-    For Each Rng In Range("T21,L21,K13,L5,T5,AB5,AC13,AB21")
-        Rng.Value = "P" & i
+    For Each rng In Range("T21,L21,K13,L5,T5,AB5,AC13,AB21")
+        rng.Value = "P" & i
         i = i + 1
-    Next Rng
-    rngPosition = Array("s21", "k21", "j13", "k5", "s5", "aa5", "Ab13", "Aa21")
+    Next rng
+    rngPosition = Array("s21", "k21", "j13", "k5", "s5", "aa5", "Ab13", "Aa21") '标记玩家位置,D,SB,BB
     Range("L6:M6,K14:L14,L22:M22,T22:U22,AB22:AC22,AC14:AD14,AB6:AC6,T6:U6").Merge
     Range("L6:M6,K14:L14,L22:M22,T22:U22,AB22:AC22,AC14:AD14,AB6:AC6,T6:U6") = "chips:"
     
     Range("N6:O6,M14:N14,N22:O22,V22:W22,AD22:AE22,AE14:AF14,AD6:AE6,V6:W6").Merge 'rngMoney
-    With Range("N5:O5,V5:W5,AD5:AE5,AE13:AF13,AD21:AE21,V21:W21,N21:O21,M13:N13,T13:X13").Borders '给人看的部分
-        .LineStyle = xlContinuous
-    End With
+    Range("N5:O5,V5:W5,AD5:AE5,AE13:AF13,AD21:AE21,V21:W21,N21:O21,M13:N13,T13:X13").Borders.LineStyle = xlContinuous '给人看的部分
+    Range("N5:O5,V5:W5,AD5:AE5,AE13:AF13,AD21:AE21,N21:O21,M13:N13,T13:X13").FormulaR1C1 = "=IF(ISTEXT(R[-1]C),""|||"","""")"
+    'V21:W21,是玩家手牌区
+    
 End Function
 Function preparePlayers()
 rngHand = [{"v20","w20";"n20","o20";"m12","n12";"n4","o4";"v4","w4";"ad4","ae4";"ae12","af12";"ad20","ae20"}]
@@ -235,8 +237,8 @@ Next handCard
 End Function
 Function flop()
 i = 0
-For Each Rng In rngFlop
-    Rng.Value = deck(shuffleDeck(deckCard))
+For Each rng In rngFlop
+    rng.Value = deck(shuffleDeck(deckCard))
     communityCards(i) = shuffleDeck(deckCard)
     deckCard = deckCard + 1
     i = i + 1
