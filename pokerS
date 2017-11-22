@@ -39,6 +39,7 @@ Dim BB As Integer
 Dim betTurn As Integer
 Dim pot 'dichi
 Function TexasHoldem()
+'v1.0 勉强可玩，给shuffle加了一个Call Randomize，
 'v0.3 171120可以比大小了
 'v0.2 171116 现在可以判定同花
 'v0.1 洗牌发牌理顺最后牌组
@@ -157,6 +158,7 @@ Dim wushier(52)
 Dim k
 'Dim a
 'For a = 0 To 5
+Call Randomize
 For k = 0 To 51
     wushier(k) = k   '一个00-51的数组
     shuffleDeck(k) = 0
@@ -174,23 +176,16 @@ Next k
 'Next a
 End Function
 Function raiseCallFold() '施工现场
-
 Do
 For i = 0 To 7
     player = (i + gamePlayed) Mod 8
     prevPlayer = (i + gamePlayed - 1) Mod 8
-    If stage = 0 And betTurn = 0 Then 'preflop,start
-        Select Case player
-        Case 1 '小盲注位
+    If stage = 0 And betTurn = 0 And i < 2 Then 'preflop,start
+        Select Case i
+        Case 0 '小盲注位
             callChips(player) = SB
-        Case 2 '大盲注位
+        Case 1 '大盲注位
             callChips(player) = BB
-        Case Else
-            If player = 0 Then '是人
-                Call youBet
-            Else
-                Call aiBet
-            End If
         End Select
     Else
         If player = 0 Then 'you
@@ -199,9 +194,9 @@ For i = 0 To 7
             Call aiBet
         End If
     End If
-        pot = pot + callChips(player)
-        playerMoney(player) = playerMoney(player) - callChips(player)
-        Range(rngMoney(player)).Value = playerMoney(player)
+    pot = pot + callChips(player)
+    playerMoney(player) = playerMoney(player) - callChips(player)
+    Range(rngMoney(player)).Value = playerMoney(player)
 Next i
 rngPot.Value = pot
 betTurn = betTurn + 1
@@ -212,27 +207,37 @@ Next i
 End Function
 Function aiBet()
 'v0 傻根
-callChips(player) = callChips(prevPlayer)
+If playerFold(player) Then
+    Exit Function
+End If
+If callChips(prevPlayer) = 0 Then
+    callChips(player) = BB
+Else
+    callChips(player) = callChips(prevPlayer)
+End If
 End Function
 Function youBet()
+If playerFold(player) Then
+    Exit Function
+End If
 yourOPT:
-yourOption = InputBox("输入你的选项序号：" & vbCrLf & "0.过牌" & vbCrLf & "1.跟注 " & callChips(player) & vbCrLf & "2.加注" & vbCrLf & "3.弃牌", "过牌，跟牌，加注或者弃牌")
-    Select Case yourOption
-        Case 0 'check
-            If callChips(prevPlayer) > callChips(player) Then
-                MsgBox "不能过牌，你的注小"
-                GoTo yourOPT
-            End If
-        Case 1 'call
-            callChips(player) = callChips(prevPlayer)
-            playerMoney(player) = playerMoney(player) - callChips(player)
-            Range(rngMoney(player)).Value = playerMoney(player)
-        Case 2 'raise
-            raiseChips = callChips(prevPlayer) + InputBox("raise?", "加注", 2 * callChips(player))
-            callChips(player) = raiseChips
-        Case 3 'fold
-            playerFold(0) = True
-    End Select
+If stage = 0 Or callChips(prevPlayer) > callChips(prevPlayer) Then 'preflop or call
+    yourOption = InputBox("输入你的选项序号：" & vbCrLf & "0.跟注 $" & callChips(player) & vbCrLf & "1.加注" & vbCrLf & "2.弃牌", "过牌，跟牌，加注或者弃牌")
+    addOpt = "raise"
+ElseIf callChips(prevPlayer) = 0 Then
+    yourOption = InputBox("输入你的选项序号：" & vbCrLf & "0.过牌" & vbCrLf & "1.下注" & vbCrLf & "2.弃牌", "过牌，跟牌，加注或者弃牌")
+    addOpt = "bet"
+End If
+
+Select Case yourOption
+    Case 0 'check or call
+        callChips(player) = callChips(prevPlayer)
+    Case 1 'raise
+        raiseChips = callChips(prevPlayer) + InputBox(addOpt, addOpt, 2 * callChips(player))
+        callChips(player) = raiseChips
+    Case 2 'fold
+        playerFold(player) = True
+End Select
     
 End Function
 Function deal()
@@ -249,11 +254,12 @@ For handCard = 0 To 1   'preflop发牌
         isHrt = hand(player, handCard) > 25 And hand(player, handCard) < 39
         isDoH = isDim Or isHrt
         If isYou And isDoH Then
-            Range(rngHand(player + 1, handCard + 1)).Font.color = -16776961 '字体染红
+            Range(rngHand(player + 1, handCard + 1)).Offset(1, 0).Font.color = -16776961 '字体染红
         End If
         deckCard = deckCard + 1
         Sleep 500
     Next player
+  
 Next handCard
 End Function
 Function flop()
@@ -263,7 +269,7 @@ For Each rng In rngFlop
     isDim = shuffleDeck(deckCard) < 13
     isHrt = shuffleDeck(deckCard) > 25 And shuffleDeck(deckCard) < 39
     If isDim Or isHrt Then
-        rng.Font.color = -16776961 '字体染红
+        rng.Offset(1, 0).Font.color = -16776961 '字体染红
     End If
     communityCards(i) = shuffleDeck(deckCard)
     deckCard = deckCard + 1
@@ -277,7 +283,7 @@ rngTurn = deck(shuffleDeck(deckCard))
 isDim = shuffleDeck(deckCard) < 13
 isHrt = shuffleDeck(deckCard) > 25 And shuffleDeck(deckCard) < 39
 If isDim Or isHrt Then
-    rngTurn.Font.color = -16776961 '字体染红
+    rngTurn.Offset(1, 0).Font.color = -16776961 '字体染红
 End If
 communityCards(3) = shuffleDeck(deckCard)
 deckCard = deckCard + 1
@@ -288,7 +294,7 @@ rngRiver = deck(shuffleDeck(deckCard))
 isDim = shuffleDeck(deckCard) < 13
 isHrt = shuffleDeck(deckCard) > 25 And shuffleDeck(deckCard) < 39
 If isDim Or isHrt Then
-    rngRiver.Font.color = -16776961 '字体染红
+    rngRiver.Offset(1, 0).Font.color = -16776961 '字体染红
 End If
 communityCards(4) = shuffleDeck(deckCard)
 Sleep 1000
@@ -668,5 +674,3 @@ Function helpme()
 'Fish--鱼：一般高水平的玩家对那些输不起，牌品差的玩家的贬意称呼。
 'Shark --鲨鱼: 一般指能够赢钱的高手?
 End Function
-
-
