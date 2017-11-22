@@ -1,3 +1,4 @@
+Private Declare Sub Sleep Lib "kernel32" (ByVal dwmilliseconds As Long)
 Dim hand(7, 2) '0-7六个玩家
 Dim playerMoney(7)
 Dim deck(52)    '牌,如sT,d8
@@ -22,7 +23,8 @@ Dim rngPot
 Dim rngFlop As Range
 Dim rngTurn As Range
 Dim rngRiver As Range
-
+Dim rngCardsCodes As Range
+Dim rngVisible As Range
 Dim callChips(7) '跟注花费
 
 
@@ -44,7 +46,10 @@ Function TexasHoldem()
 'Range("a1:ak9").Clear
 'Range("a12:ak15").Clear
 gameOver = InputBox("几轮？", "游戏时间设置", 10)
-For gamePlayed = 0 To gameOver
+If gameOver = 0 Or gameOver = "" Then
+    Exit Function
+End If
+For gamePlayed = 0 To gameOver - 1
 If gamePlayed < 1 Then
 
 
@@ -90,38 +95,46 @@ Function preparecells()
     Set rngTurn = Range("w12")
     Set rngRiver = Range("x12")
     'N=14,V=22,AD=30,CODROW1=4,R2=12,R3=20
-    Range("t10:u10").Merge
+    Set rngCardsCodes = Range("M12:N12,N4:O4,V4:W4,AD4:AE4,AE12:AF12,AD20:AE20,V20:W20,N20:O20,T12:X12") '隐藏不见的代码
     Set rngPot = Range("t10:u10")
+    Set rngPlayer = Range("T21,L21,K13,L5,T5,AB5,AC13,AB21")
+    rngPosition = Array("s21", "k21", "j13", "k5", "s5", "aa5", "Ab13", "Aa21") '标记玩家位置,D,SB,BB
+    Set rngVisible = Range("V21:W21,T13:X13")
+    Range("L6:M6,K14:L14,L22:M22,T22:U22,AB22:AC22,AC14:AD14,AB6:AC6,T6:U6").Merge
+    Range("L6:M6,K14:L14,L22:M22,T22:U22,AB22:AC22,AC14:AD14,AB6:AC6,T6:U6") = "chips:"
+    
+    
+    
+    rngPot.Merge
     rngPot.Borders.LineStyle = xlContinuous
     Range("r10:s10").Merge
     Range("r10:s10").Value = "pot:"
     
-    Range("T12:X12").NumberFormatLocal = ";;;"
-    Range("M12:N12,N4:O4,V4:W4,AD4:AE4,AE12:AF12,AD20:AE20,V20:W20,N20:O20,T12:X12" _
-        ).NumberFormatLocal = ";;;" '发牌的代码区，藏起来不给看，正式版本里面应删除
-    Range("M12:N12,N4:O4,V4:W4,AD4:AE4,AE12:AF12,AD20:AE20,V20:W20,N20:O20,T12:X12" _
-        ).Value = "" '清空桌面发的牌
+    rngCardsCodes.NumberFormatLocal = ";;;" '发牌的代码区，藏起来不给看，正式版本里面应删除
+    rngCardsCodes.Value = "" '清空桌面发的牌
+    
     i = 0
-    For Each rng In Range("T21,L21,K13,L5,T5,AB5,AC13,AB21")
+    For Each rng In rngPlayer
         rng.Value = "P" & i
         i = i + 1
     Next rng
-    rngPosition = Array("s21", "k21", "j13", "k5", "s5", "aa5", "Ab13", "Aa21") '标记玩家位置,D,SB,BB
-    Range("L6:M6,K14:L14,L22:M22,T22:U22,AB22:AC22,AC14:AD14,AB6:AC6,T6:U6").Merge
-    Range("L6:M6,K14:L14,L22:M22,T22:U22,AB22:AC22,AC14:AD14,AB6:AC6,T6:U6") = "chips:"
+
     
     Range("N6:O6,M14:N14,N22:O22,V22:W22,AD22:AE22,AE14:AF14,AD6:AE6,V6:W6").Merge 'rngMoney
+     Range("N6:O6,M14:N14,N22:O22,V22:W22,AD22:AE22,AE14:AF14,AD6:AE6,V6:W6").NumberFormatLocal = "$#,##0;-$#,##0"
+     rngPot.NumberFormatLocal = "$#,##0;-$#,##0"
     Range("N5:O5,V5:W5,AD5:AE5,AE13:AF13,AD21:AE21,V21:W21,N21:O21,M13:N13,T13:X13").Borders.LineStyle = xlContinuous '给人看的部分
-    Range("N5:O5,V5:W5,AD5:AE5,AE13:AF13,AD21:AE21,N21:O21,M13:N13,T13:X13").FormulaR1C1 = "=IF(ISTEXT(R[-1]C),""|||"","""")"
-    'V21:W21,是玩家手牌区
-    
+    Range("N5:O5,V5:W5,AD5:AE5,AE13:AF13,AD21:AE21,N21:O21,M13:N13").FormulaR1C1 = "=IF(ISTEXT(R[-1]C),""|||"","""")"
+    rngVisible.Value = "=IF(R[-1]C=0,"""",R[-1]C)"
+    rngVisible.NumberFormatLocal = "G/通用格式"
+    'V21:W21,是玩家手牌区,T13:X13是公共牌区
 End Function
 Function preparePlayers()
 rngHand = [{"v20","w20";"n20","o20";"m12","n12";"n4","o4";"v4","w4";"ad4","ae4";"ae12","af12";"ad20","ae20"}]
 rngMoney = Array("V22", "N22", "M14", "N6", "V6", "AD6", "AE14", "AD22")
 For player = 0 To 7
     playerMoney(player) = 1000
-    Range(rngMoney(player)) = playerMoney(player)
+    Range(rngMoney(player)) = "$" & playerMoney(player)
     playerQuit(player) = False
     playerFold(player) = False
 Next player
@@ -231,7 +244,15 @@ For handCard = 0 To 1   'preflop发牌
         End If
         hand(player, handCard) = shuffleDeck(deckCard)
         Range(rngHand(player + 1, handCard + 1)) = deck(shuffleDeck(deckCard))
+        isYou = player = 0
+        isDim = hand(player, handCard) < 13
+        isHrt = hand(player, handCard) > 25 And hand(player, handCard) < 39
+        isDoH = isDim Or isHrt
+        If isYou And isDoH Then
+            Range(rngHand(player + 1, handCard + 1)).Font.color = -16776961 '字体染红
+        End If
         deckCard = deckCard + 1
+        Sleep 500
     Next player
 Next handCard
 End Function
@@ -239,19 +260,38 @@ Function flop()
 i = 0
 For Each rng In rngFlop
     rng.Value = deck(shuffleDeck(deckCard))
+    isDim = shuffleDeck(deckCard) < 13
+    isHrt = shuffleDeck(deckCard) > 25 And shuffleDeck(deckCard) < 39
+    If isDim Or isHrt Then
+        rng.Font.color = -16776961 '字体染红
+    End If
     communityCards(i) = shuffleDeck(deckCard)
     deckCard = deckCard + 1
     i = i + 1
+    Sleep 500
 Next
+
 End Function
 Function turn()
 rngTurn = deck(shuffleDeck(deckCard))
+isDim = shuffleDeck(deckCard) < 13
+isHrt = shuffleDeck(deckCard) > 25 And shuffleDeck(deckCard) < 39
+If isDim Or isHrt Then
+    rngTurn.Font.color = -16776961 '字体染红
+End If
 communityCards(3) = shuffleDeck(deckCard)
 deckCard = deckCard + 1
+Sleep 1000
 End Function
 Function river()
 rngRiver = deck(shuffleDeck(deckCard))
+isDim = shuffleDeck(deckCard) < 13
+isHrt = shuffleDeck(deckCard) > 25 And shuffleDeck(deckCard) < 39
+If isDim Or isHrt Then
+    rngRiver.Font.color = -16776961 '字体染红
+End If
 communityCards(4) = shuffleDeck(deckCard)
+Sleep 1000
 End Function
 Function compareCards()
 countSameMax = 0
@@ -307,7 +347,7 @@ For i = 0 To countSameMax
                 player & " win  $" & earnChips, vbOKOnly, "Winner")
     
     playerMoney(player) = playerMoney(player) + earnChips
-    rngMoney(player) = playerMoney(player)
+    Range(rngMoney(player)) = playerMoney(player)
     Debug.Print "第 " & gamePlayed & " 轮"
     Debug.Print "得奖人数:  " & countSameMax + 1
     Debug.Print "最大牌型:  " & maxPatDeck(i)
@@ -320,6 +360,8 @@ Next i
 pot = 0
 rngPot.Value = ""
 earnChips = 0
+rngCardsCodes = ""
+rngVisible.Font.color = -16777216
 End Function
 Function zctex()
 For i = 0 To 3
@@ -356,6 +398,7 @@ For i = 0 To 6
 Debug.Print "player: " & player
 Debug.Print zok
 Debug.Print zokd 'ceshi'''''''''''''''''''''''''''''''''''''''
+
 End Function
 
 Function rules()
@@ -564,22 +607,7 @@ patternDeck(player) = deckPat(0) & Space(5) & namePat(0)
 '0high card          xxxxx
 
 End Function
-Function ceee()
-Dim beu(5)
-bii = 51
-i = 1
-For i = i To 5
-'beu(i) = i
-Debug.Print Rnd
-Next
-'beu(4) = "0" & beu(3)
-'Debug.Print beu(4), 4
-'Debug.Print beu(3), 3
-'Application.WorksheetFunction.Max(beu)
-End Function
 Function helpme()
-Application.ScreenUpdating = 1
-Application.DisplayAlerts = 1
 
 '玩家位置
 '1. Button--庄家位置，也被称作按钮位
