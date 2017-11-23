@@ -10,25 +10,31 @@ Dim patternDeck(7) '每个人最后的牌型，用于显示给人看
 Dim maxPat(7) '最大的牌型
 Dim maxPatDeck(7)
 Dim maxPlayer(7) '最大的几个玩家
+Dim playerName
 Dim playerFold(7) 'default false
 Dim playerQuit(7) 'def false
-
 Dim playerPosition(7)
-
+Dim pot(7) '0底池，其他边池
 Dim rngPosition
+Dim callChips(7) '跟注花费
+Dim diffChips(7) '补足跟注的花费
 
-Dim rngHand  '手牌格子
-Dim rngMoney '手头的钱所在的格子
-Dim rngPot
+Dim aRngHand '手牌格子名字，配合range()使用
+Dim aRngMoney '手头的钱所在的格子名字
+Dim aRngBet '下注金额的格子名字
+Dim aRngBetCondition '下注状态的格子名字
+Dim aRngPlayerName
+Dim aRngPotNum '各个锅的编号所在格子，0-7,6 4 2 0 1 3 5 7 实际显示的顺序
+Dim aRngPotMoney '各个锅金额所在格子，0-7,6 4 2 0 1 3 5 7 实际显示的顺序
+
 Dim rngFlop As Range
 Dim rngTurn As Range
 Dim rngRiver As Range
 Dim rngCardsCodes As Range
 Dim rngVisible As Range
-Dim callChips(7) '跟注花费
-Dim diffChips(7) '补足跟注的花费
 
 Dim finalSeven As String
+Dim playerAction As String
 Dim deckCard As Integer    'dealed cards发出去的牌的张数
 Dim player As Integer
 Dim prevPlayer As Integer
@@ -37,7 +43,7 @@ Dim stage As Integer 'preflop=0,flop=1,etc
 Dim SB As Integer
 Dim BB As Integer
 Dim betTurn As Integer
-Dim pot 'dichi
+Dim countAllin As Integer
 Sub TexasHoldem()
 'v1.0 勉强可玩，给shuffle加了一个Call Randomize，
 'v0.3 171120可以比大小了
@@ -61,9 +67,10 @@ If gamePlayed < 1 Then
     BB = 10
     SB = 5
     betTurn = 0
-    pot = 0
     gamePlayed = 1
 End If
+rngCardsCodes.Value = "" '清空桌面发的牌
+rngVisible.Font.color = -16777216
 Range(rngPosition(gamePlayed - 1)) = "D"
 Range(rngPosition(gamePlayed)) = "SB"
 Range(rngPosition(gamePlayed + 1)) = "BB"
@@ -97,34 +104,45 @@ Function preparecells()
     Set rngTurn = Range("w12")
     Set rngRiver = Range("x12")
     'N=14,V=22,AD=30,CODROW1=4,R2=12,R3=20
-    Set rngPot = Range("t10:u10")
     Set rngVisible = Range("V21:W21,T13:X13")
     Set rngCardsCodes = Range("M12:N12,N4:O4,V4:W4,AD4:AE4,AE12:AF12,AD20:AE20,V20:W20,N20:O20,T12:X12")
+    aRngPotNum = Array("T8:U8", "W8:X8", "Q8:R8", "Z8:AA8", "N8:O8", "AC8:AD8", "K8:L8", "AF8:AG8") '锅编号，主池为0
+    aRngPotMoney = Array("T9:U9", "W9:X9", "Q9:R9", "Z9:AA9", "N9:O9", "AC9:AD9", "K9:L9", "AF9:AG9") '
+    '6 4 2 0 1 3 5 7 各锅格子排序位置
+    Range("T9:U9,W9:X9,Q9:R9,Z9:AA9,N9:O9,AC9:AD9,K9:L9,AF9:AG9").Merge 'aRngPotMoney
+    Range("T9:U9,W9:X9,Q9:R9,Z9:AA9,N9:O9,AC9:AD9,K9:L9,AF9:AG9").Borders.LineStyle = xlContinuous
+    Range("T9:U9,W9:X9,Q9:R9,Z9:AA9,N9:O9,AC9:AD9,K9:L9,AF9:AG9").NumberFormatLocal = "$#,##0;-$#,##0"
+    Range("T8:U8,W8:X8,Q8:R8,Z8:AA8,N8:O8,AC8:AD8,K8:L8,AF8:AG8").Merge 'aRngPotNum
+    Range("T8:U8,W8:X8,Q8:R8,Z8:AA8,N8:O8,AC8:AD8,K8:L8,AF8:AG8").Borders.LineStyle = xlContinuous
+    
     rngPosition = Array("s21", "k21", "j13", "k5", "s5", "aa5", "Ab13", "Aa21") '标记玩家位置,D,SB,BB
-    
-    Range("L6:M6,K14:L14,L22:M22,T22:U22,AB22:AC22,AC14:AD14,AB6:AC6,T6:U6").Merge
+    aRngHand = [{"v20","w20";"n20","o20";"m12","n12";"n4","o4";"v4","w4";"ad4","ae4";"ae12","af12";"ad20","ae20"}]
+    aRngMoney = Array("V22", "N22", "M14", "N6", "V6", "AD6", "AE14", "AD22")
+    aRngBet = Array("V19", "N19", "M11", "N3", "V3", "AD3", "AE11", "AD19")
+    aRngBetCondition = Array("t19", "l19", "k11", "l3", "t3", "Ab3", "Ac11", "Ab19")
+    aRngPlayerName = Array("t21", "L21", "K13", "L5", "T5", "AB5", "AC13", "AB21")
+    '"chips: "
+    Range("L6:M6,K14:L14,L22:M22,T22:U22,AB22:AC22,AC14:AD14,AB6:AC6,T6:U6").Merge '"chips: "
+    Range("L6:M6,K14:L14,L22:M22,T22:U22,AB22:AC22,AC14:AD14,AB6:AC6,T6:U6").Borders.LineStyle = xlContinuous
     Range("L6:M6,K14:L14,L22:M22,T22:U22,AB22:AC22,AC14:AD14,AB6:AC6,T6:U6") = "chips:"
-    
-    
-    
-    rngPot.Merge
-    rngPot.Borders.LineStyle = xlContinuous
-    Range("r10:s10").Merge
-    Range("r10:s10").Value = "pot:"
-    rngPot.Value = ""
+    'aRngMoney
+    Range("N6:O6,M14:N14,N22:O22,V22:W22,AD22:AE22,AE14:AF14,AD6:AE6,V6:W6").Merge 'aRngMoney
+    Range("N6:O6,M14:N14,N22:O22,V22:W22,AD22:AE22,AE14:AF14,AD6:AE6,V6:W6").Borders.LineStyle = xlContinuous
+    Range("N6:O6,M14:N14,N22:O22,V22:W22,AD22:AE22,AE14:AF14,AD6:AE6,V6:W6").NumberFormatLocal = "$#,##0;-$#,##0"
+    'aRngBet
+    Range("V19:W19,N19:O19,M11:N11,N3:O3,V3:W3,AD3:AE3,AE11:AF11,AD19:AE19").Merge
+    Range("V19:W19,N19:O19,M11:N11,N3:O3,V3:W3,AD3:AE3,AE11:AF11,AD19:AE19").Borders.LineStyle = xlContinuous
+    Range("V19:W19,N19:O19,M11:N11,N3:O3,V3:W3,AD3:AE3,AE11:AF11,AD19:AE19").NumberFormatLocal = "$#,##0;-$#,##0"
+    'aRngBetCondition,check,call,bet,raise,all in,fold
+    Range("AB19:AC19,T19:U19,L19:M19,K11:L11,L3:M3,T3:U3,AB3:AC3,AC11:AD11").Merge
+    Range("AB19:AC19,T19:U19,L19:M19,K11:L11,L3:M3,T3:U3,AB3:AC3,AC11:AD11").Borders.LineStyle = xlContinuous
+    'aRngPlayerName
+    Range("T21:u21,L21:m21,K13:l13,L5:m5,T5:u5,AB5:ac5,AC13:ad13,AB21:ac21").Merge
+    Range("T21:u21,L21:m21,K13:l13,L5:m5,T5:u5,AB5:ac5,AC13:ad13,AB21:ac21").Borders.LineStyle = xlContinuous
+    aRngPotNum(0) = "pot"
     rngCardsCodes.NumberFormatLocal = ";;;" '发牌的代码区，藏起来不给看，正式版本里面应删除
     rngCardsCodes.Value = "" '清空桌面发的牌
-    
-    i = 0
-    For Each Rng In Range("T21,L21,K13,L5,T5,AB5,AC13,AB21")
-        Rng.Value = "P" & i
-        i = i + 1
-    Next Rng
 
-    
-    Range("N6:O6,M14:N14,N22:O22,V22:W22,AD22:AE22,AE14:AF14,AD6:AE6,V6:W6").Merge 'rngMoney
-     Range("N6:O6,M14:N14,N22:O22,V22:W22,AD22:AE22,AE14:AF14,AD6:AE6,V6:W6").NumberFormatLocal = "$#,##0;-$#,##0"
-     rngPot.NumberFormatLocal = "$#,##0;-$#,##0"
     Range("N5:O5,V5:W5,AD5:AE5,AE13:AF13,AD21:AE21,V21:W21,N21:O21,M13:N13,T13:X13").Borders.LineStyle = xlContinuous '给人看的部分
     Range("N5:O5,V5:W5,AD5:AE5,AE13:AF13,AD21:AE21,N21:O21,M13:N13").FormulaR1C1 = "=IF(ISTEXT(R[-1]C),""|||"","""")"
     Range("V21:W21,T13:X13").Value = "=IF(R[-1]C=0,"""",R[-1]C)"
@@ -132,11 +150,21 @@ Function preparecells()
     'V21:W21,是玩家手牌区,T13:X13是公共牌区
 End Function
 Function preparePlayers()
-rngHand = [{"v20","w20";"n20","o20";"m12","n12";"n4","o4";"v4","w4";"ad4","ae4";"ae12","af12";"ad20","ae20"}]
-rngMoney = Array("V22", "N22", "M14", "N6", "V6", "AD6", "AE14", "AD22")
+playerName = Array("Abel", "Asby", "Bart", "Bessy", "Bowes", "Bull", "Cater", "Clegg", "Crisp", _
+"Danny", "Dicks", "Dunn", "Elson", "Fanny", "Flood", "Gabe", "Getty", "Gould", "Hamm", "Hell", _
+"Holly", "Ib", "Jeeks", "Judas", "Knill", "Lear", "Liz", "Manly", "Meads", "Moss", "Nessa", _
+"Omond", "Paul", "Poll", "Rabey", "Rhys", "Rouse", "Seale", "Simm", "Spry", "Sturt", "Toner", _
+"Van", "Zuk")
+'playerName(43),0-43
+    Call Randomize
 For player = 0 To 7
+    If player = 0 Then
+        Range(aRngPlayerName(player)).Value = "you"
+    Else
+        Range(aRngPlayerName(player)).Value = playerName(Rnd * 43)
+    End If
     playerMoney(player) = 1000
-    Range(rngMoney(player)) = "$" & playerMoney(player)
+    Range(aRngMoney(player)) = "$" & playerMoney(player)
     playerQuit(player) = False
     playerFold(player) = False
 Next player
@@ -176,6 +204,11 @@ For k = 0 To 51  '循环产生52个不重复随机数，做成一个数组shuffl
 Next k
 'Next a
 End Function
+Function zctex()
+For tex = 0 To 3
+Call TexasHoldem
+Next tex
+End Function
 Function raiseCallFold() '施工现场
 betTurn = 0
 Do
@@ -183,50 +216,136 @@ Do
         playerSB = (gamePlayed) Mod 8 '小盲注位
         playerBB = (gamePlayed + 1) Mod 8 '大盲注位
         callChips(playerSB) = SB '小盲注位
-        pot = pot + SB
+        Range(aRngBetCondition(playerSB)) = "SB"
+        Range(aRngBet(playerSB)) = callChips(playerSB)
         playerMoney(playerSB) = playerMoney(playerSB) - SB
-        Range(rngMoney(playerSB)).Value = playerMoney(playerSB)
+        Range(aRngMoney(playerSB)).Value = playerMoney(playerSB)
         callChips(playerBB) = BB '大盲注位
         playerMoney(playerBB) = playerMoney(playerBB) - BB
-        Range(rngMoney(playerBB)).Value = playerMoney(playerBB)
-        pot = pot + BB
+        Range(aRngMoney(playerBB)).Value = playerMoney(playerBB)
+        Range(aRngBetCondition(playerBB)) = "BB"
+        Range(aRngBet(playerBB)) = callChips(playerBB)
+        pot(0) = pot(0) + SB + BB
+        Range(aRngPotMoney(0)) = pot(0)
     End If
 For i = 0 To 7
-    If stage = 0 And betTurn = 0 Then 'preflop,start,sb bb
-        player = (gamePlayed + 2) Mod 8
+    If stage = 0 Then  'preflop,start,sb bb
+        player = (gamePlayed + i + 2) Mod 8 '从UTG开始循环
+        prevPlayer = (gamePlayed + i + 1) Mod 8
     Else
-        player = (gamePlayed + i) Mod 8
+        player = (gamePlayed + i) Mod 8 '从小盲注开始
+        prevPlayer = (gamePlayed + i - 1) Mod 8
     End If
     If player = 0 Then 'you
         Call youBet
     Else
         Call aiBet
     End If
-    pot = pot + diffChips(player)
-    playerMoney(player) = playerMoney(player) - diffChips(player)
-    Range(rngMoney(player)).Value = playerMoney(player)
+    If playerFold(player) Then '有人撤了
+        callChips(player) = callChips(prevPlayer) '传递callChips
+        Range(aRngBetCondition(player)).Value = "fold"
+        Range(aRngBet(player)) = ""
+        Range(aRngHand(player + 1, 1)) = "" '牌拿走,二维数组从1开始
+        Range(aRngHand(player + 1, 2)) = ""
+    Else '结算这轮下注
+        If countAllin > 0 Then '如果有人Allin怎么办
+        
+        For potNum = 0 To countAllin '''
+            Range(aRngPotNum(potNum)) = potName(potNum)
+            Range(aRngPotMoney(potNum)) = pot(potNum)
+        Next potNum
+        pot(0) = pot(0) + diffChips(player)
+        playerMoney(player) = playerMoney(player) - diffChips(player)
+        Range(aRngPotMoney(0)).Value = pot(0)
+        If callChips(player) = 0 Then
+            Range(aRngBet(player)) = ""
+        Else
+            Range(aRngBet(player)) = callChips(player)
+        End If
+        Range(aRngBetCondition(player)) = playerAction
+        Range(aRngMoney(player)).Value = playerMoney(player)
+    End If
 Next i
-
-rngPot.Value = pot
 betTurn = betTurn + 1
-Loop While callChips(prevPlayer) < callChips(player)
+Loop While callChips(prevPlayer) <> callChips(player) Or callChips(player) <> callChips((player + 1) Mod 8)
+Sleep 500
 For i = 0 To 7
     callChips(i) = 0
+    Range(aRngBetCondition(i)) = ""
+    Range(aRngBet(i)) = ""
 Next i
-
 End Function
 Function aiBet()
-'v0 傻根
-If playerFold(player) Or playerQuit(player) Then
+'0.2 保守，混合，激进 1:1:1,rnd
+'v0.1 随机
+If playerFold(player) Then
     Exit Function
 End If
-If callChips(prevPlayer) = 0 Then
-    diffChips(player) = BB
-    callChips(player) = BB
+aiOPT:
+If callChips(prevPlayer) > callChips(player) Then  'preflop or call
+    calOpt = "call"
+    addOpt = "raise"
 Else
-    diffChips(player) = callChips(prevPlayer) - callChips(player)
-    callChips(player) = callChips(prevPlayer)
+    calOpt = "check"
+    addOpt = "bet"
 End If
+
+Select Case (player Mod 3)
+   Case 0
+       aiOption = Int((Rnd * 10 * 0.7 + (Rnd * 10 + 10) * 0.2 + (Rnd * 10 + 19.5) * 0.1) / 10)
+   Case 1
+       aiOption = Int((Rnd * 10 * 0.33 + (Rnd * 10 + 10) * 0.33 + (Rnd * 10 + 19.5) * 0.33) / 10)
+   Case 2
+       aiOption = Int((Rnd * 10 * 0.1 + (Rnd * 10 + 10) * 0.2 + (Rnd * 10 + 19.5) * 0.7) / 10)
+End Select
+'aiOption = Int(Rnd * (player Mod 3))
+
+Select Case aiOption
+    Case 0 'fold
+        playerFold(player) = True
+    Case 1 'check or call
+        If callChips(prevPlayer) - callChips(player) > playerMoney(player) Then
+            callChips(player) = playerMoney(player)
+            playerAction = "All In"
+            countAllin = countAllin + 1
+        Else
+            diffChips(player) = callChips(prevPlayer) - callChips(player)
+            callChips(player) = callChips(prevPlayer)
+            playerAction = calOpt
+        End If
+    Case 2 'bet or raise
+        multi = Int(Rnd * 4 + 1)
+        If callChips(prevPlayer) < 50 Then
+            raiseChips = callChips(prevPlayer) * multi
+        ElseIf pot(0) > 500 Then
+            raiseChips = Int(pot(0) / multi * 10) / 10
+        End If
+        playerAction = addOpt
+        If raiseChips > playerMoney(player) Then
+            raiseChips = playerMoney(player)
+            playerAction = "All In"
+            countAllin = countAllin + 1
+        End If
+        diffChips(player) = callChips(prevPlayer) - callChips(player) + raiseChips
+        callChips(player) = callChips(prevPlayer) + raiseChips
+End Select
+'
+''v0 傻根
+'If playerFold(player) Or playerQuit(player) Then
+'    Exit Function
+'End If
+''do check
+'playerAction = "check"
+'
+'If callChips(prevPlayer) = 0 Then
+'    diffChips(player) = BB
+'    callChips(player) = BB
+'    playerAction = "bet"
+'Else
+'    diffChips(player) = callChips(prevPlayer) - callChips(player)
+'    callChips(player) = callChips(prevPlayer)
+'    playerAction = "call"
+'End If
 End Function
 Function youBet()
 If playerFold(player) Then
@@ -235,24 +354,39 @@ End If
 yourOPT:
 If callChips(prevPlayer) > callChips(player) Then  'preflop or call
     yourOption = InputBox("输入你的选项序号：" & vbCrLf & "0.跟注 $" & callChips(prevPlayer) & vbCrLf & "1.加注" & vbCrLf & "2.弃牌", "过牌，跟牌，加注或者弃牌")
+    calOpt = "call"
     addOpt = "raise"
 Else
     yourOption = InputBox("输入你的选项序号：" & vbCrLf & "0.过牌" & vbCrLf & "1.下注" & vbCrLf & "2.弃牌", "过牌，跟牌，加注或者弃牌")
+    calOpt = "check"
     addOpt = "bet"
 End If
 
 Select Case yourOption
     Case 0 'check or call
-        diffChips(player) = callChips(prevPlayer) - callChips(player)
-        callChips(player) = callChips(prevPlayer)
-    Case 1 'raise
-        raiseChips = Int(InputBox(addOpt, addOpt, 2 * callChips(player)))
-        diffChips(player) = callChips(prevPlayer) - callChips(player) + raiseChips
-        callChips(player) = callChips(prevPlayer) + raiseChips
+        If callChips(prevPlayer) - callChips(player) > playerMoney(player) Then
+            callChips(player) = playerMoney(player)
+            playerAction = "All In"
+            countAllin = countAllin + 1
+        Else
+            diffChips(player) = callChips(prevPlayer) - callChips(player)
+            callChips(player) = callChips(prevPlayer)
+            playerAction = calOpt
+        End If
+    Case 1 'bet or raise
+        raiseChips = Int(InputBox(addOpt & vbCrLf & "stacks: $" & playerMoney(player), addOpt, 2 * callChips(player)))
+        If raiseChips >= playerMoney(player) Then
+            raiseChips = playerMoney(player)
+            playerAction = "All In"
+            countAllin = counAllin + 1
+        Else
+            playerAction = addOpt
+        End If
+            diffChips(player) = callChips(prevPlayer) - callChips(player) + raiseChips
+            callChips(player) = callChips(prevPlayer) + raiseChips
     Case Else 'fold
         playerFold(player) = True
 End Select
-    
 End Function
 Function deal()
 deckCard = 0
@@ -262,28 +396,28 @@ For handCard = 0 To 1   'preflop发牌
             Exit For
         End If
         hand(player, handCard) = shuffleDeck(deckCard)
-        Range(rngHand(player + 1, handCard + 1)) = deck(shuffleDeck(deckCard))
+        Range(aRngHand(player + 1, handCard + 1)) = deck(shuffleDeck(deckCard))
         isYou = player = 0
         isDim = hand(player, handCard) < 13
         isHrt = hand(player, handCard) > 25 And hand(player, handCard) < 39
         isDoH = isDim Or isHrt
         If isYou And isDoH Then
-            Range(rngHand(player + 1, handCard + 1)).Offset(1, 0).Font.Color = -16776961 '字体染红
+            Range(aRngHand(player + 1, handCard + 1)).Offset(1, 0).Font.color = -16776961 '字体染红
         End If
         deckCard = deckCard + 1
-        Sleep 500
+        'Sleep 500
     Next player
   
 Next handCard
 End Function
 Function flop()
 i = 0
-For Each Rng In rngFlop
-    Rng.Value = deck(shuffleDeck(deckCard))
+For Each rng In rngFlop
+    rng.Value = deck(shuffleDeck(deckCard))
     isDim = shuffleDeck(deckCard) < 13
     isHrt = shuffleDeck(deckCard) > 25 And shuffleDeck(deckCard) < 39
     If isDim Or isHrt Then
-        Rng.Offset(1, 0).Font.Color = -16776961 '字体染红
+        rng.Offset(1, 0).Font.color = -16776961 '字体染红
     End If
     communityCards(i) = shuffleDeck(deckCard)
     deckCard = deckCard + 1
@@ -297,7 +431,7 @@ rngTurn = deck(shuffleDeck(deckCard))
 isDim = shuffleDeck(deckCard) < 13
 isHrt = shuffleDeck(deckCard) > 25 And shuffleDeck(deckCard) < 39
 If isDim Or isHrt Then
-    rngTurn.Offset(1, 0).Font.Color = -16776961 '字体染红
+    rngTurn.Offset(1, 0).Font.color = -16776961 '字体染红
 End If
 communityCards(3) = shuffleDeck(deckCard)
 deckCard = deckCard + 1
@@ -308,7 +442,7 @@ rngRiver = deck(shuffleDeck(deckCard))
 isDim = shuffleDeck(deckCard) < 13
 isHrt = shuffleDeck(deckCard) > 25 And shuffleDeck(deckCard) < 39
 If isDim Or isHrt Then
-    rngRiver.Offset(1, 0).Font.Color = -16776961 '字体染红
+    rngRiver.Offset(1, 0).Font.color = -16776961 '字体染红
 End If
 communityCards(4) = shuffleDeck(deckCard)
 Sleep 1000
@@ -359,7 +493,7 @@ For player = 0 To 7
 '    Exit For '测试部分，待删'ceshi'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Next player
 
-earnChips = pot / (countSameMax + 1)
+earnChips = pot(0) / (countSameMax + 1)
 For i = 0 To countSameMax
     player = maxPlayer(i)
     a = MsgBox("winner is :   " & maxPlayer(i) & vbCrLf & _
@@ -367,7 +501,7 @@ For i = 0 To countSameMax
                 player & " win  $" & earnChips, vbOKOnly, "Winner")
     
     playerMoney(player) = playerMoney(player) + earnChips
-    Range(rngMoney(player)) = playerMoney(player)
+    Range(aRngMoney(player)) = playerMoney(player)
     Debug.Print "第 " & gamePlayed & " 轮"
     Debug.Print "得奖人数:  " & countSameMax + 1
     Debug.Print "最大牌型:  " & maxPatDeck(i)
@@ -377,19 +511,17 @@ For i = 0 To countSameMax
     Debug.Print "------------------------------------"
 '    Exit For 'ceshi'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Next i
-pot = 0
-rngPot.Value = ""
+For i = 0 To 7
+    pot(i) = 0
+    Range(aRngPotNum(i)) = ""
+    Range(aRngPotMoney(i)) = ""
+Next i
+Range(aRngPotNum(0)) = "pot"
 earnChips = 0
 Range(rngPosition(gamePlayed - 1)) = "" '移除位置标记
 Range(rngPosition(gamePlayed)) = ""
 Range(rngPosition(gamePlayed + 1)) = ""
-rngCardsCodes.Value = "" '清空桌面发的牌
-rngVisible.Font.Color = -16777216
-End Function
-Function zctex()
-For i = 0 To 3
-Call TexasHoldem
-Next i
+
 End Function
 Function insertSort()
 'v1.0   把牌按照点数从大到小，从黑桃到方片排序
@@ -691,4 +823,3 @@ Function helpme()
 'Fish--鱼：一般高水平的玩家对那些输不起，牌品差的玩家的贬意称呼。
 'Shark --鲨鱼: 一般指能够赢钱的高手?
 End Function
-
