@@ -1,16 +1,15 @@
 Private Declare Sub Sleep Lib "kernel32" (ByVal dwmilliseconds As Long)
+
+Dim allPlayerPatAndDecek(7, 2) 'string,7是序号，0是player，1是牌点数组成的牌型pattern ,str，2是牌编号组成的牌型patternDeckstr
+'
+Dim allinPlayerChipsAndPot(7, 2) 'int，7是序号，0是player，1是chips，2是pot
 Dim hand(7, 2) '0-7六个玩家
 Dim playerMoney(7)
 Dim deck(52)    '牌,如sT,d8
 Dim shuffleDeck(52) '洗好的牌,是牌的编号，51=sA,50=sK,0=d2
-Dim zongpai(7) '手牌+公共牌,编号
 Dim communityCards(5)  'cards on table
-Dim pattern(7) '每个人最后的牌型，0是high,用于内部比大小
-Dim patternDeck(7) '每个人最后的牌型，用于显示给人看
-Dim maxPat(7) '最大的牌型
-Dim maxPatDeck(7)
-Dim maxPlayer(7) '最大的几个玩家
-Dim playerName '玩家名数组，一大堆名字
+
+Dim playerName '玩家名数组，一大堆??
 Dim playerCall(7) 'def false
 'Dim playerCheck(7) 'def false
 Dim playerRaise(7) 'def false
@@ -18,14 +17,17 @@ Dim playerAllin(7) 'def false
 Dim playerFold(7) 'default false
 Dim playerQuit(7) 'def false
 Dim playerPosition(7)
-Dim pot(7) '0底池，其他边池
+'Dim pot(7) 已经整合进 allinPlayerChipsAndPot'0底池，其他边池
 Dim rngPosition
-Dim allinPlayerChipsAndPot(7, 2) 'int
 Dim callChips(7) '跟注花费，虚的
 Dim realBet(7) '实际下注金额
 Dim diffChips(7) '补足跟注的花费
 Dim countRaise(7)
+Dim samePatPlr(7) '持有相同牌型的玩家，string
+Dim sameBetPlr(7) ' 相同下注的玩家，string
+Dim zongpai(7) '手牌+公共牌,编号
 
+'aRng是array，内容是地址，配合range()使用
 Dim aRngHand '手牌格子名字，配合range()使用
 Dim aRngMoney '手头的钱所在的格子名字
 Dim aRngBet '下注金额的格子名字
@@ -56,6 +58,7 @@ Dim betTimes As Integer
 Dim countAllin As Integer
 Dim countFold As Integer
 Dim countOnTable As Integer
+Dim countThisTurnAction As Integer
 Dim lastRaisePlayer As Integer '最后一个下注的人
 Dim lastRaisePlayerbetTimes As Integer '他的下注人次号码
 Dim lastAllinNum As Integer
@@ -85,9 +88,6 @@ If gamePlayed < 1 Then
     Cells.RowHeight = 14.25
     BB = 10
     SB = 5
-    betTurn = 0
-    countAllin = 0
-    countOnTable = 8
     minAllIn = 99999999
     Call preparecells
     Call preparePlayers
@@ -181,7 +181,7 @@ Function preparecells()
     rngCardsCodes.NumberFormatLocal = ";;;" '发牌的代码区，藏起来不给看，正式版本里面应删除
     rngCardsCodes.Value = "" '清空桌面发的牌
 
-    Range("N5:O5,V5:W5,AD5:AE5,AE13:AF13,AD21:AE21,V21:W21,N21:O21,M13:N13,T13:X13").Borders.LineStyle = xlContinuous '给人看的部分
+    Range("N5:O5,V5:W5,AD5:AE5,AE13:AF13,AD21:AE21,V21:W21,N21:O21,M13:N13,T13:X13").Borders.LineStyle = xlContinuous '给?丝吹牟糠?
     Range("N5:O5,V5:W5,AD5:AE5,AE13:AF13,AD21:AE21,N21:O21,M13:N13").FormulaR1C1 = "=IF(ISTEXT(R[-1]C),""|||"","""")"
     'Range("V21:W21,T13:X13").Value = "=IF(R[-1]C=0,"""",R[-1]C)"
     Range("V21:W21,T13:X13").NumberFormatLocal = "G/通用格式"
@@ -207,7 +207,12 @@ For player = 0 To 7
     Else
         Range(aRngPlayerName(player)).Value = playerName(Int(Rnd * 43))
     End If
+    '/test
     playerMoney(player) = (10 - player) * BB 'test
+    If player = 5 Then
+        playerMoney(player) = playerMoney(player - 1)
+    End If
+    '/test
     Range(aRngMoney(player)) = "$" & playerMoney(player)
     playerCall(player) = False
     'playerCheck(player) = False
@@ -242,7 +247,7 @@ For k = 0 To 51
 Next k
 uBond = 52
 lBond = 0
-For k = 0 To 51  '循环产生52个不重复随机数，做成一个数组shuffleDeck
+For k = 0 To 51  '循环产生52个不重复随机数，做?梢桓鍪閟huffleDeck
     If uBond > 0 Then
         paixu = Int(Rnd(Timer) * uBond)   '[0,uBond-1] 之间随机整数
         shuffleDeck(k) = wushier(paixu) '随机到的值一个个放到新数组里
@@ -258,7 +263,7 @@ Call TexasHoldem
 Next tex
 End Function
 Function raiseCallFold() '施工现场
-If countAllin + countFold = 8 Then '除了fold ，全allin了
+If countAllin + countFold >= 7 Then '除了fold ，全allin了,one man do nothing
     Exit Function
 End If
 betTurn = 0
@@ -339,7 +344,7 @@ i = betTimes Mod 8 '还要不要一圈圈来
         Range(aRngBetCondition(player)) = playerAction
         If playerAction = "call" Then
             Range(aRngBetCondition(player)).Interior.Color = 5296274 '绿底, call
-            Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白色字体
+            Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白?痔?
         ElseIf playerAction = "check" Or playerAction = "bet" Then
             Range(aRngBetCondition(player)).Interior.Color = 15773696 '蓝底, check
             Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白色字体
@@ -363,44 +368,31 @@ preTurn = betTurn
 '计算转了几圈了
 ifSameRaisePlayer = player = lastRaisePlayer
 ifSameRaiseCycle = betTimes = lastRaisePlayerbetTimes + 9 And betTimes > 1
-ifAllFoldOrAllin = countAllin + countFold >= 7
+ifHigherThanAllin = countAllin + countFold = 7 And maxCallChips >= maxAllIn '/test'
+ifAllFoldOrAllin = countAllin + countFold = 8 Or ifHigherThanAllin  'one man can do nothing
 'noManRaise = Application.Max(countRaise) = 0
 If ifSameRaisePlayer And ifSameRaiseCycle Then  '又转到最后一个加注的人了
     betTurn = betTurn + 1
 End If
 
 'ifLoopBet
-If ifAllFoldOrAllin Then '全下或者弃牌了
+If ifAllFoldOrAllin Or betTurn > preTurn Then '全下或者弃牌了
     ifLoopBet = False
 ElseIf betTurn = preTurn Then '还没转完
     ifLoopBet = True
-Else
-    If playerRaise(player) Or playerAllin(player) And Not ifAllFoldOrAllin Then '转完一轮了，但是又加注了
-        ifLoopBet = True
-    Else 'If playerCall(player) Then 'If playerFold(player) = True Then'没加注
-        ifLoopBet = False
-    End If
 End If
 
 
 'loopBet:
 Sleep 600
 Loop While ifLoopBet
-'下注结束，结算主池边池
-'For player = 0 To 7 '检查玩家状态
-'
-'    If playerFold(player) Then 'countOnTable=8开始
-'        countOnTable = countOnTable - 1
-'    ElseIf Not (playerAllin(player)) And callChips(player) < maxCallChips Then '还在桌上而且没有全下，下注还少的
-'        ifLoopBet = True
-'        'goto loopBet
-'        Exit For
-'    Else
-'        ifLoopBet = False
-'    End If
-'Next player
 countOnTable = 8 - countFold
-If countAllin > 0 Then '结算下注，计算边池'重做，这一轮有没有全下的，没有就应该过
+If stage = 0 Then
+    countThisTurnAction = countOnTable
+Else
+    countThisTurnAction = countThisTurnAction - countOnTable
+End If
+If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,结算下注，计算边池
 
     '数组位置countAllin处是空的，因为是数字进去后再+1的，countAllin -1有数值
     For i = lastAllinNum To countAllin - 2 '将边池数组按照玩家全下的金额从小到大排列，如果之前已经有几个边池了，就排序后面的
@@ -417,26 +409,32 @@ If countAllin > 0 Then '结算下注，计算边池'重做，这一轮有没有�
                 allinPlayerChipsAndPot(j, 0) = tempPly
                 allinPlayerChipsAndPot(j, 1) = tempChp
                 allinPlayerChipsAndPot(j, 2) = tempPot
+            ElseIf allinPlayerChipsAndPot(j, 1) = allinPlayerChipsAndPot(i, 1) Then
+                If j = i + 1 Then
+                    sameBetPlr(i) = sameBetPlr(i) & allinPlayerChipsAndPot(i, 0)
+                Else
+                    sameBetPlr(i) = sameBetPlr(i) & allinPlayerChipsAndPot(j, 0)
+                End If
             End If
         Next j
     Next i
     
     For i = lastAllinNum To countAllin '如果之前已经有几个边池了，就排序后面的
+        If i > 0 And countAllin - lastAllinNum > 1 Then 'multi allin
+            diffAllin = (allinPlayerChipsAndPot(i, 1) - allinPlayerChipsAndPot(i - 1, 1))
+            diffCallAllin = maxCallChips - allinPlayerChipsAndPot(countAllin - lastAllinNum - 1, 1) '如果加注超过最后一个全下的注
+        End If
         If i = lastAllinNum Then '主池，或者这一轮的第一个边池
-            If i > 0 And countAllin - lastAllinNum > 1 Then
-                diffAllin = (allinPlayerChipsAndPot(i, 1) - allinPlayerChipsAndPot(i - 1, 1))
-                diffCallAllin = maxCallChips - allinPlayerChipsAndPot(i - lastAllinNum - 1, 1)
-            End If
-            allinPlayerChipsAndPot(i, 2) = allinPlayerChipsAndPot(i, 2) + allinPlayerChipsAndPot(i, 1) * 2 'countOnTable这部分要重写 'prevAllinPot
+            allinPlayerChipsAndPot(i, 2) = allinPlayerChipsAndPot(i, 2) + allinPlayerChipsAndPot(i, 1) * countThisTurnAction 'countThisTurnAction
             Range(aRngPotMoney(i)) = allinPlayerChipsAndPot(i, 2) '金额
         ElseIf i < countAllin And diffAllin > 0 Then
-            allinPlayerChipsAndPot(i, 2) = diffAllin * (countOnTable - i)
+            allinPlayerChipsAndPot(i, 2) = diffAllin * (countThisTurnAction - i)
             Range(aRngPotNum(i)) = "sd.pot" & (i)
             Range(aRngPotMoney(i)) = allinPlayerChipsAndPot(i, 2)
             Range(aRngPotNum(i)).Borders.LineStyle = xlContinuous
             Range(aRngPotMoney(i)).Borders.LineStyle = xlContinuous
         ElseIf diffCallAllin > 0 Then '后面call的超过这一轮最大的所有allin，再有一个边池
-            allinPlayerChipsAndPot(i, 2) = 5 * (countOnTable - i) '最后一个加注的人的算法要重写
+            allinPlayerChipsAndPot(i, 2) = diffAllin * (countThisTurnAction - i) '最后一个加注的人的算法要重写
             Range(aRngPotNum(i)) = "sd.pot" & (i)
             Range(aRngPotMoney(i)) = allinPlayerChipsAndPot(i, 2)
             Range(aRngPotNum(i)).Borders.LineStyle = xlContinuous
@@ -461,9 +459,8 @@ If countAllin > 0 Then '结算下注，计算边池'重做，这一轮有没有�
 '        Next
 '    Next
 Else '没有边池
-    pot(0) = totalPot
-    Range(aRngPotMoney(0)) = pot(0)
-    'prevAllinPot = pot(0)
+    allinPlayerChipsAndPot(0, 2) = totalPot
+    Range(aRngPotMoney(0)) = allinPlayerChipsAndPot(0, 2)
 End If
 
 
@@ -482,6 +479,7 @@ For i = 0 To 7
     End If
 Next i
 minAllIn = 1000 * BB
+maxAllIn = 0
 lastRaisePlayer = 0
 lastRaisePlayerbetTimes = 0
 lastAllinNum = countAllin
@@ -530,6 +528,9 @@ Else
 End If
 
 'aiOption = Int(Rnd * (player Mod 3))
+'test''''''''
+aiOption = 2
+'/test'''''''''''''''''''''''''''''''''''
 If aiOption = 2 Then
     If countRaise(player) > aiOption + aiPosRnk Or playerRaise(player) And maxCallChips > 20 * BB Then
         aiOption = 1 '你加注太多了，跟吧
@@ -559,8 +560,11 @@ Select Case aiOption
             diffChips(player) = playerMoney(player)
             allinPlayerChipsAndPot(countAllin, 0) = player
             allinPlayerChipsAndPot(countAllin, 1) = playerMoney(player) + callChips(player)
-            If allinPlayerChipsAndPot(countAllin, 1) < minAllIn Then
+            If allinPlayerChipsAndPot(countAllin, 1) <= minAllIn Then
                 minAllIn = allinPlayerChipsAndPot(countAllin, 1)
+            End If
+            If allinPlayerChipsAndPot(countAllin, 1) > maxAllIn Then
+                maxAllIn = allinPlayerChipsAndPot(countAllin, 1)
             End If
             If allinPlayerChipsAndPot(countAllin, 1) > maxCallChips Then
                 maxCallChips = allinPlayerChipsAndPot(countAllin, 1)
@@ -589,7 +593,9 @@ Select Case aiOption
         Else 'If totalPot > 300 Then
             raiseChips = Int(totalPot / multi / BB) * BB
         End If
-        
+        'test'''''''''''
+        raiseChips = 300 * BB
+        '/test'''''''''''''''''''''
         If raiseChips >= playerMoney(player) Then 'Allin
             playerAction = "all in"
             playerAllin(player) = True
@@ -597,8 +603,11 @@ Select Case aiOption
             allinPlayerChipsAndPot(countAllin, 0) = player
             allinPlayerChipsAndPot(countAllin, 1) = playerMoney(player) + callChips(player)
             
-            If allinPlayerChipsAndPot(countAllin, 1) < minAllIn Then
+            If allinPlayerChipsAndPot(countAllin, 1) <= minAllIn Then
                 minAllIn = allinPlayerChipsAndPot(countAllin, 1) '更新最小全下
+            End If
+            If allinPlayerChipsAndPot(countAllin, 1) > maxAllIn Then
+                maxAllIn = allinPlayerChipsAndPot(countAllin, 1)
             End If
             If allinPlayerChipsAndPot(countAllin, 1) >= maxCallChips Then
                 maxCallChips = allinPlayerChipsAndPot(countAllin, 1)
@@ -690,6 +699,9 @@ raiseChip:
         If allinPlayerChipsAndPot(countAllin, 1) <= minAllIn Then '是否最小全下，用于拆边池
             minAllIn = allinPlayerChipsAndPot(countAllin, 1)
         End If
+        If allinPlayerChipsAndPot(countAllin, 1) > maxAllIn Then
+            maxAllIn = allinPlayerChipsAndPot(countAllin, 1)
+        End If
         
         callChips(player) = allinPlayerChipsAndPot(countAllin, 1)
         If callChips(player) > maxCallChips Then '我的大，跟注看我的下注
@@ -765,16 +777,17 @@ rngRiver = deck(shuffleDeck(deckCard))
 isDim = shuffleDeck(deckCard) < 13
 isHrt = shuffleDeck(deckCard) > 25 And shuffleDeck(deckCard) < 39
 If isDim Or isHrt Then
-    rngRiver.Offset(1, 0).Font.Color = -16776961 '字体染红
+    rngRiver.Offset(1, 0).Font.Color = -16776961 '字体?竞?
 End If
 communityCards(4) = shuffleDeck(deckCard)
 Sleep 1000
 End Function
 Function compareCards()
-countSameMax = 0
+Dim pkPlayer(7)
 For i = 0 To 7
     maxPat(i) = ""
 Next i
+maxPattern = ""
 For player = 0 To 7
     If playerFold(player) = "fold" Then
         Exit For
@@ -788,35 +801,77 @@ For player = 0 To 7
         zongpai(i) = communityCards(tableCard)
         i = i + 1
     Next tableCard
-    '测试部分'ceshi'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'zongpai(0) = 38
-'zongpai(1) = 49
-'zongpai(2) = 48
-'zongpai(3) = 51
-'zongpai(4) = 46
-'zongpai(5) = 30
-'zongpai(6) = 45
-
-    'end测试部分'ceshi'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    
     Call insertSort
     Call rules '比量牌组
-    Debug.Print patternDeck(player) & " " & deck(hand(player, 0)) & " " & deck(hand(player, 1))
-    Debug.Print "------"
-    If pattern(player) > maxPat(countSameMax) Then '选出最大的牌型和玩家
-        countSameMax = 0
-        maxPat(countSameMax) = pattern(player)
-        maxPatDeck(countSameMax) = patternDeck(player)
-        maxPlayer(countSameMax) = player
-    ElseIf pattern(player) = maxPat(countSameMax) Then '如果有相同大小牌型，则增加分底池的玩家
-        countSameMax = countSameMax + 1
-        maxPat(countSameMax) = pattern(player)
-        maxPatDeck(countSameMax) = patternDeck(player)
-        maxPlayer(countSameMax) = player
-    End If
+    
+
+    
+
+'    If player < 7 And allPlayerPatAndDecek(player + 1,1) > allPlayerPatAndDecek(player,1) Then
+'        maxPattern = allPlayerPatAndDecek(player + 1,1)
+'        attern(player + 1) = allPlayerPatAndDecek(player,1)
+'        allPlayerPatAndDecek(player,1) = maxPattern
+'    Debug.Print allPlayerPatAndDecek(player + 1,2) & " " & deck(hand(player, 0)) & " " & deck(hand(player, 1))
+'    Debug.Print "------"
+'    If allPlayerPatAndDecek(player,1) > maxPat(countSameMax) Then '选出最大的牌型和玩家
+'        countSameMax = 0
+'        maxPat(countSameMax) = allPlayerPatAndDecek(player,1)
+'        maxPatDeck(countSameMax) = allPlayerPatAndDecek(player + 1,2)
+'        maxPlayer(countSameMax) = player
+'    ElseIf allPlayerPatAndDecek(player,1) = maxPat(countSameMax) Then '如果有相同大小牌型，则增加分底池的玩家
+'        countSameMax = countSameMax + 1
+'        maxPat(countSameMax) = allPlayerPatAndDecek(player,1)
+'        maxPatDeck(countSameMax) = allPlayerPatAndDecek(player + 1,2)
+'        maxPlayer(countSameMax) = player
+'    End If
 '    Exit For '测试部分，待删'ceshi'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Next player
+'比较牌型大小，从大到小
+For i = 0 To 6
+    For j = i + 1 To 7
+        If allPlayerPatAndDecek(i, 1) < allPlayerPatAndDecek(j, 1) Then
+            temp = allPlayerPatAndDecek(i, 0)
+            allPlayerPatAndDecek(i, 0) = allPlayerPatAndDecek(j, 1)
+            allPlayerPatAndDecek(j, 0) = temp
+            temp = allPlayerPatAndDecek(i, 1)
+            allPlayerPatAndDecek(i, 1) = allPlayerPatAndDecek(j, 1)
+            allPlayerPatAndDecek(j, 1) = temp
+            temp = allPlayerPatAndDecek(i, 2)
+            allPlayerPatAndDecek(i, 2) = allPlayerPatAndDecek(j, 2)
+            allPlayerPatAndDecek(j, 2) = temp
+        ElseIf allPlayerPatAndDecek(i, 1) = allPlayerPatAndDecek(j, 1) Then '牌型一样大，平分池
+            If j = i + 1 Then
+                samePatPlr(i) = samePatPlr(i) & allPlayerPatAndDecek(i, 0)
+            End If
+                samePatPlr(i) = samePatPlr(i) & allPlayerPatAndDecek(j, 0)
+        End If
+    Next j
+Next i
 
-earnChips = totalPot / (countSameMax + 1)
+If countAllin > 0 Then '可能有边池
+    
+    For i = 0 To 7 '考察赢的玩家,0开始是最大的赢家
+        For j = countAllian To 0 Step -1   '有几个池，7是最边池，如果赢了7，就通吃，0就只有0
+            If allPlayerPatAndDecek(i, 0) = allinPlayerChipsAndPot(j, 0) Then '
+                sameBetPlr
+                samePatPlr
+                '/test'''''''''''''''''''''''''''''''''''''''''
+            
+            
+        Next j
+    Next i
+Else '没有边池，大家分就行
+    If Len(samePatPlr(0)) > 0 Then
+        earnChips = totalPot / Len(samePatPlr(0))
+    Else
+        earnChips = totalPot
+    End If
+    playerMoney(player) = playerMoney(player) + earnChips
+    Range(aRngMoney(player)) = playerMoney(player)
+End If
+
+'/test below need to change
 For i = 0 To countSameMax
     player = maxPlayer(i)
     a = MsgBox("winner is :   player " & maxPlayer(i) & "  " & Range(aRngPlayerName(player)).Value & vbCrLf & _
@@ -842,16 +897,11 @@ End Function
 Function cleaning()
 For i = 0 To 7
     diffChips(i) = 0
-    pot(i) = 0
     allinPlayerChipsAndPot(i, 0) = 0
     allinPlayerChipsAndPot(i, 1) = 0
     allinPlayerChipsAndPot(i, 2) = 0
     countRaise(i) = 0
     If playerMoney(i) <= 0 Then
-'        playerQuit(i) = True
-'        Range(aRngPlayerName(player)).Value = ""
-'        playerMoney(player) = 1
-'        Range(aRngMoney(player)) = ""
         Range(aRngPlayerName(player)).Value = playerName(Int(Rnd * 43))
         playerMoney(player) = 100 * BB
         Range(aRngMoney(player)) = "$" & playerMoney(player)
@@ -874,6 +924,9 @@ For i = 0 To 7
     Next i
 maxCallChips = 0
 countAllin = 0
+lastAllinNum = 0
+countOnTable = 8
+countFold = 0
 earnChips = 0
 minAllIn = 1000 * BB
 totalPot = 0
@@ -929,7 +982,7 @@ Function rules()
 
 Dim namePat 'name
 Dim countSuits(3) '统计这7张牌里面各个花色的数量
-Dim flushCards(3) '四个花色，把牌连起来
+Dim flushCards(3) '四个花色，?雅屏鹄?
 Dim sameCards(6) '统计这7张牌里点数相同的牌数
 Dim sameDeck(6)
 Dim rankZ(6)
@@ -938,8 +991,6 @@ Dim suitZ(6)
 Dim suitDeck(6)
 Dim typePat(9) '0-9十个统计能组成的牌型，内容是rankZ
 Dim deckPat(9) '用牌id组成的牌型,zongpai
-'patternDeck(player)
-'pattern(player)
 Dim rnkSev As String
 Dim sutSev As String
 rnkSev = ""
@@ -994,7 +1045,9 @@ countStraightFlush = 0 '计数同花顺的个数
 countStraight = 0 '计算顺子的个数
 straightCards = "" '收集顺子牌，如kqjt9,1110090807,10位字符
 straightDecks = "" '顺子以牌面收集，如 sTd9h8c7d6
-pattern(player) = "" '最后的牌型，牌型号开头，跟着5张牌，11位字符，如皇家同花顺就是91211100908
+allPlayerPatAndDecek(player, 0) = player
+allPlayerPatAndDecek(player, 1) = "" '最后的牌型，牌型号开头，跟着5张牌的点数，11位字符，如皇家同花顺就是91211100908
+allPlayerPatAndDecek(player, 2) = "" '最后的牌型，牌型号开头，跟着5张牌的牌号id，11位字符，如皇家同花顺就是91211100908
 
 
 For i = 0 To 5 '组牌型
@@ -1012,16 +1065,16 @@ For i = 0 To 5 '组牌型
         straightDecks = straightDecks & rankDeck(ifSame)
         straightSuits = straightSuits + Abs(suitZ(i) - suitZ(j)) '统计花色，如果都是同花色，=0
         If countStraight = 4 And straightSuits = 0 And Left(straightCards, 2) = 12 Then   '4rankZi+1rankZj 5张连接张，是A的同花顺，9royal
-            pattern(player) = 9 & straightCards & rankZ(j) '& "    royal flush"
-            patternDeck(player) = straightDecks & rankDeck(j) & Space(5) & namePat(9)
+            allPlayerPatAndDecek(player, 1) = 9 & straightCards & rankZ(j) '& "    royal flush"
+            allPlayerPatAndDecek(player, 2) = straightDecks & rankDeck(j) & Space(5) & namePat(9)
             Exit Function
         ElseIf countStraight = 4 And straightSuits = 0 Then '普通同花顺,8straight flush
-            pattern(player) = 8 & straightCards & rankZ(j) '& "    straight flush"
-            patternDeck(player) = straightDecks & rankDeck(j) & Space(5) & namePat(8)
+            allPlayerPatAndDecek(player, 1) = 8 & straightCards & rankZ(j) '& "    straight flush"
+            allPlayerPatAndDecek(player, 2) = straightDecks & rankDeck(j) & Space(5) & namePat(8)
             Exit Function
         ElseIf countStraight = 4 Then
-            pattern(player) = 4 & straightCards & rankZ(j) '& "    straight" '只是顺子,或者3 of a kind"
-            patternDeck(player) = straightDecks & rankDeck(j) & Space(5) & namePat(4)
+            allPlayerPatAndDecek(player, 1) = 4 & straightCards & rankZ(j) '& "    straight" '只是顺子,或者3 of a kind"
+            allPlayerPatAndDecek(player, 2) = straightDecks & rankDeck(j) & Space(5) & namePat(4)
             Exit Function
         End If
     ElseIf rankZ(i) - rankZ(j) = 0 Then '判断是否相同点数牌
@@ -1073,47 +1126,47 @@ Select Case Len(sameCards(0))
     Case 8
         typePat(7) = 7 & sameCards(0) & Left(sameCards(1), 2) ' & "    4 of a kind" '74 of a kind:       AAAAx
         deckPat(7) = sameDeck(0) & Left(sameDeck(1), 2) & Space(5) & namePat(7)
-        pattern(player) = typePat(7)
-        patternDeck(player) = deckPat(7)
+        allPlayerPatAndDecek(player, 1) = typePat(7)
+        allPlayerPatAndDecek(player, 2) = deckPat(7)
         Exit Function
     Case 6
         If Len(sameCards(1)) > 3 Then
             typePat(6) = 6 & sameCards(0) & Left(sameCards(1), 4) ' & "    full house" ':        AAAKK
             deckPat(6) = sameDeck(0) & Left(sameDeck(1), 4) & Space(5) & namePat(6)
-            pattern(player) = typePat(6)
-            patternDeck(player) = deckPat(6)
+            allPlayerPatAndDecek(player, 1) = typePat(6)
+            allPlayerPatAndDecek(player, 2) = deckPat(6)
             Exit Function
         ElseIf Len(typePat(5)) > 10 Then
-            pattern(player) = typePat(5) '只是同花，前面写了
+            allPlayerPatAndDecek(player, 1) = typePat(5) '只是同花，前面写了
             'deckPat(5) = suitDeck(suitZ(i)) & Space(5) & namePat(5)前面已经写了
-            patternDeck(player) = deckPat(5)
+            allPlayerPatAndDecek(player, 2) = deckPat(5)
             Exit Function
         Else
             typePat(3) = 3 & sameCards(0) & sameCards(1) & sameCards(2) '& "    3 of a kind" ':       AAAxx
             deckPat(3) = sameDeck(0) & sameDeck(1) & sameDeck(2) & Space(5) & namePat(3)
-            pattern(player) = typePat(3)
-            patternDeck(player) = deckPat(3)
+            allPlayerPatAndDecek(player, 1) = typePat(3)
+            allPlayerPatAndDecek(player, 2) = deckPat(3)
             Exit Function
         End If
     Case 4
         If Len(sameCards(1)) > 3 Then
             typePat(2) = 2 & sameCards(0) & sameCards(1) & Left(sameCards(2), 2) '& "    two pairs" '2          AAKKx
             deckPat(2) = sameDeck(0) & sameDeck(1) & Left(sameDeck(2), 2) & Space(5) & namePat(2)
-            pattern(player) = typePat(2)
-            patternDeck(player) = deckPat(2)
+            allPlayerPatAndDecek(player, 1) = typePat(2)
+            allPlayerPatAndDecek(player, 2) = deckPat(2)
             Exit Function
         Else
             typePat(1) = 1 & sameCards(0) & sameCards(1) & sameCards(2) & sameCards(3) '& "    one pair" '1           AAxxx
             deckPat(1) = sameDeck(0) & sameDeck(1) & sameDeck(2) & sameDeck(3) & Space(5) & namePat(1)
-            pattern(player) = typePat(1)
-            patternDeck(player) = deckPat(1)
+            allPlayerPatAndDecek(player, 1) = typePat(1)
+            allPlayerPatAndDecek(player, 2) = deckPat(1)
             Exit Function
         End If
 End Select
-pattern(player) = typePat(0)
-patternDeck(player) = deckPat(0) & Space(5) & namePat(0)
+allPlayerPatAndDecek(player, 1) = typePat(0)
+allPlayerPatAndDecek(player, 2) = deckPat(0)
     
-'pattern(player) = Application.WorksheetFunction.Max(typePat)
+'allPlayerPatAndDecek(player,1) = Application.WorksheetFunction.Max(typePat)
 'final:
 '9royal flush:       TJQKAs
 '8straight flush:    56789s
@@ -1131,7 +1184,7 @@ Function helpme()
 
 '玩家位置
 '1. Button--庄家位置，也被称作按钮位
-'线上游戏中第一局庄家位置由系统随机指定，线下游戏时可以大家抽牌决定，抽到最大牌的人的做第一局的庄家，以后每局庄家位置按照顺时针方向下移一位。
+'线上游戏中第一局庄家位置由系统随机指定，线下游戏时可以大家抽牌决定，抽到最大牌的人的做第一?值淖遥院竺烤肿椅恢冒凑账呈闭敕较蛳乱埔晃弧?
 '2. Big Blind--大盲注，简称BB
 '庄家左手数起第二位即为大盲注，牌局开始前需固定下注的位置，一般下注额为当前牌桌底注。
 '3. Small Blind--小盲注，简称SB
@@ -1145,7 +1198,7 @@ Function helpme()
 '1. Bet--押注：押上筹码。
 '2. Call--跟进 / 跟注：跟随众人押上同等的注额。
 '3. Fold--弃牌 / 不跟：放弃继续牌局的机会。
-'4. Check--让牌 / 看牌：在无需跟进的情况下选择把决定“让”给下一位。
+'4. Check--让牌 / 看牌：在无需跟进的情况下选择把决定"让"给下一位。
 '5. Raise--加注：把现有的注金抬高。
 '6. Re-raise--再加注：在别人加注以后回过来再加注。
 '7. All-in--全下：一次过把手上的筹码全押上。
@@ -1153,7 +1206,7 @@ Function helpme()
 '1. Pre-flop--翻牌前
 '公共牌出现以前的第一轮叫注?
 '2. Flop--翻牌，首三张公用牌。Flop round--翻牌圈：首三张公共牌出现以后的押注圈。
-'3. Turn--转牌，第四张公共牌。Turn round--转牌圈： 第四张公共牌出现以后的押注圈 。
+'3. Turn--转牌，第四张公共牌。Turn round--转牌?Γ? 第四张公共牌出现以后的押注圈 。
 '4. River--河牌，第五张公共牌。River round--河牌圈：第五张公共牌出现以后 , 也即是摊牌以前的押注圈 。
 '四种花色
 '1. H(Heart)--红桃：在扑克牌里是爱情的象征
@@ -1179,7 +1232,7 @@ Function helpme()
 'Nuts--坚果：比如你手牌A-A，台面 A-A-6-J-8，你的四条最大，就叫nuts
 '其他
 'Pot--底池：每一个牌局里众人已押上的筹码总额，也即该局的奖金数目。
-'Outs--出路： 一个玩家在某个阶段所可能获胜的几种方法。比如一个拥有一对口袋9的玩家需要多一张9来取胜,他的就有两条“出路”(剩下的两个花色的9)。
+'Outs--出路： 一个玩家在某个阶段所可能获胜的几种方法。比如一个拥有一对口袋9的玩家需要多一张9来取胜,他的就有两条"出路"(剩下的两个花色的9)。
 'Bluff--诈唬：在没有什么胜算的情况下押上很多筹码，虚张声势。
 'Slowplay--慢玩：比如坚果不下注，钓鱼的意思。
 'Heads-up--单挑，缩写HU
@@ -1188,4 +1241,8 @@ Function helpme()
 'Fish--鱼：一般高水平的玩家对那些输不起，牌品差的玩家的贬意称呼。
 'Shark --鲨鱼: 一般指能够赢钱的高手?
 End Function
+
+
+
+
 
