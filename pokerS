@@ -140,7 +140,7 @@ Function preparecells()
     Set rngVisible = Range("V21:W21,T13:X13")
     Set rngCardsCodes = Range("M12:N12,N4:O4,V4:W4,AD4:AE4,AE12:AF12,AD20:AE20,V20:W20,N20:O20,T12:X12")
     aRngPotNum = Array("T8:U8", "W8:X8", "Z8:AA8", "AC8:AD8", "AF8:AG8", "K8:L8", "N8:O8", "Q8:R8") '锅编号，主池为0
-    aRngPotMoney = Array("T9:U9", "W9:X9", "Q9:R9", "Z9:AA9", "N9:O9", "AC9:AD9", "K9:L9", "AF9:AG9") '
+    aRngPotMoney = Array("T9:U9", "W9:X9", "Z9:AA9", "AC9:AD9", "AF9:AG9", "K9:L9", "N9:O9", "Q9:R9") '("T9:U9", "W9:X9", "Q9:R9", "Z9:AA9", "N9:O9", "AC9:AD9", "K9:L9", "AF9:AG9") '
     '6 4 2 0 1 3 5 7 各锅格子排序位置
     Range("T9:U9,W9:X9,Q9:R9,Z9:AA9,N9:O9,AC9:AD9,K9:L9,AF9:AG9").Merge 'aRngPotMoney
     'Range("T9:U9,W9:X9,Q9:R9,Z9:AA9,N9:O9,AC9:AD9,K9:L9,AF9:AG9").Borders.LineStyle = xlContinuous
@@ -333,26 +333,19 @@ i = betTimes Mod 8 '还要不要一圈圈来
         totalPot = totalPot + diffChips(player)
         playerMoney(player) = playerMoney(player) - diffChips(player)
         rngTotalPot.Value = totalPot
-'        If callChips(player) = 0 Then
-'            Range(aRngBet(player)) = 0
-'        ElseIf playerAllin(player) Then '有人全下，要修改
-'            Range(aRngBet(player)) = allinPlayerChipsAndPot(countAllin - 1, 1) '改了，真实数值'callChips是传递数值用的，以alinchip为准
-'        Else
-'            Range(aRngBet(player)) = callChips(player)
-'        End If
         Range(aRngBetCondition(player)).Select
         Range(aRngBetCondition(player)) = playerAction
         If playerAction = "call" Then
-            Range(aRngBetCondition(player)).Interior.color = 5296274 '绿底, call
+            Range(aRngBetCondition(player)).Interior.Color = 5296274 '绿底, call
             Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白?痔?
         ElseIf playerAction = "check" Or playerAction = "bet" Then
-            Range(aRngBetCondition(player)).Interior.color = 15773696 '蓝底, check
+            Range(aRngBetCondition(player)).Interior.Color = 15773696 '蓝底, check
             Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白色字体
         ElseIf playerAction = "raise" Then
-            Range(aRngBetCondition(player)).Interior.color = 49407 '橙底, raise or bet
+            Range(aRngBetCondition(player)).Interior.Color = 49407 '橙底, raise or bet
             Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白色字体
         ElseIf playerAction = "all in" Then
-            Range(aRngBetCondition(player)).Interior.color = 255 '红底,all in
+            Range(aRngBetCondition(player)).Interior.Color = 255 '红底,all in
             Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白色字体
         End If
         Range(aRngBet(player)) = callChips(player)
@@ -372,26 +365,19 @@ ifSameRaiseCycle = betTimes = lastRaisePlayerbetTimes + 9 'And betTimes > 1
 If ifSameRaisePlayer And ifSameRaiseCycle Then  '又转到最后一个加注的人了
     betTurn = betTurn + 1
 End If
+lstOne = countAllin + countFold = 7
+ifLastOne = lstOne And ifSameRaiseCycle '/test'
 
-ifHigherThanAllin = countAllin + countFold = 7 And maxCallChips >= maxAllIn '/test'
-If ifHigherThanAllin Then '比allin还高，再拎出来算一个边池
-    allinPlayerChipsAndPot(countDiffAllin, 0) = lastRaisePlayer
-    allinPlayerChipsAndPot(countDiffAllin, 1) = maxCallChips
-End If
 '如果只有一个人加注，其余人都全下或者fold，那么要确认他的加注是大过其他人的allin，要转一圈到他
-
-ifAllFoldOrAllin = countAllin + countFold = 8 Or ifHigherThanAllin  'one man can do nothing
-
+ifAllFoldOrAllin = countAllin + countFold = 8 Or ifLastOne 'one man can do nothing
 'ifLoopBet
 If ifAllFoldOrAllin Or betTurn > preTurn Then '全下或者弃牌了
     ifLoopBet = False
 ElseIf betTurn = preTurn Then '还没转完
     ifLoopBet = True
 End If
-
-
 'loopBet:
-Sleep 600
+'Sleep 600
 Loop While ifLoopBet
 countOnTable = 8 - countFold
 If stage = 0 Then
@@ -399,8 +385,9 @@ If stage = 0 Then
 Else
     countThisTurnAction = countThisTurnAction - countOnTable
 End If
+
 If countDiffAllin = 0 Then
-countDiffAllin = countAllin
+    countDiffAllin = countAllin
 End If
 
 If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,结算下注，计算边池
@@ -434,24 +421,49 @@ If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,�
         Next j
     Next i
     
+    If ifLastOne Then '>=allin，只剩一个人了，但是不是allin
+        For i = 0 To 7
+            If Not playerFold(i) Or Not playerAllin(i) And callChips(i) = maxAllIn Then '如果有没allin的但是跟注了，就和最大的allin一个池
+                allinPlayerChipsAndPot(countDiffAllin - 1, 0) = allinPlayerChipsAndPot(countDiffAllin - 1, 0) & i
+                allinPlayerChipsAndPot(countDiffAllin - 1, 1) = maxCallChips
+                Exit For
+            ElseIf Not playerFold(i) Or Not playerAllin(i) And callChips(i) > maxAllIn Then '甚至加注上去了，就单算一个池
+                allinPlayerChipsAndPot(countDiffAllin, 0) = i
+                allinPlayerChipsAndPot(countDiffAllin, 1) = callChips(i)
+                Exit For
+            End If
+        Next i
+    End If
+    countSameBetPlayer = 0
     For i = lastAllinNum To countDiffAllin '如果之前已经有几个边池了，就整理汇集后面的
+            If i > lastAllinNum Then  '之前有相同allin的，造成池比allin人数少
+                If Len(allinPlayerChipsAndPot(i - 1, 0)) > 1 Then '写到一起去,如果i=last会报错
+                    countSameBetPlayer = countSameBetPlayer + 1
+                End If
+'            ElseIf i = countDiffAllin Then '最后一个diffallin了，还有重复项的话
+'                If allinPlayerChipsAndPot(i, 1) = "" Then '写到一起去,如果i=last会报错
+'                    countSameBetPlayer = countSameBetPlayer + 1
+'                End If
+            End If
+            playerCountIn = countThisTurnAction - i - countSameBetPlayer
         If i > 0 And countDiffAllin - lastAllinNum > 1 Then 'multi allin
-            diffAllin = (allinPlayerChipsAndPot(i, 1) - allinPlayerChipsAndPot(i - 1, 1))
+            If Not allinPlayerChipsAndPot(i, 1) = "" Then
+                diffAllin = (allinPlayerChipsAndPot(i, 1) - allinPlayerChipsAndPot(i - 1, 1))
+            End If
             diffCallAllin = maxCallChips - allinPlayerChipsAndPot(countDiffAllin - lastAllinNum - 1, 1) '如果加注超过最后一个全下的注
         End If
         If i = lastAllinNum Then '主池，或者这一轮的第一个边池,potowner在后面每轮都结算
             allinPlayerChipsAndPot(i, 2) = allinPlayerChipsAndPot(i, 2) + allinPlayerChipsAndPot(i, 1) * countThisTurnAction 'countThisTurnAction
             Range(aRngPotMoney(i)) = allinPlayerChipsAndPot(i, 2) '金额
         ElseIf i < countDiffAllin Then
-            If diffAllin > 0 Then
-            potOwner(i) = 1 '/test''''''''''''''''''''''''''''''''''''''''''
-            allinPlayerChipsAndPot(i, 2) = diffAllin * (countThisTurnAction - i)
+            'potOwner(i) = 1 '/test''''''''''''''''''''''''''''''''''''''''''
+            allinPlayerChipsAndPot(i, 2) = diffAllin * playerCountIn
             Range(aRngPotNum(i)) = "sd.pot" & (i)
             Range(aRngPotMoney(i)) = allinPlayerChipsAndPot(i, 2)
             Range(aRngPotNum(i)).Borders.LineStyle = xlContinuous
             Range(aRngPotMoney(i)).Borders.LineStyle = xlContinuous
         ElseIf diffCallAllin > 0 Then '后面call的超过这一轮最大的所有allin，再有一个边池
-            allinPlayerChipsAndPot(i, 2) = diffAllin * (countThisTurnAction - i) '最后一个加注的人的算法要重写
+            allinPlayerChipsAndPot(i, 2) = diffCallAllin * playerCountIn '最后一个加注的人的算法要重写
             Range(aRngPotNum(i)) = "sd.pot" & (i)
             Range(aRngPotMoney(i)) = allinPlayerChipsAndPot(i, 2)
             Range(aRngPotNum(i)).Borders.LineStyle = xlContinuous
@@ -604,6 +616,8 @@ Select Case aiOption
             End If
             If allinPlayerChipsAndPot(countAllin, 1) > maxAllIn Then
                 maxAllIn = allinPlayerChipsAndPot(countAllin, 1)
+                lastRaisePlayer = player
+                lastRaisePlayerbetTimes = betTimes
             End If
             If allinPlayerChipsAndPot(countAllin, 1) >= maxCallChips Then
                 maxCallChips = allinPlayerChipsAndPot(countAllin, 1)
@@ -611,10 +625,6 @@ Select Case aiOption
             callChips(player) = allinPlayerChipsAndPot(countAllin, 1)
             playerAction = "all in"
             playerAllin(player) = True
-            If countAllin = 0 Then '第一个全下的
-                lastRaisePlayer = player
-                lastRaisePlayerbetTimes = betTimes
-            End If
             countAllin = countAllin + 1
         Else '不是全下
             playerAction = addOpt '普通加注
@@ -733,7 +743,7 @@ For handCard = 0 To 1   'preflop发牌
         isHrt = hand(player, handCard) > 25 And hand(player, handCard) < 39
         isDoH = isDim Or isHrt
         If isYou And isDoH Then
-            Range(aRngHand(player + 1, handCard + 1)).Offset(1, 0).Font.color = -16776961 '字体染红
+            Range(aRngHand(player + 1, handCard + 1)).Offset(1, 0).Font.Color = -16776961 '字体染红
         End If
         deckCard = deckCard + 1
         'Sleep 500
@@ -743,12 +753,12 @@ Next handCard
 End Function
 Function flop()
 i = 0
-For Each rng In rngFlop
-    rng.Value = deck(shuffleDeck(deckCard))
+For Each Rng In rngFlop
+    Rng.Value = deck(shuffleDeck(deckCard))
     isDim = shuffleDeck(deckCard) < 13
     isHrt = shuffleDeck(deckCard) > 25 And shuffleDeck(deckCard) < 39
     If isDim Or isHrt Then
-        rng.Offset(1, 0).Font.color = -16776961 '字体染红
+        Rng.Offset(1, 0).Font.Color = -16776961 '字体染红
     End If
     communityCards(i) = shuffleDeck(deckCard)
     deckCard = deckCard + 1
@@ -762,7 +772,7 @@ rngTurn = deck(shuffleDeck(deckCard))
 isDim = shuffleDeck(deckCard) < 13
 isHrt = shuffleDeck(deckCard) > 25 And shuffleDeck(deckCard) < 39
 If isDim Or isHrt Then
-    rngTurn.Offset(1, 0).Font.color = -16776961 '字体染红
+    rngTurn.Offset(1, 0).Font.Color = -16776961 '字体染红
 End If
 communityCards(3) = shuffleDeck(deckCard)
 deckCard = deckCard + 1
@@ -773,7 +783,7 @@ rngRiver = deck(shuffleDeck(deckCard))
 isDim = shuffleDeck(deckCard) < 13
 isHrt = shuffleDeck(deckCard) > 25 And shuffleDeck(deckCard) < 39
 If isDim Or isHrt Then
-    rngRiver.Offset(1, 0).Font.color = -16776961 '字体?竞?
+    rngRiver.Offset(1, 0).Font.Color = -16776961 '字体?竞?
 End If
 communityCards(4) = shuffleDeck(deckCard)
 Sleep 1000
@@ -805,14 +815,14 @@ Call sortPat
 
 If countAllin > 0 Then '可能有边池
     For i = 0 To 7 '考察赢的玩家,0开始是最大的赢家
-        For j = countDiffAllian To 0 Step -1   '有几个池，7是最边池，如果赢了7，就通吃，0就只有0
+        For j = countDiffAllin - 1 To 0 Step -1 '有几个池，7是最边池，如果赢了7，就通吃，0就只有0
             strWinner = ""
             winPot = 0
             lenSamPat = Len(samePatPlr(i)) '这个牌型的所有玩家
             lenSamBet = Len(allinPlayerChipsAndPot(j, 0)) '这个池的所有玩家
-            ifSamePat = lenSamPat > 0
-            ifSameBet = lenSamBet > 0
-            
+            ifSamePat = lenSamPat > 1
+            ifSameBet = lenSamBet > 1
+'既有相同牌型，又是相同下注
             If ifSamePat And ifSameBet Then '既有相同牌型，又是相同下注
                 For k = 1 To lenSamPat
                 playerWinner = Mid(samePatPlr(i), k, 1)
@@ -855,11 +865,14 @@ If countAllin > 0 Then '可能有边池
 '只有相同下注，playerWinner只有一个
             ElseIf ifSameBet Then  '只有相同下注
                 playerWinner = allPlayerPatAndDecek(i, 0)
-                For l = 1 To lenSamPat
-                playerBet = Mid(allinPlayerChipsAndPot(j, 0), l, 1)
+                For l = 1 To lenSamBet
+                playerBet = CInt(Mid(allinPlayerChipsAndPot(j, 0), l, 1))
                     If playerWinner = playerBet Then
                         player = playerBet
                         earnChips = allinPlayerChipsAndPot(j, 2)
+                        If earnChips = 0 Then
+                            Exit For
+                        End If
                         playerMoney(player) = playerMoney(player) + earnChips
                         Range(aRngMoney(player)) = playerMoney(player)
                         Range(aRngPotNum(j)) = Range(aRngPotNum(j)).Value - earnChips
@@ -867,17 +880,27 @@ If countAllin > 0 Then '可能有边池
                 Next l
 '下注、牌型都一个人
             ElseIf allPlayerPatAndDecek(i, 0) = allinPlayerChipsAndPot(j, 0) Then
-                player = playerBet
-                earnChips = allinPlayerChipsAndPot(j, 2)
-                playerMoney(player) = playerMoney(player) + earnChips
-                Range(aRngMoney(player)) = playerMoney(player)
-                Range(aRngPotNum(j)) = Range(aRngPotNum(j)).Value - earnChips
+                player = allPlayerPatAndDecek(i, 0)
+                earnChips = 0
+                For winAll = j To 0 Step -1
+                    earnChips = allinPlayerChipsAndPot(winAll, 2)
+                    If earnChips = 0 Then
+                        Exit For
+                    End If
+                    Range(aRngPotNum(winAll)) = ""
+                    allinPlayerChipsAndPot(winAll, 2) = allinPlayerChipsAndPot(winAll, 2) - earnChips
+                    Range(aRngPotMoney(winAll)) = ""
+                    '格子样式也要消除
+                    playerMoney(player) = playerMoney(player) + earnChips
+                    Range(aRngMoney(player)) = playerMoney(player)
+                Next winAll
+                Exit For
             End If
-            allinPlayerChipsAndPot(j, 2) = allinPlayerChipsAndPot(j, 2) - earnChips
+            'allinPlayerChipsAndPot(j, 2) = allinPlayerChipsAndPot(j, 2) - earnChips
         Next j
     Next i
 '没人赢得该池，奖金退回
-     For j = countDiffAllian To 0 Step -1
+    For j = countDiffAllian To 0 Step -1
         lenSamBet = Len(allinPlayerChipsAndPot(j, 0)) '这个池的所有玩家
         ifSameBet = lenSamBet > 0
         If ifSameBet Then
@@ -934,7 +957,7 @@ End If
 '    Debug.Print "赢家:  " & player, deck(hand(player, 0)), deck(hand(player, 1))
 '    Debug.Print "------------------------------------"
 '    Exit For 'ceshi'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-Next i
+'Next i
 If MsgBox("next round?", vbOKCancel) Then
 Else
     Exit Function
@@ -972,6 +995,7 @@ For i = 0 To 7
     Range(aRngBet(i)).Value = ""
     Range(rngPosition(i)) = ""
     Next i
+ifLastOne = False
 maxCallChips = 0
 countAllin = 0
 lastAllinNum = 0
@@ -988,7 +1012,7 @@ If gamePlayed > 1 Then
 End If
 
 rngCardsCodes.Value = "" '清空桌面发的牌
-rngVisible.Font.color = -16777216
+rngVisible.Font.Color = -16777216
 Range(rngPosition((gamePlayed - 1) Mod 8)) = "D"
 Range(rngPosition(gamePlayed Mod 8)) = "SB"
 Range(rngPosition((gamePlayed + 1) Mod 8)) = "BB"
