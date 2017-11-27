@@ -139,7 +139,7 @@ Function preparecells()
     'N=14,V=22,AD=30,CODROW1=4,R2=12,R3=20
     Set rngVisible = Range("V21:W21,T13:X13")
     Set rngCardsCodes = Range("M12:N12,N4:O4,V4:W4,AD4:AE4,AE12:AF12,AD20:AE20,V20:W20,N20:O20,T12:X12")
-    aRngPotNum = Array("T8:U8", "W8:X8", "Q8:R8", "Z8:AA8", "N8:O8", "AC8:AD8", "K8:L8", "AF8:AG8") '锅编号，主池为0
+    aRngPotNum = Array("T8:U8", "W8:X8", "Z8:AA8", "AC8:AD8", "AF8:AG8", "K8:L8", "N8:O8", "Q8:R8") '锅编号，主池为0
     aRngPotMoney = Array("T9:U9", "W9:X9", "Q9:R9", "Z9:AA9", "N9:O9", "AC9:AD9", "K9:L9", "AF9:AG9") '
     '6 4 2 0 1 3 5 7 各锅格子排序位置
     Range("T9:U9,W9:X9,Q9:R9,Z9:AA9,N9:O9,AC9:AD9,K9:L9,AF9:AG9").Merge 'aRngPotMoney
@@ -402,6 +402,7 @@ End If
 If countDiffAllin = 0 Then
 countDiffAllin = countAllin
 End If
+
 If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,结算下注，计算边池
     '数组位置countAllin,countDiffAllin处是空的，因为是数字进去后再+1的，countAllin -1有数值
     For i = lastAllinNum To countAllin - 2 '将边池数组按照玩家全下的金额从小到大排列，如果之前已经有几个边池了，就排序后面的
@@ -800,49 +801,99 @@ Next player
     
 
 '比较牌型大小，从大到小
-For i = 0 To 6
-    For j = i + 1 To 7
-        If allPlayerPatAndDecek(j, 1) > allPlayerPatAndDecek(i, 1) Then  '玩家，牌型rank，牌型deck,按牌型rank从大到小排序
-            tempPly = allPlayerPatAndDecek(i, 0)
-            tempRnk = allPlayerPatAndDecek(i, 1)
-            tempDek = allPlayerPatAndDecek(i, 2)
-            
-            allPlayerPatAndDecek(i, 0) = allPlayerPatAndDecek(j, 0)
-            allPlayerPatAndDecek(i, 1) = allPlayerPatAndDecek(j, 1)
-            allPlayerPatAndDecek(i, 2) = allPlayerPatAndDecek(j, 2)
-            
-            allPlayerPatAndDecek(j, 0) = tempPly
-            allPlayerPatAndDecek(j, 1) = tempRnk
-            allPlayerPatAndDecek(j, 2) = tempDek
-        ElseIf allPlayerPatAndDecek(i, 1) = allPlayerPatAndDecek(j, 1) Then '牌型一样大，平分池
-            If j = i + 1 Then
-                samePatPlr(i) = samePatPlr(i) & allPlayerPatAndDecek(i, 0)
-            End If
-                samePatPlr(i) = samePatPlr(i) & allPlayerPatAndDecek(j, 0)
-        End If
-    Next j
-Next i
+Call sortPat
 
 If countAllin > 0 Then '可能有边池
-    
     For i = 0 To 7 '考察赢的玩家,0开始是最大的赢家
-        For j = countAllian To 0 Step -1   '有几个池，7是最边池，如果赢了7，就通吃，0就只有0
-            If allPlayerPatAndDecek(i, 0) = allinPlayerChipsAndPot(j, 0) Then '
-                sameBetPlr
-                samePatPlr
-                '/test'''''''''''''''''''''''''''''''''''''''''
+        For j = countDiffAllian To 0 Step -1   '有几个池，7是最边池，如果赢了7，就通吃，0就只有0
+            strWinner = ""
+            winPot = 0
+            lenSamPat = Len(samePatPlr(i)) '这个牌型的所有玩家
+            lenSamBet = Len(allinPlayerChipsAndPot(j, 0)) '这个池的所有玩家
+            ifSamePat = lenSamPat > 0
+            ifSameBet = lenSamBet > 0
+            If lenSamPat > lenSamBet Then
+                UB = lenSamPat
+            Else
+                UB = lenSamBet
+            End If
             
-            
+            If ifSamePat And ifSameBet Then '既有相同牌型，又是相同下注
+                For k = 1 To lenSamPat
+                playerWinner = Mid(samePatPlr(i), k, 1)
+                For l = 1 To lenSamBet
+                playerBet = Mid(allinPlayerChipsAndPot(j, 0), l, 1)
+                    If playerWinner = playerBet Then
+                        strWinner = strWinner & playerWinner '赢下这个牌型和这个池的所有玩家
+                        Exit For
+                    End If
+                Next l
+                Next k
+'                For potNum = j To 0 Step -1 '不可以，因为还有别的同样牌型的人可能在主池里，不能吃掉它们的，还是要一个个循环过去
+'                    winPot = winPot + allinPlayerChipsAndPot(j, 2)
+'                Next potNum
+'                Exit For
+                If Len(strWinner) > 0 Then
+                    earnChips = allinPlayerChipsAndPot(j, 2) / Len(strWinner)
+                Else
+                    earnChips = allinPlayerChipsAndPot(j, 2)
+                End If
+                For k = 1 To Len(strWinner)
+                    player = Mid(strWinner, k, 1)
+                    playerMoney(player) = playerMoney(player) + earnChips
+                    Range(aRngMoney(player)) = playerMoney(player)
+                    Range(aRngPotNum(j)) = Range(aRngPotNum(j)).Value - earnChips
+                Next k
+'持有相同牌型，但是只有一个人在这个池,playerBet只有一个
+            ElseIf ifSamePat Then  '有人持有相同牌型，但是只有一个人在这个池
+                playerBet = allinPlayerChipsAndPot(j, 0)
+                For k = 1 To lenSamPat
+                    playerWinner = Mid(samePatPlr(i), k, 1)
+                    If playerWinner = playerBet Then
+                        player = playerBet
+                        earnChips = allinPlayerChipsAndPot(j, 2)
+                        playerMoney(player) = playerMoney(player) + earnChips
+                        Range(aRngMoney(player)) = playerMoney(player)
+                        Range(aRngPotNum(j)) = Range(aRngPotNum(j)).Value - earnChips
+                    End If
+                Next k
+'只有相同下注，playerWinner只有一个
+            ElseIf ifSameBet Then  '只有相同下注
+                playerWinner = allPlayerPatAndDecek(i, 0)
+                For l = 1 To lenSamPat
+                playerBet = Mid(allinPlayerChipsAndPot(j, 0), l, 1)
+                    If playerWinner = playerBet Then
+                        player = playerBet
+                        earnChips = allinPlayerChipsAndPot(j, 2)
+                        playerMoney(player) = playerMoney(player) + earnChips
+                        Range(aRngMoney(player)) = playerMoney(player)
+                        Range(aRngPotNum(j)) = Range(aRngPotNum(j)).Value - earnChips
+                    End If
+                Next l
+'下注、牌型都一个人
+            ElseIf allPlayerPatAndDecek(i, 0) = allinPlayerChipsAndPot(j, 0) Then
+                player = playerBet
+                earnChips = allinPlayerChipsAndPot(j, 2)
+                playerMoney(player) = playerMoney(player) + earnChips
+                Range(aRngMoney(player)) = playerMoney(player)
+                Range(aRngPotNum(j)) = Range(aRngPotNum(j)).Value - earnChips
         Next j
     Next i
 Else '没有边池，大家分就行
     If Len(samePatPlr(0)) > 0 Then
         earnChips = totalPot / Len(samePatPlr(0))
+        For i = 1 To Len(samePatPlr(0))
+            player = Mid(samePatPlr(0), i, 1)
+            playerMoney(player) = playerMoney(player) + earnChips
+            Range(aRngMoney(player)) = playerMoney(player)
+            Range(aRngPotNum(0)) = Range(aRngPotNum(0)).Value - earnChips
+        Next
     Else
         earnChips = totalPot
+        playerMoney(player) = playerMoney(player) + earnChips
+        Range(aRngMoney(player)) = playerMoney(player)
+        Range(aRngPotNum(0)) = Range(aRngPotNum(0)).Value - earnChips
     End If
-    playerMoney(player) = playerMoney(player) + earnChips
-    Range(aRngMoney(player)) = playerMoney(player)
 End If
 
 '/test below need to change
@@ -941,17 +992,59 @@ For i = 0 To 5
             zongpai(i) = temp
         End If
     Next j
-
 Next i
-'ceshi'''''''''''''''''''''''''''''''''''''''
-For i = 0 To 6
-    zok = zok & " " & zongpai(i)
-    zokd = zokd & " " & deck(zongpai(i))
-    Next i
-Debug.Print "player: " & player
-Debug.Print zok
-Debug.Print zokd 'ceshi'''''''''''''''''''''''''''''''''''''''
+End Function
+Function sortBet()
 
+coutsam = 0
+For i = 0 To 6
+    j = i + 1
+    If allPlayerPatAndDecek(i, 1) = allPlayerPatAndDecek(j, 1) Then '牌型一样大，平分池
+        If coutsam = 0 Then
+            samePatPlr(i) = allPlayerPatAndDecek(i, 0) & allPlayerPatAndDecek(j, 0)
+            coutsam = coutsam + 1
+        Else
+            samePatPlr(i) = samePatPlr(i) & allPlayerPatAndDecek(j, 0)
+            coutsam = coutsam + 1
+        End If
+    Else
+        coutsam = 0
+    End If
+Next i
+End Function
+Function sortPat()
+For i = 0 To 6
+    For j = i + 1 To 7
+        If allPlayerPatAndDecek(j, 1) > allPlayerPatAndDecek(i, 1) Then  '玩家，牌型rank，牌型deck,按牌型rank从大到小排序
+            tempPly = allPlayerPatAndDecek(i, 0)
+            tempRnk = allPlayerPatAndDecek(i, 1)
+            tempDek = allPlayerPatAndDecek(i, 2)
+            
+            allPlayerPatAndDecek(i, 0) = allPlayerPatAndDecek(j, 0)
+            allPlayerPatAndDecek(i, 1) = allPlayerPatAndDecek(j, 1)
+            allPlayerPatAndDecek(i, 2) = allPlayerPatAndDecek(j, 2)
+            
+            allPlayerPatAndDecek(j, 0) = tempPly
+            allPlayerPatAndDecek(j, 1) = tempRnk
+            allPlayerPatAndDecek(j, 2) = tempDek
+        End If
+    Next j
+Next i
+coutsam = 0
+For i = 0 To 6
+    j = i + 1
+    If allPlayerPatAndDecek(i, 1) = allPlayerPatAndDecek(j, 1) Then '牌型一样大，平分池
+        If coutsam = 0 Then
+            samePatPlr(i) = allPlayerPatAndDecek(i, 0) & allPlayerPatAndDecek(j, 0)
+            coutsam = coutsam + 1
+        Else
+            samePatPlr(i) = samePatPlr(i) & allPlayerPatAndDecek(j, 0)
+            coutsam = coutsam + 1
+        End If
+    Else
+        coutsam = 0
+    End If
+Next i
 End Function
 Function rules()
 'v0.2   在判断牌点数rank时，保证每个牌是两位数，用字符串表示，00是2,12是A
