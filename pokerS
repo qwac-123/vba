@@ -812,11 +812,6 @@ If countAllin > 0 Then '可能有边池
             lenSamBet = Len(allinPlayerChipsAndPot(j, 0)) '这个池的所有玩家
             ifSamePat = lenSamPat > 0
             ifSameBet = lenSamBet > 0
-            If lenSamPat > lenSamBet Then
-                UB = lenSamPat
-            Else
-                UB = lenSamBet
-            End If
             
             If ifSamePat And ifSameBet Then '既有相同牌型，又是相同下注
                 For k = 1 To lenSamPat
@@ -877,8 +872,33 @@ If countAllin > 0 Then '可能有边池
                 playerMoney(player) = playerMoney(player) + earnChips
                 Range(aRngMoney(player)) = playerMoney(player)
                 Range(aRngPotNum(j)) = Range(aRngPotNum(j)).Value - earnChips
+            End If
+            allinPlayerChipsAndPot(j, 2) = allinPlayerChipsAndPot(j, 2) - earnChips
         Next j
     Next i
+'没人赢得该池，奖金退回
+     For j = countDiffAllian To 0 Step -1
+        lenSamBet = Len(allinPlayerChipsAndPot(j, 0)) '这个池的所有玩家
+        ifSameBet = lenSamBet > 0
+        If ifSameBet Then
+            earnChips = allinPlayerChipsAndPot(j, 2) / Len(strWinner)
+            For l = 1 To lenSamBet
+                player = Mid(allinPlayerChipsAndPot(j, 0), l, 1)
+                allinPlayerChipsAndPot(j, 2) = allinPlayerChipsAndPot(j, 2) - earnChips
+                Range(aRngPotNum(j)) = Range(aRngPotNum(j)).Value - earnChips
+                playerMoney(player) = playerMoney(player) + earnChips
+                Range(aRngMoney(player)) = playerMoney(player)
+            Next l
+        Else
+            player = allinPlayerChipsAndPot(j, 0)
+            earnChips = allinPlayerChipsAndPot(j, 2)
+            allinPlayerChipsAndPot(j, 2) = 0
+            Range(aRngPotNum(j)) = 0
+            playerMoney(player) = playerMoney(player) + earnChips
+            Range(aRngMoney(player)) = playerMoney(player)
+        End If
+    Next j
+    
 Else '没有边池，大家分就行
     If Len(samePatPlr(0)) > 0 Then
         earnChips = totalPot / Len(samePatPlr(0))
@@ -886,8 +906,9 @@ Else '没有边池，大家分就行
             player = Mid(samePatPlr(0), i, 1)
             playerMoney(player) = playerMoney(player) + earnChips
             Range(aRngMoney(player)) = playerMoney(player)
+            allinPlayerChipsAndPot(0, 2) = allinPlayerChipsAndPot(0, 2) - earnChips
             Range(aRngPotNum(0)) = Range(aRngPotNum(0)).Value - earnChips
-        Next
+        Next i
     Else
         earnChips = totalPot
         playerMoney(player) = playerMoney(player) + earnChips
@@ -895,7 +916,7 @@ Else '没有边池，大家分就行
         Range(aRngPotNum(0)) = Range(aRngPotNum(0)).Value - earnChips
     End If
 End If
-
+    
 '/test below need to change
 'For i = 0 To countSameMax
 '    player = maxPlayer(i)
