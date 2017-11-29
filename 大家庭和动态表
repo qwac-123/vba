@@ -182,7 +182,7 @@ End If
 End Function
 
 Sub bbb动态表ISMSROB()
-
+'v2.1船舶gps上加了个框便于定位
 'v2处理ISMSROB
 'v1.1
 '删掉了了agent info表里面时间信息前的一个空格
@@ -276,8 +276,7 @@ If Not Range("k5") = "" Then
         :=False, Transpose:=False
     Workbooks("PERSONAL.xlsb").Sheets("船位数据").Rows("1:17").ClearContents
     Workbooks("PERSONAL.xlsb").Sheets("船位数据").Rows("1:17").ClearFormats
-    
-    
+    Workbooks("PERSONAL.xlsb").Sheets("船位数据").Range("k3:l17").Borders.LineStyle = xlContinuous
 Else
   Call check_wk船舶动态
 MsgBox "还没复制船舶经纬度"
@@ -479,3 +478,4 @@ Cells(r, c).Select
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 End Sub
+
