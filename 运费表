@@ -1,0 +1,455 @@
+Sub 运费表()
+'
+' 运费表 Macro
+'v1
+
+'
+
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
+    Rows("1:1").Delete Shift:=xlUp '删除标题
+    Columns("A:A").SpecialCells(xlCellTypeBlanks).EntireRow.Delete
+    Range("B:B,D:e").Delete Shift:=xlToLeft '删除开票日期B和船+币D和发票号码
+
+    Columns("H:H").Select
+    Selection.NumberFormatLocal = "0.00_);[红色](0.00)"
+    Selection.FormatConditions.Add type:=xlExpression, Formula1:="=A1=""USD"""
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    With Selection.FormatConditions(1).Interior
+        .PatternColorIndex = xlAutomatic
+        .color = 5296274
+        .TintAndShade = 0
+    End With
+    
+    Selection.FormatConditions(1).StopIfTrue = True
+
+    Columns("D:D").NumberFormatLocal = "0.00_);[红色](0.00)"
+    Columns("E:E").Cut
+    Columns("D:D").Insert Shift:=xlToRight
+    Columns("E:E").Cut
+    Columns("G:G").Insert Shift:=xlToRight
+    Columns("G:G").Cut
+    Columns("E:E").Insert Shift:=xlToRight
+    Columns("a:c").ColumnWidth = 7
+    Columns("D:e").ColumnWidth = 24
+    Columns("f").ColumnWidth = 14
+
+    Columns("C:C").Select '去除V便于后续筛选
+    Selection.Replace What:="V", Replacement:="", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    Selection.NumberFormatLocal = "G/通用格式"
+    
+    With Columns("D:D") '航线调整
+    .Replace What:="-", Replacement:="/", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="－", Replacement:="/", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="上海", Replacement:="shanghai", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="青峙", Replacement:="qingzhi", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="惠州", Replacement:="HUIZHOU", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="马尾", Replacement:="mawei", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="高雄", Replacement:="kaohsiung", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="麦寮", Replacement:="mailiao", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="珠", Replacement:="zhu", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="海", Replacement:="hai", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="港", Replacement:="gang", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="东", Replacement:="dong", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="西", Replacement:="xi", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="南", Replacement:="nan", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="北", Replacement:="bei", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="中", Replacement:="zhong", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="张家", Replacement:="zhangjia", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="宁波", Replacement:="ningbo", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="连云", Replacement:="lianyun", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="钦州", Replacement:="qinzhou", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="茂名", Replacement:="maoming", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="漕泾", Replacement:="caojing", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="南京", Replacement:="nanjing", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="营口", Replacement:="yingkou", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="中山", Replacement:="zhongshan", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="江阴", Replacement:="jiangyin", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="大连", Replacement:="dalian", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="泉州", Replacement:="quanzhou", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="南通", Replacement:="nantong", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="天津", Replacement:="tianjin", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="大丰", Replacement:="dafeng", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="东莞", Replacement:="dongguan", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="东营", Replacement:="dongying", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="厦门", Replacement:="xiamen", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="岚山", Replacement:="lanshan", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="台中", Replacement:="taichung", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="鲅鱼圈", Replacement:="bayuquan", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="嘉兴", Replacement:="jiaxing", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="汕头", Replacement:="shantou", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="青岛", Replacement:="qingdao", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="吴泾", Replacement:="wujing", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="州", Replacement:="zhou", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="浦", Replacement:="pu", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+        
+    .Replace What:="常", Replacement:="chang", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="洋", Replacement:="yang", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="八所", Replacement:="basuo", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="揭阳", Replacement:="jieyang", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="温", Replacement:="wen", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="莱", Replacement:="lai", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="大榭", Replacement:="daxie", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="山", Replacement:="shan", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="舟", Replacement:="zhou", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="镇", Replacement:="zhen", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="烟台", Replacement:="yantai", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="熟", Replacement:="shu", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="乍", Replacement:="zha", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="仪征", Replacement:="yizheng", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="小虎岛", Replacement:="xiaohudao", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="麦廖", Replacement:="mailiao", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="江", Replacement:="jiang", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="门", Replacement:="men", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="潍坊", Replacement:="weifang", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="天健", Replacement:="tianjin", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="广", Replacement:="guang", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="京唐", Replacement:="jingtang", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="石井", Replacement:="shijing", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="泰兴", Replacement:="taixing", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="锦", Replacement:="jin", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="三水", Replacement:="guangdong", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="如东", Replacement:="RUDONG, JIANGSU", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="", Replacement:="", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="", Replacement:="", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+
+    End With
+
+
+'公司
+    With Columns("E:E")
+    .Replace What:="SOPO INTERNATIONAL LIMITED", Replacement:="SOPO INTERNATIONAL LTD", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="舟山市和兴船务有限公司嘉善分公司", Replacement:="ZHOUSHAN HEXING SHIPPING CO.,LTD.", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="惠州惠菱化成有限公司", Replacement:="Huizhou MMA Co.,Ltd", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="扬子石化 -巴斯夫有限责任公司", Replacement:="扬子石化-巴斯夫有限责任公司", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    
+    End With
+        
+        
+'货名
+    With Columns("F:F")
+    .Replace What:="冰醋酸", Replacement:="Acetic acid", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="醋酸乙烯", Replacement:="VINYL ACETATE", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="丙烯腈", Replacement:="AN", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="二甲基甲酰胺", Replacement:="Dimethylformamide", LookAt _
+        :=xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False _
+        , ReplaceFormat:=False
+    .Replace What:="纯苯", Replacement:="BENZENE", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="苯", Replacement:="BENZENE", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="苯酚", Replacement:="Phenol", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="混合二甲苯", Replacement:="MIX XYLENE", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="对二甲苯", Replacement:="PARAXYLENE", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="二甲苯", Replacement:="Xylenes", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="甲苯", Replacement:="TOLUENE", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="碳9", Replacement:="C-9", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="碳九", Replacement:="C-9", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="C9", Replacement:="C-9", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="苯乙烯", Replacement:="STYRENE MONOMER", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="丙酮", Replacement:="Acetone", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="act", Replacement:="Acetone", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="甲醇", Replacement:="Methanol", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="乙醇", Replacement:="ethanol", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="酒精", Replacement:="alcohol", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="辛醇", Replacement:="Octanol (all isomers)", LookAt _
+        :=xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False _
+        , ReplaceFormat:=False
+    .Replace What:="乙二醇", Replacement:="Ethylene glycol", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="正丁醇", Replacement:="n-Butyl alcohol", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="异壬醇", Replacement:="ISONONYL ALCOHOL", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="AN", Replacement:="AN(acrylonitrile)", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="丙烯晴", Replacement:="AN(acrylonitrile)", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="混二甲苯", Replacement:="MIX XYLENE", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="甲甲酯", Replacement:="Methyl methacrylate", LookAt _
+        :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="甲基丙烯酸甲酯", Replacement:="Methyl methacrylate", LookAt _
+        :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="乙酸乙酯", Replacement:="acetic ether", LookAt _
+        :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="乙酸乙烯酯", Replacement:="VINYL ACETATE", LookAt _
+        :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="工业用乙酸乙烯酯", Replacement:="VINYL ACETATE", LookAt _
+        :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="甲基叔丁基醚", Replacement:="Methyl tert butyl ether", LookAt _
+        :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False
+    End With
+    
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
+'Loco.Select
+End Sub
+Sub 清空收入清单()
+'
+' Macro6 Macro
+'
+
+'
+    ActiveWorkbook.Worksheets("收入清单2017").AutoFilter.Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("收入清单2017").AutoFilter.Sort.SortFields.Add Key:= _
+        Range("C1:C614"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption _
+        :=xlSortNormal
+    With ActiveWorkbook.Worksheets("收入清单2017").AutoFilter.Sort
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    ActiveWorkbook.Worksheets("收入清单2017").AutoFilter.Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("收入清单2017").AutoFilter.Sort.SortFields.Add Key:= _
+        Range("B1:B614"), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption _
+        :=xlSortNormal
+    With ActiveWorkbook.Worksheets("收入清单2017").AutoFilter.Sort
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+End Sub
+Sub 拆分运费表()
+'
+'
+
+'
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
+Sheets("收入清单2017").Select
+kaitou = 2
+weiba = Range("a1").End(xlDown).Row
+For i = 2 To weiba
+    If Cells(i, 2) <> Cells(i + 1, 2) Then
+        Sheets.Add After:=Sheets(Sheets.Count)
+        Sheets(Sheets.Count).name = Sheets("收入清单2017").Cells(i, 2).Text
+        Sheets("收入清单2017").Rows("1:1").Copy Sheets(Sheets.Count).Rows("1:1")
+        Sheets("收入清单2017").Rows(kaitou & ":" & i).Copy Sheets(Sheets.Count).Range("a2")
+        kaitou = i + 1
+        Sheets(Sheets.Count).Range("A1").AutoFilter
+        Sheets("收入清单2017").Select
+        
+    End If
+Next i
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
+End Sub
+Function 另存或保存()
+'
+
+
+'
+ 
+If Dir("F:\工作文档\动态表(鼎衡大家庭）\10月\2.xlsx") Then
+    ActiveWorkbook.Save
+Else: ActiveWorkbook.SaveAs Filename:="F:\工作文档\动态表(鼎衡大家庭）\10月\1.xlsx", _
+        FileFormat:=xlOpenXMLWorkbook, CreateBackup:=False
+End If
+End Function

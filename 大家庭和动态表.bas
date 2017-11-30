@@ -1,4 +1,7 @@
 Attribute VB_Name = "´ó¼ÒÍ¥ºÍ¶¯Ì¬±í"
+Dim zuotian
+Dim dajiating
+Dim dongtaibiao
 Sub ¿ªÊ¼½ñÌìÉÏÎçµÄ¹¤×÷()
 'v1.2Ôö¼ÓÁËÏòÉÏ¹öÆÁ´úÂë
 'v1.1 É¾µôÁË²¿·ÖÎŞÓÃ´úÂë£¬ÏÖÔÚ´ò¿ª¶¯Ì¬±í»áÕıÈ·ÏÔÊ¾ÔÚ´¬²°×´Ì¬±í
@@ -13,10 +16,10 @@ If Weekday(Date, vbMonday) = 1 Then 'Èç¹û½ñÌìÊÇÖÜÒ»£¬¾Í´ò¿ªÖÜÎåµÄ£»·ñÔò¾Í´ò¿ª×òÌ
 Else
     zuotian = 1
 End If
-    Workbooks.Open Filename:=Format(Date - zuotian, "F:\\¹¤×÷ÎÄµµ\\¶¯Ì¬±í£¨¶¦ºâ´ó¼ÒÍ¥£©\\mmÔÂ\\¶¯Ì¬±í£¨¶¦ºâ´ó¼ÒÍ¥£©yyyy-mm-dd.xl\sx")
+    Set dajiating = Workbooks.Open(Filename:=Format(Date - zuotian, "F:\\¹¤×÷ÎÄµµ\\¶¯Ì¬±í£¨¶¦ºâ´ó¼ÒÍ¥£©\\mmÔÂ\\¶¯Ì¬±í£¨¶¦ºâ´ó¼ÒÍ¥£©yyyy-mm-dd.xl\sx"))
 
-    Workbooks.Open Filename:= _
-        "\\192.168.0.223\\º½ÔËÔÚÏß\\3.2¡¢²Ù×÷²¿\\4 ´¬²°¶¯Ì¬±í\\" & Format(Date - zuotian, "yyyy\\mmÔÂ\\´¬²°¶¯Ì¬£¨yyyy-mm-dd£©.xl\sx")
+    Set dongtaibiao = Workbooks.Open(Filename:= _
+        "\\192.168.0.223\\º½ÔËÔÚÏß\\3.2¡¢²Ù×÷²¿\\4 ´¬²°¶¯Ì¬±í\\" & Format(Date - zuotian, "yyyy\\mmÔÂ\\´¬²°¶¯Ì¬£¨yyyy-mm-dd£©.xl\sx"))
 Sheets(1).Activate
 ActiveWindow.SmallScroll Up:=20
 Application.ScreenUpdating = 1
@@ -40,7 +43,7 @@ End If
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
 
-Range("d4:e16").Interior.Pattern = xlNone
+Range("d4:e16").Interior.pattern = xlNone
     With Range("k1:k25") '´¦Àí¸´ÖÆ¹ıÀ´µÄ´¬²°¶¯Ì¬
     .Replace What:="£º", Replacement:=":", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
@@ -110,6 +113,10 @@ Range("h4").Select
 
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
+
+If Dir(Format(Date, "F:\\¹¤×÷ÎÄµµ\\¶¯Ì¬±í£¨¶¦ºâ´ó¼ÒÍ¥£©\\mmÔÂ"), 16) = Empty Then
+    MkDir Format(Date, "F:\\¹¤×÷ÎÄµµ\\¶¯Ì¬±í£¨¶¦ºâ´ó¼ÒÍ¥£©\\mmÔÂ")
+End If
     ActiveWorkbook.SaveAs Filename:= _
         Format(Date, "F:\\¹¤×÷ÎÄµµ\\¶¯Ì¬±í£¨¶¦ºâ´ó¼ÒÍ¥£©\\mmÔÂ\\¶¯Ì¬±í£¨¶¦ºâ´ó¼ÒÍ¥£©yyyy-mm-dd.xl\sx"), FileFormat:= _
         xlOpenXMLWorkbook, CreateBackup:=False
@@ -124,7 +131,7 @@ Else
 End If
 Set wkjin = Workbooks(Format(Date, "´¬²°¶¯Ì¬£¨yyyy-mm-dd£©.xl\sx"))
 Set wkzuo = Workbooks(Format(Date - zuotian, "´¬²°¶¯Ì¬£¨yyyy-mm-dd£©.xl\sx"))
-If Len(wkjin.Name) > 0 Then
+If Len(wkjin.name) > 0 Then
     If Err.Number = 9 Then 'Èç¹ûwkjin´ò¿ªÁË£¬¾Í¼¤»î
         wkjin.Activate
     Else                    '·ñÔò¾Í¼¤»îÁíÒ»¸ö
@@ -142,7 +149,7 @@ Else
 End If
 Set wkjin = Workbooks(Format(Date, "¶¯Ì¬±í£¨¶¦ºâ´ó¼ÒÍ¥£©£¨yyyy-mm-dd£©.xl\sx"))
 Set wkzuo = Workbooks(Format(Date - zuotian, "¶¯Ì¬±í£¨¶¦ºâ´ó¼ÒÍ¥£©£¨yyyy-mm-dd£©.xl\sx"))
-If Len(wkjin.Name) > 0 Then
+If Len(wkjin.name) > 0 Then
     If Err.Number = 9 Then 'Èç¹ûwkjin´ò¿ªÁË£¬¾Í¼¤»î
         wkjin.Activate
     Else                    '·ñÔò¾Í¼¤»îÁíÒ»¸ö
@@ -152,7 +159,7 @@ End If
 End Function
 
 Sub bbb¶¯Ì¬±íISMSROB()
-'
+
 'v2´¦ÀíISMSROB
 'v1.1
 'É¾µôÁËÁËagent info±íÀïÃæÊ±¼äĞÅÏ¢Ç°µÄÒ»¸ö¿Õ¸ñ
@@ -231,7 +238,7 @@ Next i
     Application.CutCopyMode = False
     
 
-    Sheets("agent info.").Range("a1").FormulaR1C1 = "´¬¶Óµ±Ç°º½´Î´úÀíĞÅÏ¢( " & Format(Date, "yyyyÄêmÔÂdÈÕ aaaa") & ")" '¸üĞÂÈÕÆÚ"=IF(RC=0,TEXT(NOW(),""yyyyÄêmÔÂdÈÕ aaaa""&"")""),RC)"
+    Sheets("agent info.").Range("a1").FormulaR1C1 = "´¬¶Óµ±Ç°º½´Î´úÀíĞÅÏ¢(" & Format(Date, "yyyyÄêmÔÂdÈÕ aaaa") & ")" '¸üĞÂÈÕÆÚ"=IF(RC=0,TEXT(NOW(),""yyyyÄêmÔÂdÈÕ aaaa""&"")""),RC)"
     Sheets("coordinate info.").Range("a1").FormulaR1C1 = "ÒµÎñĞ­µ÷»áÒéÄÚÈİ(" & Format(Date, "yyyyÄêmÔÂdÈÕ aaaa") & ")"  '¸üĞÂÈÕÆÚ "=IF(RC=0,TEXT(NOW(),""yyyyÄêmÔÂdÈÕ aaaa""&"")""),RC)"
 '¿ªÊ¼´¦Àí¾­Î³¶È
     Windows("PERSONAL.xlsb").Activate
@@ -255,18 +262,26 @@ End If
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 '±£´æ½ñÌì
+fileDirNAME = _
+"\\192.168.0.223\\º½ÔËÔÚÏß\\3.2¡¢²Ù×÷²¿\\4 ´¬²°¶¯Ì¬±í\\" & Format(Date, "yyyy\\mmÔÂ\\´¬²°¶¯Ì¬£¨yyyy-mm-dd£©.xl\sx")
+Debug.Print fileDirNAME
+If Dir("\\192.168.0.223\\º½ÔËÔÚÏß\\3.2¡¢²Ù×÷²¿\\4 ´¬²°¶¯Ì¬±í\\" & Format(Date, "yyyy\\mmÔÂ"), 16) = Empty Then
+    MkDir "\\192.168.0.223\\º½ÔËÔÚÏß\\3.2¡¢²Ù×÷²¿\\4 ´¬²°¶¯Ì¬±í\\" & Format(Date, "yyyy\\mmÔÂ")
+End If
 
-    ActiveWorkbook.SaveAs Filename:= _
-        "\\192.168.0.223\\º½ÔËÔÚÏß\\3.2¡¢²Ù×÷²¿\\4 ´¬²°¶¯Ì¬±í\\" & Format(Date, "yyyy\\mmÔÂ\\´¬²°¶¯Ì¬£¨yyyy-mm-dd£©.xl\sx"), _
+    dongtaibiao.SaveAs Filename:= _
+        fileDirNAME, _
         FileFormat:=xlOpenXMLWorkbook, CreateBackup:=False
+
+dajiating.Activate
 End Sub
 Function ´ó¼ÒÍ¥ÏÂº½´Î()
 r = ActiveCell.Row
 Set loadP = Cells(r, 4)
 Set discP = Cells(r, 5)
 Set NextV = Cells(r, 9)
-Cells(r, 4) = Left(NextV.Value, InStr(3, NextV.Value, "-") - 1)
-Cells(r, 5) = Right(NextV.Value, Len(NextV.Value) - InStr(3, NextV.Value, "-"))
+Cells(r, 4) = Left(NextV.value, InStr(3, NextV.value, "-") - 1)
+Cells(r, 5) = Right(NextV.value, Len(NextV.value) - InStr(3, NextV.value, "-"))
 NextV = "´ı¸æ"
 End Function
 Sub aaa¿ìËÙÏÂº½´Î()
