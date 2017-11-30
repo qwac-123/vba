@@ -209,8 +209,10 @@ For player = 0 To 7
     '/test
     playerMoney(player) = 100 * BB 'test
     If player = 5 Then
-        playerMoney(player) = 50 * BB
+        playerMoney(player) = 400 * BB
     ElseIf player = 3 Then
+        playerMoney(player) = 300 * BB
+    ElseIf player = 1 Then
         playerMoney(player) = 30 * BB
     End If
     '/test
@@ -301,7 +303,7 @@ i = betTimes Mod 8 '还要不要一圈圈来
         player = (gamePlayed + i + 2) Mod 8 '从UTG开始循环
         prevPlayer = (gamePlayed + i + 1) Mod 8
         Range(aRngBetCondition(player)).Select
-    Else
+    Else '第二轮下注了
         player = (gamePlayed + i) Mod 8 '从小盲注开始
         prevPlayer = (gamePlayed + i - 1) Mod 8
         Range(aRngBetCondition(player)).Select
@@ -328,7 +330,18 @@ i = betTimes Mod 8 '还要不要一圈圈来
 
 '
 
-    If playerFold(player) Then '有人弃牌
+    If playerFold(player) Then '有人弃牌选择了弃牌
+        countFold = countFold + 1
+        callChips(player) = 0
+        Range(aRngBetCondition(player)).Value = "fold"
+        Range(aRngBetCondition(player)).Interior.ThemeColor = xlThemeColorLight1 '黑底,fold
+        Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白色字体
+        Range(aRngBet(player)) = ""
+        Range(aRngHand(player + 1, 1)) = "" '牌拿走,二维数组从1开始
+        Range(aRngHand(player + 1, 2)) = ""
+        playerCall(player) = False
+        playerRaise(player) = False
+        playerAllin(player) = False
         GoTo nextPlayerBet
     Else '正常结算player的下注到一个总底池
         totalPot = totalPot + diffChips(player)
@@ -341,11 +354,11 @@ i = betTimes Mod 8 '还要不要一圈圈来
         Range(aRngBetCondition(player)).Select
         If playerAction = "call" Then
             Range(aRngBetCondition(player)).Interior.color = 5296274 '绿底, call
-            Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白?痔?
-        ElseIf playerAction = "check" Or playerAction = "bet" Then
+            Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白色字体
+        ElseIf playerAction = "check" Then
             Range(aRngBetCondition(player)).Interior.color = 15773696 '蓝底, check
             Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白色字体
-        ElseIf playerAction = "raise" Then
+        ElseIf playerAction = "raise" Or playerAction = "bet" Then
             Range(aRngBetCondition(player)).Interior.color = 49407 '橙底, raise or bet
             Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白色字体
         ElseIf playerAction = "all in" Then
@@ -416,22 +429,22 @@ If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,�
                 countDiffAllin = countDiffAllin - 1
                 allinPlayerChipsAndPot(i, 0) = allinPlayerChipsAndPot(i, 0) & allinPlayerChipsAndPot(j, 0)
                 allinPlayerChipsAndPot(j, 0) = ""
-                allinPlayerChipsAndPot(j, 1) = ""
-                allinPlayerChipsAndPot(j, 2) = ""
+                allinPlayerChipsAndPot(j, 1) = 0
+                allinPlayerChipsAndPot(j, 2) = 0
             End If
         Next j
     Next i
+    '还在场上没全下的
     lastOfUs = 8 - countAllin - countFold '/test如果还有人没allin，或者到了下一轮又allin了怎么办
-    If lastOfUs > 0 Then '>=allin，还有人没fold或allin
+    If lastOfUs > 0 Then  '最后一轮下注结束了，>=allin，还有人没fold或allin
         For i = 0 To 7
-            If (Not playerFold(i) Or Not playerAllin(i)) And callChips(i) = maxAllIn Then '如果有没allin的但是跟注了，就和最大的allin一个池
+            If (Not playerFold(i) Or Not playerAllin(i)) And callChips(i) = maxAllIn And stage = 3 Then '如果有没allin的但是跟注了，就和最大的allin一个池
                 allinPlayerChipsAndPot(countDiffAllin - 1, 0) = allinPlayerChipsAndPot(countDiffAllin - 1, 0) & i
-                allinPlayerChipsAndPot(countDiffAllin - 1, 1) = maxCallChips
-                Exit For
             ElseIf (Not playerFold(i) Or Not playerAllin(i)) And callChips(i) > maxAllIn Then '甚至加注上去了，就单算一个池
-                allinPlayerChipsAndPot(countDiffAllin, 0) = i
+                If stage = 3 Then
+                    allinPlayerChipsAndPot(countDiffAllin, 0) = allinPlayerChipsAndPot(countDiffAllin, 0) & i
+                End If
                 allinPlayerChipsAndPot(countDiffAllin, 1) = callChips(i)
-                Exit For
             End If
         Next i
     End If
@@ -439,7 +452,7 @@ If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,�
     For i = lastAllinNum To countDiffAllin '如果之前已经有几个边池了，就整理汇集后面的
             If i > lastAllinNum Then  '之前有相同allin的，造成池比allin人数少
                 If Len(allinPlayerChipsAndPot(i - 1, 0)) > 1 Then '写到一起去,如果i=last会报错
-                    countSameBetPlayer = countSameBetPlayer + 1
+                    countSameBetPlayer = Len(allinPlayerChipsAndPot(i - 1, 0)) - 1
                 End If
 '            ElseIf i = countDiffAllin Then '最后一个diffallin了，还有重复项的话
 '                If allinPlayerChipsAndPot(i, 1) = "" Then '写到一起去,如果i=last会报错
@@ -447,7 +460,7 @@ If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,�
 '                End If
             End If
             playerCountIn = countThisTurnAction - i - countSameBetPlayer
-        If i > 0 And countDiffAllin - lastAllinNum > 1 Then 'multi allin
+        If i > 0 And countDiffAllin - lastAllinNum > 0 Then 'multi allin
             If Not allinPlayerChipsAndPot(i, 1) = "" Then
                 diffAllin = (allinPlayerChipsAndPot(i, 1) - allinPlayerChipsAndPot(i - 1, 1))
             End If
@@ -493,7 +506,7 @@ For i = 0 To 7
     End If
     playerCall(i) = False
     playerRaise(i) = False
-    If countAllin >= 7 Then
+    If countAllin >= 7 Then '如果大家都全下了，就摊牌直接到结算，手牌染色
         Range(aRngHand(i + 1, 1)).Offset(1, 0) = Range(aRngHand(i + 1, 1)).Value
         Range(aRngHand(i + 1, 2)).Offset(1, 0) = Range(aRngHand(i + 1, 2)).Value
         isDim = Left(Range(aRngHand(i + 1, 1)).Offset(1, 0).Text, 1) = "h"
@@ -525,7 +538,7 @@ Function aiBet()
 Call Randomize
 
 toSBPos = player - gamePlayed Mod 8 '距离小盲注位置，aiPlayer = 1~7,不会等于零，因为0是你，玩家
-If toSBPos >= 5 Then '在后
+If toSBPos >= 4 Then '在后
     aiPosRnk = 2
 ElseIf toSBPos >= 2 Then '在中
     aiPosRnk = 1
@@ -549,7 +562,7 @@ If maxCallChips = 0 Then
     addOpt = "bet"
     If aiOption = 0 Then
         aiOption = 1 '别弃牌，再看看，或许有免费牌
-    ElseIf aiOption = 0 And aiPosition = 2 Then
+    ElseIf aiOption = 1 And aiPosRnk = 2 Then
         aiOption = 2
     End If
 ElseIf maxCallChips > callChips(player) Then  ' or call
@@ -562,7 +575,7 @@ End If
 
 'aiOption = Int(Rnd * (player Mod 3))
 'test''''''''
-aiOption = 2
+'aiOption = 2
 '/test'''''''''''''''''''''''''''''''''''
 If aiOption = 2 Then
     If countRaise(player) > aiOption + aiPosRnk Or playerRaise(player) And maxCallChips > 20 * BB Then
@@ -573,20 +586,7 @@ If aiOption = 2 Then
 End If
 Select Case aiOption
     Case 0 'fold
-        countFold = countFold + 1
-        callChips(player) = 0 '不再传递callChips
-        Range(aRngBetCondition(player)).Value = "fold"
-        Range(aRngBetCondition(player)).Interior.ThemeColor = xlThemeColorLight1 '黑底,fold
-        Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白色字体
-        Range(aRngBet(player)) = ""
-        Range(aRngHand(player + 1, 1)) = "" '牌拿走,二维数组从1开始
-        Range(aRngHand(player + 1, 2)) = ""
         playerFold(player) = True
-        playerCall(player) = False
-        'playerCheck(player) = False
-        playerRaise(player) = False
-        playerAllin(player) = False
-        
     Case 1 'check or call
 'checkOrCall:
         If maxCallChips - callChips(player) >= playerMoney(player) Then '跟不上了，被迫allin
@@ -740,18 +740,8 @@ raiseChip:
         playerAllin(player) = True
         playerAction = "all in"
     Case Else 'fold
-        countFold = countFold + 1
-        callChips(player) = 0 '不再传递callChips
-        Range(aRngBetCondition(player)).Value = "fold"
-        Range(aRngBetCondition(player)).Interior.ThemeColor = xlThemeColorLight1 '黑底,fold
-        Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白色字体
-        Range(aRngBet(player)) = ""
-        Range(aRngHand(player + 1, 1)) = "" '牌拿走,二维数组从1开始
-        Range(aRngHand(player + 1, 2)) = ""
-        playerFold(player) = True
-        playerCall(player) = False
-        playerRaise(player) = False
-        playerAllin(player) = False
+        playerFold(player) = True '还是要表个态
+        '在raisefold那边统一结算
 End Select
 End Function
 Function deal()
@@ -1162,8 +1152,9 @@ For i = 0 To 7
     totalWin(i) = 0
 Next i
 countAllin = 0
-countOnTable = 8
+countDiffAllin = 0
 countFold = 0
+countOnTable = 8
 earnChips = 0
 ifLastOne = False
 lastAllinNum = 0
