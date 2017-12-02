@@ -1,5 +1,4 @@
 Private Declare Sub Sleep Lib "kernel32" (ByVal dwmilliseconds As Long)
-'v1202,22:52 在家里运行会自己无缘由停止
 'v1130,11:02
 'v1129,22:46 边池分配还有问题
 'v1129,17:05 现在取消能够结束游戏了
@@ -915,7 +914,7 @@ If allinPlayerChipsAndPot(1, 2) > 0 Then '有边池
                     rngTotalPot = totalPot
                     totalWin(player) = totalWin(player) + earnChips
                     Range(aRngMoney(player)) = playerMoney(player)
-                    Range(aRngPotNum(j)) = Range(aRngPotNum(j)).Value - earnChips
+                    Range(aRngPotMoney(j)) = Range(aRngPotMoney(j)).Value - earnChips
                 Next eachSamPat
                 Range(aRngPotMoney(j), aRngPotNum(j)).Borders.LineStyle = xlNone
                 Range(aRngPotMoney(j), aRngPotNum(j)).Value = ""
@@ -936,7 +935,7 @@ If allinPlayerChipsAndPot(1, 2) > 0 Then '有边池
                                 totalPot = totalPot - earnChips
                                 rngTotalPot = totalPot
                                 Range(aRngMoney(player)) = playerMoney(player)
-                                Range(aRngPotNum(j)) = Range(aRngPotNum(j)).Value - earnChips
+                                Range(aRngPotMoney(j)) = Range(aRngPotMoney(j)).Value - earnChips
                             Next eachSamPat
                             allinPlayerChipsAndPot(winAll, 2) = allinPlayerChipsAndPot(winAll, 2) - earnChips * Len(strSamePatPlayer)
                             Range(aRngPotMoney(winAll), aRngPotNum(winAll)).Borders.LineStyle = xlNone
@@ -980,7 +979,7 @@ If allinPlayerChipsAndPot(1, 2) > 0 Then '有边池
                                 totalPot = totalPot - earnChips
                                 rngTotalPot = totalPot
                                 Range(aRngMoney(player)) = playerMoney(player)
-                                Range(aRngPotNum(j)) = CInt(Range(aRngPotNum(j)).Value) - earnChips
+                                Range(aRngPotMoney(j)) = CInt(Range(aRngPotMoney(j)).Value) - earnChips
                             Next eachSamPat
                             Range(aRngPotMoney(j), aRngPotNum(j)).Borders.LineStyle = xlNone
                             Range(aRngPotMoney(j), aRngPotNum(j)).Value = ""
@@ -1001,7 +1000,7 @@ If allinPlayerChipsAndPot(1, 2) > 0 Then '有边池
                                     totalPot = totalPot - earnChips
                                     rngTotalPot = totalPot
                                     Range(aRngMoney(player)) = playerMoney(player)
-                                    Range(aRngPotNum(j)) = Range(aRngPotNum(j)).Value - earnChips
+                                    Range(aRngPotMoney(j)) = Range(aRngPotMoney(j)).Value - earnChips
                                 Next eachSamPat
                                 allinPlayerChipsAndPot(winAll, 2) = allinPlayerChipsAndPot(winAll, 2) - earnChips * Len(strSamePatPlayer)
                                 Range(aRngPotMoney(winAll), aRngPotNum(winAll)).Borders.LineStyle = xlNone
@@ -1091,7 +1090,7 @@ Else '没有边池，一样的牌型就分，没有一样的就通吃
             rngTotalPot = totalPot
             Range(aRngMoney(player)) = playerMoney(player)
             allinPlayerChipsAndPot(0, 2) = allinPlayerChipsAndPot(0, 2) - earnChips
-            Range(aRngPotNum(0)) = Range(aRngPotNum(0)).Value - earnChips
+            Range(aRngPotMoney(0)) = Range(aRngPotMoney(0)).Value - earnChips
         Next i
     Else
         player = allPlayerPatAndDecek(0, 0)
@@ -1101,7 +1100,7 @@ Else '没有边池，一样的牌型就分，没有一样的就通吃
         totalPot = totalPot - earnChips
         rngTotalPot = totalPot
         Range(aRngMoney(player)) = playerMoney(player)
-        Range(aRngPotNum(0)) = Range(aRngPotNum(0)).Value - earnChips
+        Range(aRngPotMoney(0)) = Range(aRngPotMoney(0)).Value - earnChips
     End If
 End If
 End Function
