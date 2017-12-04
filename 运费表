@@ -86,9 +86,6 @@ Application.DisplayAlerts = 0
     .Replace What:="北", Replacement:="bei", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="中", Replacement:="zhong", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
     .Replace What:="张家", Replacement:="zhangjia", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
@@ -107,7 +104,7 @@ Application.DisplayAlerts = 0
     .Replace What:="漕泾", Replacement:="caojing", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="南京", Replacement:="nanjing", LookAt:=xlPart, _
+    .Replace What:="京", Replacement:="jing", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="营口", Replacement:="yingkou", LookAt:=xlPart, _
@@ -125,7 +122,7 @@ Application.DisplayAlerts = 0
     .Replace What:="泉州", Replacement:="quanzhou", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="南通", Replacement:="nantong", LookAt:=xlPart, _
+    .Replace What:="通", Replacement:="tong", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="天津", Replacement:="tianjin", LookAt:=xlPart, _
@@ -134,10 +131,10 @@ Application.DisplayAlerts = 0
     .Replace What:="大丰", Replacement:="dafeng", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="东莞", Replacement:="dongguan", LookAt:=xlPart, _
+    .Replace What:="莞", Replacement:="guan", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="东营", Replacement:="dongying", LookAt:=xlPart, _
+    .Replace What:="营", Replacement:="ying", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="厦门", Replacement:="xiamen", LookAt:=xlPart, _
@@ -288,9 +285,6 @@ Application.DisplayAlerts = 0
     .Replace What:="醋酸乙烯", Replacement:="VINYL ACETATE", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="丙烯腈", Replacement:="AN", LookAt:=xlWhole, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
     .Replace What:="二甲基甲酰胺", Replacement:="Dimethylformamide", LookAt _
         :=xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False _
         , ReplaceFormat:=False
@@ -303,6 +297,12 @@ Application.DisplayAlerts = 0
     .Replace What:="苯酚", Replacement:="Phenol", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
+    .Replace What:="甲苯", Replacement:="TOLUENE", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="混二甲苯", Replacement:="MIX XYLENE", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False
     .Replace What:="混合二甲苯", Replacement:="MIX XYLENE", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
@@ -312,7 +312,7 @@ Application.DisplayAlerts = 0
     .Replace What:="二甲苯", Replacement:="Xylenes", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="甲苯", Replacement:="TOLUENE", LookAt:=xlWhole, _
+    .Replace What:="三甲苯", Replacement:="Trimethylbenzene (all isomers)", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="碳9", Replacement:="C-9", LookAt:=xlWhole, _
@@ -358,9 +358,6 @@ Application.DisplayAlerts = 0
         xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="丙烯晴", Replacement:="AN(acrylonitrile)", LookAt:= _
-        xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
-        ReplaceFormat:=False
-    .Replace What:="混二甲苯", Replacement:="MIX XYLENE", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="甲甲酯", Replacement:="Methyl methacrylate", LookAt _
@@ -429,7 +426,7 @@ weiba = Range("a1").End(xlDown).Row
 For i = 2 To weiba
     If Cells(i, 2) <> Cells(i + 1, 2) Then
         Sheets.Add After:=Sheets(Sheets.Count)
-        Sheets(Sheets.Count).name = Sheets("收入清单2017").Cells(i, 2).Text
+        Sheets(Sheets.Count).Name = Sheets("收入清单2017").Cells(i, 2).Text
         Sheets("收入清单2017").Rows("1:1").Copy Sheets(Sheets.Count).Rows("1:1")
         Sheets("收入清单2017").Rows(kaitou & ":" & i).Copy Sheets(Sheets.Count).Range("a2")
         kaitou = i + 1
@@ -453,3 +450,34 @@ Else: ActiveWorkbook.SaveAs Filename:="F:\工作文档\动态表(鼎衡大家庭
         FileFormat:=xlOpenXMLWorkbook, CreateBackup:=False
 End If
 End Function
+Sub 滞期费统计表()
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
+Sheets("滞期费统计表").Select
+Rows("1:3").Delete Shift:=xlUp '开头标题行删除
+Columns("E:E").SpecialCells(xlCellTypeBlanks).EntireRow.Delete '删除没有发票号的行
+Columns("B").NumberFormatLocal = "yyyy-m-d" '日期列
+Columns("F:F").Cut Destination:=Columns("D:D") '航次列替代船+币列
+Columns("H:K").Cut Destination:=Columns("F:I") '航线 货名 公司 金额
+For r = 1 To 200
+continueCheck:
+    If Cells(r, 1).Interior.ColorIndex = -4142 And Cells(r, 1) <> "" Then
+        r = r + 1
+        Rows(r).Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
+    ElseIf Cells(r, 1).Interior.ColorIndex <> -4142 And Cells(r, 1) <> "" Then
+        Rows(r).Delete
+        GoTo continueCheck
+    ElseIf Cells(r, 2) = "" Then
+        countEmpty = countEmpty + 1
+        If countEmpty > 3 Then
+            Range(Cells(1, 2), Cells(r - countEmpty, 9)).Copy
+            Exit For
+        End If
+    Else
+        countEmpty = 0
+    End If
+Next r
+Columns("i").NumberFormatLocal = "$#,##0.00"
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
+End Sub
