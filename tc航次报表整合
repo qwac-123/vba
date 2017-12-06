@@ -1,0 +1,280 @@
+Option Explicit
+
+Dim hangciDiYiCi As Boolean
+Dim ranrunDiYiCi As Boolean
+Dim openedOil As Boolean
+Dim openedVoy As Boolean
+
+Dim i As Integer
+Dim rng0 As Range
+Dim rng1 As Object
+Dim rng2 As Object
+Dim rng3 As Object
+
+Dim w As Object
+Dim wsh As Object
+Dim zb As Object
+Dim zsh As Object
+
+Dim rowGangKou As Long '港口所在行
+Dim rowzbEnd As Long
+Dim rowXiJieHead As Long '行号数据类型是long
+Dim rowXiJieEnd As Long
+
+Dim str As String '单元格内容
+Dim shipNum As String '从input里得到的，都是string
+Dim shipName As String
+Dim fileDir As String '文件夹位置
+Dim voy As String '记录航次号
+Dim nam As String
+
+Dim dakaibaobiao As Variant ' 在VBA中，对于For Each m In a，若a是数组，m只能声明为variant 变量，这是语法决定的。
+Dim baobiao As Variant '同上
+Sub tc合并全年航次报表()
+'Range("A1").CurrentRegion.Offset(1, 0).ClearContents
+Application.ScreenUpdating = False
+Dim arr(1 To 10000) As String
+Dim f, cFile, i%, k%, x%
+Dim wb As Workbook
+
+arr(1) = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\"
+i = 1: k = 1
+
+Set zb = ActiveWorkbook
+Set zsh = ActiveSheet
+
+'If MsgBox("是否清除当前表的内容", vbYesNo) = vbYes Then
+'    Cells.Delete '删除当前表的内容
+'Else
+''不删表，继续
+'End If
+
+Do While i < UBound(arr)
+    If arr(i) = "" Then Exit Do
+    f = Dir(arr(i), vbDirectory)
+    Do While f <> "" '
+        If InStr(f, ".") = 0 And 1 Then '没有"."说明是文件夹名字 文件夹里面第一个是".", 第二个是"..",往后是看得见的文件夹
+            If Right(f, 1) = "年" And f <> "2017年" Then '非2017年文件夹不要
+                GoTo dirf
+            End If
+            k = k + 1
+            arr(k) = arr(i) & f & "\"
+        End If
+dirf:
+        f = Dir
+    Loop
+    i = i + 1
+Loop
+
+For x = 22 To UBound(arr) '使用前请检查arr(22)是不是第一个2017文件夹
+    If arr(x) = "" Then
+        Exit For
+    End If
+    Debug.Print Right(arr(x), 2)
+    initialName = Left(arr(x), 2)
+    If initialName <> "鼎衡" And initialName <> "建兴" And Right(arr(x), 2) <> "年\" Then
+        GoTo nextxx:
+    End If
+    
+    cFile = Dir(arr(x) & "*.xls?")
+    Do While cFile <> ""
+        baobiao = arr(x) & cFile
+        Set fs = CreateObject("scripting.FileSystemObject")
+        Set f = fs.GetFile(baobiao)
+        'Debug.Print Now 'Month(f.DateLastModified)
+        If Month(f.DateLastModified) < Month(Now) Then '如果是以前的，就不整合了
+            'GoTo nextFile:
+        ElseIf InStr(5, baobiao, "燃") = 0 And InStr(5, baobiao, "然") = 0 Then '这是航次报表
+            Call 航次报表整合
+        Else '这是燃润料报表
+            Call 燃润料报表整合
+        End If
+nextFile:
+        cFile = Dir
+    Loop
+nextxx:
+Next x
+
+zsh.Cells(rowzbEnd, 1).Select
+ActiveWindow.FreezePanes = False
+Range("b2").Select
+ActiveWindow.FreezePanes = True
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
+End Sub
+Sub 批量新建文件夹()
+Dim ar
+ar = Array("鼎衡1", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17（万年青）", "鼎衡18（常春藤）", "鼎衡2", "鼎衡3", "建兴32", "鼎衡5", "鼎衡7", "鼎衡9")
+For i = 0 To UBound(ar)
+sorFil = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & ar(i) & "\2017年"
+dstFil = "F:\工作文档\航次报表2017年\" & ar(i)
+FileCopy sorFil, dstFil
+Next i
+'MkDir "F:\工作文档\航次报表2017年\" & ar(i)
+Next i
+End Sub
+Sub tc航次报表统一整合()
+'v1.7 现在可以正确找到航次报表的细节时间了
+'v1.6 现在可以正确找到油料表头了
+'v1.5 重做了船名输入选择
+'v1.4 增加了开头提示清除表
+'v1.3 修改了冻结拆分窗格部分
+'v1.2 增加了船名输入以便于选择报表文件夹
+'v1.1 '增加了判断是否打开过油料表oil 和航次表voy
+ 'v1.0可以整合航次报表和燃润料报表到一张表里
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
+Do
+If shipNum = "     " Then
+    MsgBox "请输入正确的数字"
+End If
+shipNum = InputBox("请输入船名数字，如鼎衡10就输入10", "船名数字", "10")
+Loop While Len(shipNum) > 2
+If shipNum = "" Then
+    Exit Sub
+End If
+Select Case shipNum
+    Case 17
+        shipName = "鼎衡17（万年青）"
+    Case 18
+        shipName = "鼎衡18（常春藤）"
+    Case 32
+        shipName = "建兴32"
+    Case Else
+        shipName = "鼎衡" & shipNum
+End Select
+fileDir = _
+"\\192.168.0.223\航运在线\10、油料管理部\航次报表\" _
+& shipName & "\" & Year(Date) & "年"
+ChDir fileDir
+dakaibaobiao = Application.GetOpenFilename(FileFilter:="Excel文件 (*.xls; *.xlsx),*.xls; *.xlsx,所有文件(*.*),*.*", _
+       title:="Excel选择", MultiSelect:=True) '选择要被合并的簿
+
+If Not IsArray(dakaibaobiao) Then '如果点了取消就结束
+    Exit Sub
+End If
+
+ranrunDiYiCi = True
+hangciDiYiCi = True
+openedOil = False
+openedVoy = False
+Set zb = ActiveWorkbook
+Set zsh = ActiveSheet
+
+If MsgBox("是否清除当前表的内容", vbYesNo) = vbYes Then
+    Cells.Delete '删除当前表的内容
+Else
+'退出
+End If
+
+For Each baobiao In dakaibaobiao
+    If InStr(5, baobiao, "燃") = 0 Or InStr(5, baobiao, "然") = 0 Then '这是航次报表
+        Call 航次报表整合
+    Else '这是燃润料报表
+        Call 燃润料报表整合
+    End If
+Next baobiao
+ActiveWindow.FreezePanes = False
+Range("b2").Select
+ActiveWindow.FreezePanes = True
+'处理航次区域
+If openedVoy Then
+    Columns("A:A").ColumnWidth = 4
+    Columns("B:c").ColumnWidth = 8
+    Columns("e:f").ColumnWidth = 15.4
+    Rows.RowHeight = 15
+End If
+zsh.Cells(rowzbEnd, 1).Select
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
+End Sub
+Function 燃润料报表整合()
+'v2.2 现在能够正确找到表头位置了
+'v2.1 增加了判断是否打开过油料表
+'v2.0 从原来的sub改为sub航次报表统一整合()下的一个function
+'v1.0 油料报表整合 Macro
+Dim rngGezi As Object
+Dim rowOilHead As Long
+Dim rowOilAdd As Long
+Dim rowOilEnd As Long
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
+Set w = Workbooks.Open(baobiao)
+Set wsh = w.Sheets("燃油报表")
+voy = Mid(w.Name, InStr(6, w.Name, "V") + 1, 4)
+nam = Left(w.Name, 4)
+rowzbEnd = zsh.Cells(66666, 2).End(xlUp).Row + 1
+If Left(Range("a39"), 5) = "本航次消耗" Then
+    wsh.Range("c39").Copy
+    zsh.Cells(rowzbEnd, 3).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    wsh.Range("b39").Copy
+    zsh.Cells(rowzbEnd, 4).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+ElseIf Left(Range("a41"), 5) = "本航次消耗" Then
+    wsh.Range("c41").Copy
+    zsh.Cells(rowzbEnd, 3).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+    wsh.Range("b41").Copy
+    zsh.Cells(rowzbEnd, 4).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+    'zsh.Cells(rowzbEnd, 1) = voy
+Else
+    Debug.Print 1
+End If
+zsh.Cells(rowzbEnd, 1) = nam
+zsh.Cells(rowzbEnd, 2) = voy
+w.Close
+openedOil = True
+End Function
+Function 航次报表整合()
+'v2.2 现在只选中可见单元格
+'v2.1 增加了判断是否打开过航次表
+'v2.0 从原来的sub改为sub航次报表统一整合()下的一个function
+'v1.171114 最后调整了格子大小
+'v1.0 航次报表整合 Macro
+
+On Error GoTo errorOpen '手动解决
+Set w = Workbooks.Open(baobiao)
+If 0 Then '文档打不开了，手动打开
+errorOpen:
+MsgBox Right(baobiao, 18)
+Set w = ActiveWorkbook
+End If
+Set wsh = w.Sheets("航次报表")
+Set rng0 = wsh.Range("b5,d5") '航次开始结束
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
+rowzbEnd = zsh.Cells(66666, 5).End(xlUp).Row + 1
+voy = Mid(w.Name, InStr(6, w.Name, "V") + 1, 4)
+nam = Left(w.Name, 4)
+rng0.Copy
+zsh.Cells(rowzbEnd, 7).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+zsh.Cells(rowzbEnd, 5) = nam
+zsh.Cells(rowzbEnd, 6) = voy
+w.Close
+openedVoy = True
+End Function
+Sub tc计算表拆分到各表()
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
+Set zsh = ActiveSheet
+Dim kaitou
+kaitou = 2
+For i = 2 To Cells(66666, 1).End(xlUp).Row
+    If Cells(i, 1) <> Cells(i + 1, 1) Then
+        Sheets.Add After:=Sheets(Sheets.Count)
+        Sheets(Sheets.Count).Name = Sheets(1).Cells(i, 1).Value
+        zsh.Rows("1:1").Copy Sheets(Sheets.Count).Rows("1:1") '表头
+        zsh.Rows(kaitou & ":" & i).Copy Sheets(Sheets.Count).Range("a2")
+        kaitou = i + 1
+        Sheets(Sheets.Count).Range("A1").AutoFilter
+        zsh.Select
+    End If
+Next i
+Sheets.Select
+Columns.EntireColumn.AutoFit
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
+End Sub
