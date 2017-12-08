@@ -80,9 +80,6 @@ Application.DisplayAlerts = 0
     .Replace What:="西", Replacement:="xi", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="南", Replacement:="nan", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
     .Replace What:="北", Replacement:="bei", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
@@ -104,7 +101,7 @@ Application.DisplayAlerts = 0
     .Replace What:="漕泾", Replacement:="caojing", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="京", Replacement:="jing", LookAt:=xlPart, _
+    .Replace What:="南京", Replacement:="nanjing", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="营口", Replacement:="yingkou", LookAt:=xlPart, _
@@ -122,7 +119,7 @@ Application.DisplayAlerts = 0
     .Replace What:="泉州", Replacement:="quanzhou", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="通", Replacement:="tong", LookAt:=xlPart, _
+    .Replace What:="南通", Replacement:="nantong", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="天津", Replacement:="tianjin", LookAt:=xlPart, _
@@ -165,6 +162,9 @@ Application.DisplayAlerts = 0
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="浦", Replacement:="pu", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="海南", Replacement:="yangpu", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
         
@@ -279,6 +279,9 @@ Application.DisplayAlerts = 0
         
 '货名
     With Columns("F:F")
+    .Replace What:="AA", Replacement:="Acetic acid", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
     .Replace What:="冰醋酸", Replacement:="Acetic acid", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
@@ -297,6 +300,9 @@ Application.DisplayAlerts = 0
     .Replace What:="苯酚", Replacement:="Phenol", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
+    .Replace What:="TOL", Replacement:="TOLUENE", LookAt:=xlWhole, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
     .Replace What:="甲苯", Replacement:="TOLUENE", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
@@ -307,6 +313,12 @@ Application.DisplayAlerts = 0
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="对二甲苯", Replacement:="PARAXYLENE", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="邻二甲苯", Replacement:="O-XYLENE", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="OX", Replacement:="O-XYLENE", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="二甲苯", Replacement:="Xylenes", LookAt:=xlWhole, _
@@ -325,6 +337,9 @@ Application.DisplayAlerts = 0
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="苯乙烯", Replacement:="STYRENE MONOMER", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="SM", Replacement:="STYRENE MONOMER", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="丙酮", Replacement:="Acetone", LookAt:=xlWhole, _
@@ -360,6 +375,9 @@ Application.DisplayAlerts = 0
     .Replace What:="丙烯晴", Replacement:="AN(acrylonitrile)", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
+    .Replace What:="丙烯腈", Replacement:="AN(acrylonitrile)", LookAt:= _
+        xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False
     .Replace What:="甲甲酯", Replacement:="Methyl methacrylate", LookAt _
         :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
@@ -378,8 +396,17 @@ Application.DisplayAlerts = 0
     .Replace What:="甲基叔丁基醚", Replacement:="Methyl tert butyl ether", LookAt _
         :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
+    .Replace What:="150N+500N", Replacement:="500N+150N", LookAt _
+        :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="CYC", Replacement:="Cyclohexane", LookAt _
+        :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False '环己烷
+    .Replace What:="异辛烷", Replacement:="isooctane", LookAt _
+        :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
+        ReplaceFormat:=False
     End With
-    
+    'isooctane
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 'Loco.Select
@@ -468,6 +495,7 @@ continueCheck:
         Rows(r).Delete
         GoTo continueCheck
     ElseIf Cells(r, 2) = "" Then
+    
         countEmpty = countEmpty + 1
         If countEmpty > 3 Then
             Range(Cells(1, 2), Cells(r - countEmpty, 9)).Copy
