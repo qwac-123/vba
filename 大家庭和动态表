@@ -2,6 +2,8 @@ Dim zuotian
 Dim dajiating
 Dim dongtaibiao
 Sub 开始今天上午的工作()
+'v3 删除了DH7
+'V2 增加了ANGEL123,DHE
 'v1.2增加了向上滚屏代码
 'v1.1 删掉了部分无用代码，现在打开动态表会正确显示在船舶状态表
 ''v1.0
@@ -26,6 +28,8 @@ Application.DisplayAlerts = 1
 Workbooks(Format(Date - zuotian, "船舶动态（yyyy-mm-dd）.xl\sx")).Activate
 End Sub
 Function 大家庭动态()
+'V3 删除了DH7
+'V2 etb未完成，增加了ANGEL123 DHE
 'v1.1 预计靠泊时间也写了一个简陋的函数进去
 'v1.0
 ' 处理船舶动态 Macro
@@ -47,13 +51,16 @@ Range("d4:e16").Interior.pattern = xlNone
     .Replace What:="：", Replacement:=":", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:=" ", Replacement:="", LookAt:=xlPart, _
+    .Replace What:="", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="鼎衡", Replacement:="DH", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="建兴", Replacement:="JX", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
+    .Replace What:="-", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="轮", Replacement:="", LookAt:=xlPart, _
@@ -64,7 +71,7 @@ Range("d4:e16").Interior.pattern = xlNone
         ReplaceFormat:=False
     End With
 
-For Each rngk In Range("k1:k25")
+For Each rngk In Range("k1:k30")
     j = 4
     i = 0
     If InStr(1, rngk, ":") = 0 Then
@@ -74,11 +81,11 @@ For Each rngk In Range("k1:k25")
         i = i + 1
         GoTo nextrngk
     End If
-    xinxi = Mid(rngk.Text, InStr(1, rngk.Text, ":") + 1, 999)
-    xinxitou = Mid(rngk.Text, 1, InStr(4, rngk.Text, ":") - 1)
-    For Each rnga In Range("a4:a20")
-        If xinxitou = rnga Then
-            Cells(j, 10) = xinxi
+    shipInfo = Mid(rngk.Text, InStr(1, rngk.Text, ":") + 1, 999)
+    shipName = Mid(rngk.Text, 1, InStr(1, rngk.Text, ":") - 1)
+    For Each rnga In Range("a4:a19")
+        If shipName = rnga Then
+            Cells(j, 10) = shipInfo
             GoTo nextrngk
         End If
         j = j + 1
@@ -86,11 +93,11 @@ For Each rngk In Range("k1:k25")
 nextrngk:
 Next rngk
 endchulidongtai:    '动态处理完毕
-Range("k1:k35").ClearContents
-Range("j4:j15").Copy Range("k4:k15")
-Range("a4:a15").Copy Range("j4:j15")
+Range("k1:k40").ClearContents
+Range("j4:j19").Copy Range("k4:k19")
+Range("a4:a19").Copy Range("j4:j19")
 Range("a1") = "上海鼎衡船队动态信息一览表 " & Format(Date, "yyyy年m月d日 aaaa") '更新日期 Range("G1:I1").FormulaR1C1 = "=IF(RC=0,TEXT(NOW(),""yyyy年m月d日 aaaa""),RC)"
-tri = Array("张家港", "连云港", "鲅鱼圈", "仙人岛")
+'tri = Array("张家港", "连云港", "鲅鱼圈", "仙人岛")
 'For r = 4 To 16
 '    If Cells(r, 11) = "" Then
 '        GoTo nextr
@@ -112,24 +119,26 @@ tri = Array("张家港", "连云港", "鲅鱼圈", "仙人岛")
 'nextr:
 'Next r
     
-    
-    Range("F4:F15").FormulaR1C1 = _
-        "=IF(RC[1]<>"""",""开往""&MID(RC[1],5,3),IF(RC[2]<>"""",""锚泊""&MID(RC[2],5,3),IF(COUNT(FIND(""靠泊"",RC[5])),IF(SUM(ISNUMBER(FIND({""张家港"",""连云港"",""鲅鱼圈"",""仙人岛""},RC[5]))*1),MID(RC[5],FIND(""靠泊"",RC[5]),5),MID(RC[5],FIND(""靠泊"",RC[5]),4)),RC[6]&""完货"")))"
-    Range("h4:h15").FormulaR1C1 = _
-        "=IF(ISTEXT(RC[5]),""预计靠泊""&RC[5],"""")"
-    
-    
+
+Range("F4:F19").FormulaR1C1 = _
+    "=IF(RC[1]<>"""",""开往""&MID(RC[1],5,3),IF(RC[2]<>"""",""锚泊""&MID(RC[2],5,3),IF(COUNT(FIND(""靠泊"",RC[5])),IF(SUM(ISNUMBER(FIND({""张家港"",""连云港"",""鲅鱼圈"",""仙人岛""},RC[5]))*1),MID(RC[5],FIND(""靠泊"",RC[5]),5),MID(RC[5],FIND(""靠泊"",RC[5]),4)),RC[6]&""完货"")))"
+Range("h4:h19").FormulaR1C1 = _
+    "=IF(ISTEXT(RC[5]),""预计靠泊""&RC[5],"""")"
 
 Set djt = ActiveWorkbook
-Range("K4:k15").Copy '大家庭船舶动态复制到动态表
+Set rngJX = Range("K4:k14")
+Set rngAg = Range("k16:k19")
 Call check_wk船舶动态
 
-    Range("J4").Select
-    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
-        :=False, Transpose:=False
-    Range("L4").Select
-        
+rngJX.Copy '大家庭船舶动态复制到动态表
+Range("J4").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+    :=False, Transpose:=False 'DH1-JX32
+rngAg.Copy
+Range("J18").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+    :=False, Transpose:=False 'HX - DHE
     
+Range("L4").Select
+        
 djt.Activate
 Range("h4").Select
 
@@ -153,7 +162,7 @@ Else
 End If
 Set wkjin = Workbooks(Format(Date, "船舶动态（yyyy-mm-dd）.xl\sx"))
 Set wkzuo = Workbooks(Format(Date - zuotian, "船舶动态（yyyy-mm-dd）.xl\sx"))
-If Len(wkjin.name) > 0 Then
+If Len(wkjin.Name) > 0 Then
     If Err.Number = 9 Then '如果wkjin打开了，就激活
         wkjin.Activate
     Else                    '否则就激活另一个
@@ -172,7 +181,7 @@ End If
 Set wkjin = Workbooks(Format(Date, "动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx"))
 Set wkzuo = Workbooks(Format(Date - zuotian, "动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx"))
 Debug.Print Format(Date - zuotian, "动态表（鼎衡大家庭）yyyy-mm-dd）.xl\sx")
-If Len(wkjin.name) > 0 Then
+If Len(wkjin.Name) > 0 Then
     If Err.Number = 9 Then '如果wkjin打开了，就激活
         wkjin.Activate
     Else                    '否则就激活另一个
@@ -182,7 +191,7 @@ End If
 End Function
 
 Sub bbb动态表ISMSROB()
-'v2.1船舶gps上加了个框便于定位
+'v3 增加了angel 123 ,DH E
 'v2处理ISMSROB
 'v1.1
 '删掉了了agent info表里面时间信息前的一个空格
@@ -235,7 +244,11 @@ For i = 4 To 15 Step 1
         'Debug.Print Mid(rob, 9, InStr(11, rob, "t") - 8)
       Cells(i, 16) = Mid(ROB, InStr(16, ROB, ":") + 1, InStr(19, ROB, "t") - InStr(16, ROB, ":")) 'do
       'Debug.Print Mid(rob, InStr(16, rob, ":") + 1, InStr(19, rob, "t") - InStr(16, rob, ":")) 'do
-      Cells(i, 17) = Mid(ROB, InStr(40, ROB, ":") + 1, InStr(46, ROB, "L") - InStr(40, ROB, ":")) 'lo
+'      Debug.Print ROB
+'      Debug.Print Space(39) & "40" & Space(5) & "46"
+'      Debug.Print InStr(38, ROB, "L")
+'      Debug.Print Mid(ROB, InStr(35, ROB, ":") + 1, InStr(38, ROB, "L") - InStr(35, ROB, ":"))
+      Cells(i, 17) = Mid(ROB, InStr(35, ROB, ":") + 1, InStr(38, ROB, "L") - InStr(35, ROB, ":")) 'lo
       'Debug.Print Mid(rob, InStr(40, rob, ":") + 1, InStr(46, rob, "L") - InStr(40, rob, ":")) 'lo
       Cells(i, 18) = Mid(ROB, InStr(27, ROB, ":") + 1, InStr(30, ROB, "t") - InStr(27, ROB, ":")) 'fw
       'Debug.Print Mid(rob, InStr(27, rob, ":") + 1, InStr(30, rob, "t") - InStr(27, rob, ":")) 'fw
@@ -267,16 +280,13 @@ Next i
 '开始处理经纬度
     Windows("PERSONAL.xlsb").Activate
     Sheets("船位数据").Select
-If Not Range("k5") = "" Then
-
-    Range("K21:K35").Copy
+If Range("k5") <> "" Then
+    Range("K23:K41").Copy
     Call check_wk船舶动态
-    Range("K4").Select
-    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+    Range("K4").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
         :=False, Transpose:=False
-    Workbooks("PERSONAL.xlsb").Sheets("船位数据").Rows("1:17").ClearContents
-    Workbooks("PERSONAL.xlsb").Sheets("船位数据").Rows("1:17").ClearFormats
-    Workbooks("PERSONAL.xlsb").Sheets("船位数据").Range("k3:l17").Borders.LineStyle = xlContinuous
+    Workbooks("PERSONAL.xlsb").Sheets("船位数据").Rows("1:21").ClearContents
+    Workbooks("PERSONAL.xlsb").Sheets("船位数据").Rows("1:21").ClearFormats
 Else
   Call check_wk船舶动态
 MsgBox "还没复制船舶经纬度"
@@ -478,4 +488,3 @@ Cells(r, c).Select
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 End Sub
-
