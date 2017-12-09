@@ -55,6 +55,7 @@ Dim gamePlayed As Integer '玩了几次
 Dim stage As Integer 'preflop=0,flop=1,etc
 Dim SB As Integer 'small blind
 Dim BB As Integer 'big blind
+Dim startPlayer As Integer 'first player who is not All in
 Dim betTurn As Integer
 Dim betTimes As Integer
 Dim countAllin As Integer
@@ -105,12 +106,12 @@ If gamePlayed < 1 Then
     ActiveWindow.SmallScroll ToRight:=4.3
     '/test
 End If
-If playerMoney(0) <= 0 Then
-    a = MsgBox("continue?", vbYesNo, "GAME OVER")
-    
-    playerMoney(0) = 100 * BB
-    Range(aRngMoney(0)) = "$" & playerMoney(i)
-End If
+'If playerMoney(0) <= 0 Then
+'    a = MsgBox("continue?", vbYesNo, "GAME OVER")
+'
+'    playerMoney(0) = 100 * BB
+'    Range(aRngMoney(0)) = "$" & playerMoney(i)
+'End If
 Call cleaning
 Call shuffle    '洗牌
 Call deal       '发牌
@@ -307,7 +308,7 @@ i = betTimes Mod 8 '还要不要一圈圈来
         prevPlayer = (gamePlayed + i + 1) Mod 8
         Range(aRngBetCondition(player)).Select
     Else '第二轮下注了
-        player = (gamePlayed + i) Mod 8 '从小盲注开始
+        player = (gamePlayed + startPlayer + i) Mod 8 '从小盲注（或者第一个不是allin fold的人）开始
         prevPlayer = (gamePlayed + i - 1) Mod 8
         Range(aRngBetCondition(player)).Select
     End If
@@ -384,7 +385,6 @@ If ifSameRaisePlayer And ifSameRaiseCycle Then  '又转到最后一个加注的�
 End If
 lstOne = countAllin + countFold = 7
 ifLastOne = lstOne And ifSameRaiseCycle '/test'
-
 '如果只有一个人加注，其余人都全下或者fold，那么要确认他的加注是大过其他人的allin，要转一圈到他
 ifAllFoldOrAllin = countAllin + countFold = 8 Or ifLastOne 'one man can do nothing
 'ifLoopBet
@@ -393,7 +393,7 @@ If ifAllFoldOrAllin Or betTurn > preTurn Then '全下或者弃牌了
 ElseIf betTurn = preTurn Then '还没转完
     ifLoopBet = True
 End If
-'loopBet:
+loopBet:
 'Sleep 600
 Loop While ifLoopBet
 countOnTable = 8 - countFold
@@ -404,7 +404,7 @@ Else
 End If
 
 If countDiffAllin = 0 Then
-    countDiffAllin = countAllin
+    countDiffAllin = countAllin - 1 '数组从0开始，count从1开始
 End If
 
 If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,结算下注，计算边池
@@ -414,6 +414,9 @@ If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,�
             allinPlayerChipsAndPot(i, 0) = allinPlayerChipsAndPot(i + 1, 0)
             allinPlayerChipsAndPot(i, 1) = allinPlayerChipsAndPot(i + 1, 1)
             allinPlayerChipsAndPot(i, 2) = allinPlayerChipsAndPot(i + 1, 2)
+            allinPlayerChipsAndPot(i + 1, 0) = ""
+            allinPlayerChipsAndPot(i + 1, 1) = 0
+            allinPlayerChipsAndPot(i + 1, 2) = 0
         End If
         For j = i + 1 To countAllin - 1
             If allinPlayerChipsAndPot(j, 1) < allinPlayerChipsAndPot(i, 1) Then '后比前小的话，全下的额度
@@ -441,9 +444,10 @@ If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,�
     lastOfUs = 8 - countAllin - countFold '/test如果还有人没allin，或者到了下一轮又allin了怎么办
     If lastOfUs > 0 Then  '最后一轮下注结束了，>=allin，还有人没fold或allin
         For i = 0 To 7
-            If (Not playerFold(i) Or Not playerAllin(i)) And callChips(i) = maxAllIn And stage = 3 Then '如果有没allin的但是跟注了，就和最大的allin一个池并把名字加进去
-                allinPlayerChipsAndPot(countDiffAllin - 1, 0) = allinPlayerChipsAndPot(countDiffAllin - 1, 0) & i
+            If (Not playerFold(i) Or Not playerAllin(i)) And callChips(i) = maxAllIn And stage = 3 Then '如果有没allin的但是跟注了,而且还是最后一轮下注了，就和最大的allin一个池并把名字加进去
+                allinPlayerChipsAndPot(countDiffAllin, 0) = allinPlayerChipsAndPot(countDiffAllin - 1, 0) & i
             ElseIf (Not playerFold(i) Or Not playerAllin(i)) And callChips(i) > maxAllIn Then '甚至加注上去了，就单算一个池
+                countDiffAllin = countDiffAllin + 1
                 If stage = 3 Then '如果是最后一轮下注，再把名字加上去
                     allinPlayerChipsAndPot(countDiffAllin, 0) = allinPlayerChipsAndPot(countDiffAllin, 0) & i
                 End If
@@ -465,7 +469,7 @@ If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,�
             End If
             playerCountIn = countThisTurnAction - i - countSameBetPlayer
         If i > 0 And countDiffAllin - lastAllinNum > 0 Then 'multi allin
-            If Not allinPlayerChipsAndPot(i, 1) = "" Then
+            If allinPlayerChipsAndPot(i, 1) <> "" Then
                 diffAllin = (allinPlayerChipsAndPot(i, 1) - allinPlayerChipsAndPot(i - 1, 1))
             End If
             diffCallAllin = maxCallChips - allinPlayerChipsAndPot(countDiffAllin - lastAllinNum - 1, 1) '如果加注超过最后一个全下的注
@@ -496,13 +500,16 @@ End If
 
 
 'Sleep 500
+resetLastAllin = True
+countThisTurnAction = 0
 For i = 0 To 7
     callChips(i) = 0
     ifCall = Range(aRngBetCondition(i)) = "call"
-    ifAllin = Range(aRngBetCondition(i)) = "all in"
-    ifFold = Range(aRngBetCondition(i)) = "fold"
+    ifAllin = playerAllin(i)
+    ifFold = playerFold(i)
     ifClearRng = Not (ifAllin Or ifFold) And Not ifLastOne
     If ifClearRng Then
+        countThisTurnAction = countThisTurnAction + 1
         Range(aRngBetCondition(i)) = ""
         Range(aRngBet(i)) = ""
         Range(aRngBetCondition(i)).Interior.pattern = xlNone '无填充
@@ -510,6 +517,10 @@ For i = 0 To 7
     End If
     playerCall(i) = False
     playerRaise(i) = False
+    If Not (ifAllin) And i >= gamePlayed Mod 8 And resetLastAllin Then '第一个不是allin的人是下回合的开始人物
+        startPlayer = i
+        resetLastAllin = False
+    End If
     If countAllin >= 7 Then '如果大家都全下了，就摊牌直接到结算，手牌染色
         Range(aRngHand(i + 1, 1)).Offset(1, 0) = Range(aRngHand(i + 1, 1)).Value
         Range(aRngHand(i + 1, 2)).Offset(1, 0) = Range(aRngHand(i + 1, 2)).Value
@@ -530,7 +541,6 @@ Next i
 minAllIn = 1000 * BB
 maxAllIn = 0
 maxCallChips = 0
-lastRaisePlayer = 0
 lastRaisePlayerbetTimes = 0
 lastAllinNum = countDiffAllin
 End Function
@@ -625,7 +635,7 @@ Select Case aiOption
             raiseChips = Int(totalPot / multi / BB) * BB
         End If
         'test'''''''''''
-        raiseChips = 3100
+        'raiseChips = 1000
         '/test'''''''''''''''''''''
         If raiseChips + maxCallChips - callChips(player) >= playerMoney(player) Then 'Allin
             playerAction = "all in"
@@ -1159,8 +1169,10 @@ countAllin = 0
 countDiffAllin = 0
 countFold = 0
 countOnTable = 8
+countThisTurnAction = 8
 earnChips = 0
 ifLastOne = False
+startPlayer = 0
 lastAllinNum = 0
 maxCallChips = 0
 maxAllIn = 0
@@ -1518,4 +1530,5 @@ Function helpme()
 'Fish--鱼：一般高水平的玩家对那些输不起，牌品差的玩家的贬意称呼。
 'Shark --鲨鱼: 一般指能够赢钱的高手?
 End Function
+
 
