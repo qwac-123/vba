@@ -1,0 +1,211 @@
+Sub Macro1()
+'
+' Macro1 Macro
+'
+
+'
+    Selection.Copy
+    Windows("Book2").Activate
+    Sheets("Sheet2").Select
+    Range("M11").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+End Sub
+Sub Macro2()
+'
+' Macro2 Macro
+'
+
+'
+    Columns("A:D").Select
+    Selection.NumberFormatLocal = "0.00_);[红色](0.00)"
+    Columns("E:E").Select
+    Selection.ColumnWidth = 16.25
+    Columns("E:F").Select
+    Selection.NumberFormatLocal = "[$-F800]dddd, mmmm dd, yyyy"
+    Selection.NumberFormatLocal = "yyyy-m-d"
+End Sub
+Sub Macro3()
+'
+' Macro3 Macro
+'
+
+'
+    Columns("E:F").Select
+    Selection.NumberFormatLocal = "yyyy-m-d h:mm;@"
+    Range("E6").Select
+    Sheets("2017年").Select
+    Selection.Copy
+    Sheets("Sheet1").Select
+    Range("E2:F10").Select
+    Selection.PasteSpecial Paste:=xlPasteFormats, Operation:=xlNone, _
+        SkipBlanks:=False, Transpose:=False
+    Application.CutCopyMode = False
+End Sub
+Sub Macro4()
+'
+' Macro4 Macro
+'
+
+'
+    Range("D:D,A:A").Select
+    Range("A1").Activate
+    Selection.NumberFormatLocal = "G/通用格式"
+    Selection.ColumnWidth = 8.75
+End Sub
+Sub 燃润料航次统计()
+'
+' 燃润料航次统计 Macro
+'
+
+'
+For Each sht In Sheets()
+    shipNam = sht.Name
+    shipNamShort = sht.Name
+    If Left(shipNam, 1) = "d" Or Left(shipNam, 1) = "j" Then
+        If shipNam = "dh17" Then
+            shipNam = "鼎衡17（万年青）"
+        ElseIf shipNam = "dh18" Then
+            shipNam = "鼎衡18（常春藤）"
+        ElseIf shipNam = "jx32" Then
+            shipNam = "建兴32"
+        Else
+            shipNam = Replace(shipNam, "dh", "鼎衡")
+        End If
+        startRow = Range("b3").End(xlDown).Row + 1
+        endRow = Range("a3").End(xlDown).Row
+        For ro = startRow To endRow
+            voy = Cells(ro, 1)
+            Cells(ro, 2).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$F$5"
+            Cells(ro, 3).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$B$7"
+            Cells(ro, 4).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$D$5"
+            Cells(ro, 5).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$D$9"
+            Cells(ro, 6).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$H$4"
+            Cells(ro, 7).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$H$9"
+            Cells(ro, 8).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$H$6"
+            Cells(ro, 9).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$E$13+'\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$E$14"
+            Cells(ro, 10).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$E$19+'\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$E$21"
+            Cells(ro, 11).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$E$16"
+            Cells(ro, 12).FormulaR1C1 = "=(RC[-3]+RC[-1])/(RC[-8]/24)"
+            Cells(ro, 13).FormulaR1C1 = "=RC[-4]/(RC[-8]/24)"
+            Cells(ro, 14).FormulaR1C1 = "=RC[-4]/(RC[-10]/24)"
+            Cells(ro, 15).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$E$12"
+            Cells(ro, 16).FormulaR1C1 = "=RC[-1]/(RC[-12]/24)"
+            Cells(ro, 17).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$B$41"
+            Cells(ro, 18).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$C$41"
+            Cells(ro, 19).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$D$41"
+            Cells(ro, 20).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xls]燃油报表'!$E$39"
+            Cells(ro, 21).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xls]燃油报表'!$F$39"
+            Cells(ro, 22).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xls]燃油报表'!$G$39"
+            Cells(ro, 23).Formula = ""
+            Cells(ro, 24).Formula = ""
+            Cells(ro, 25).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$E$25"
+            Cells(ro, 26).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "航次报表" & voy & ".xlsx]航次报表'!$D$4"
+            Cells(ro, 27).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "航次报表" & voy & ".xlsx]航次报表'!$F$4"
+            Cells(ro, 28).Formula = "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\[" & shipNamShort & "燃润料航次报表" & voy & ".xlsx]燃油报表'!$D$4"
+        Next ro
+    End If
+Next sht
+End Sub
+
+        
+'    Range("B62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R5C6"
+'    Range("C62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R7C2"
+'    Range("D62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R5C4"
+'    Range("E62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R9C4"
+'    Range("F62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R4C8"
+'    Range("G62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R9C8"
+'    Range("H62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R6C8"
+'    Range("I62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R13C5+'\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R14C5"
+'    Range("J62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R19C5+'\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R21C5"
+'    Range("K62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R16C5"
+'    Range("L62").Select
+'    ActiveCell.FormulaR1C1 = "=(RC[-3]+RC[-1])/(RC[-8]/24)"
+'    Range("M62").Select
+'    ActiveCell.FormulaR1C1 = "=RC[-4]/(RC[-8]/24)"
+'    Range("N62").Select
+'    ActiveCell.FormulaR1C1 = "=RC[-4]/(RC[-10]/24)"
+'    Range("O62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R12C5"
+'    Range("P62").Select
+'    ActiveCell.FormulaR1C1 = "=RC[-1]/(RC[-12]/24)"
+'    Range("Q62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R41C2"
+'    Range("R62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R41C3"
+'    Range("S62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R41C4"
+'    Range("T62").Select
+'    ActiveCell.FormulaR1C1 = ""
+'    Range("U62").Select
+'    ActiveCell.FormulaR1C1 = ""
+'    Range("V62").Select
+'    ActiveCell.FormulaR1C1 = ""
+'    Range("W62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R41C7"
+'    Range("X62").Select
+'    ActiveCell.FormulaR1C1 = ""
+'    Range("Y62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R25C5"
+'    Range("Z62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1航次报表V1746.xls]航次报表'!R4C4"
+'    Range("AA62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R4C6"
+'    Range("AB62").Select
+'    ActiveCell.FormulaR1C1 = _
+'        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2017年\[DH1燃润料航次报表V1746.xls]燃油报表'!R4C4"
+'    Range("AC62").Select
+'    ActiveCell.FormulaR1C1 = ""
+'    Range("AD62").Select
+'    ActiveCell.FormulaR1C1 = ""
+'    Range("AE62").Select
+Sub Macro8()
+'
+' Macro8 Macro
+'
+
+'
+shipNam = "鼎衡1"
+shipNamShort = "dh1"
+    ActiveCell.FormulaR1C1 = _
+        "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\"
+End Sub
+Sub Macro9()
+'
+' Macro9 Macro
+'
+
+'
+For col = 2 To 28
+    fro = Cells(42, col).Formula
+    Debug.Print "CELLS(66," & col & ").formula = """ & fro & """"
+Next
+End Sub
