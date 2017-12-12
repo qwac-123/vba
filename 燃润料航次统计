@@ -57,58 +57,74 @@ Sub 燃润料航次统计()
 '
 ' 燃润料航次统计 Macro
 '
+'i = 1
+'For Each shipNam In Array("鼎衡1", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17", "鼎衡18", "鼎衡2", "鼎衡3", "建兴32", "鼎衡5", "鼎衡7", "鼎衡9")
+'    If Left(shipNam, 1) = "鼎" Or Left(shipNam, 1) = "建" Then
+'        If shipNam = "鼎衡17（万年青）" Then
+'            shipNamShort = "dh17"
+'        ElseIf shipNam = "鼎衡18（常春藤）" Then
+'            shipNamShort = "dh18"
+'        ElseIf shipNam = "建兴32" Then
+'            shipNamShort = "jx32"
+'        Else
+'            shipNamShort = Replace(shipNam, "鼎衡", "dh")
+'        End If
+
+'        If i > Sheets.Count Then
+'            Sheets.Add After:=Sheets(Sheets.Count) '保证总簿的表数量够
+'            Set sht = Sheets(i)
+'            sht.Name = shipNam '增加的表名字相同
+'            With Sheets(i - 1)
+'            .Range("a1:aa3").Copy sht.Range("a1:aa3")
+'            .Range(.Range("A4"), .Range("A4").End(xlDown)).Copy sht.Range("a4")
+'            .Rows("4:4").Copy
+'            sht.Rows("4:73").PasteSpecial Paste:=xlPasteFormats
+'            Application.CutCopyMode = False
+'            End With
+'            Range("b4").Select
+'        End If
+'        Set sht = Sheets(i)
 'test
-i = 1
 '/test
 '
-'For Each sht In Sheets()
-'    shipNam = sht.Name
-'    shipNamShort = sht.Name
-'    If Left(shipNam, 1) = "d" Or Left(shipNam, 1) = "j" Then
-'        If shipNam = "dh17" Then
-'            shipNam = "鼎衡17（万年青）"
-'        ElseIf shipNam = "dh18" Then
-'            shipNam = "鼎衡18（常春藤）"
-'        ElseIf shipNam = "jx32" Then
-'            shipNam = "建兴32"
-'        Else
-'            shipNam = Replace(shipNam, "dh", "鼎衡")
-'        End If
-For Each shipNam In Array("鼎衡1", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17（万年青）", "鼎衡18（常春藤）", "鼎衡2", "鼎衡3", "建兴32", "鼎衡5", "鼎衡7", "鼎衡9")
-    If Left(shipNam, 1) = "鼎" Or Left(shipNam, 1) = "建" Then
-        If shipNam = "鼎衡17（万年青）" Then
-            shipNamShort = "dh17"
-        ElseIf shipNam = "鼎衡18（常春藤）" Then
-            shipNamShort = "dh18"
-        ElseIf shipNam = "建兴32" Then
-            shipNamShort = "jx32"
+For Each sht In Sheets()
+    shipNam = sht.Name
+    If shipNam = "dh5" Then
+    
+    ElseIf shipNam = "dh17" Then
+    Else
+    GoTo nextSHT
+    End If
+    shipNamShort = sht.Name
+    If Left(shipNam, 1) = "d" Or Left(shipNam, 1) = "j" Then
+        If shipNam = "dh17" Then
+            shipNam = "鼎衡17（万年青）"
+        ElseIf shipNam = "dh18" Then
+            shipNam = "鼎衡18（常春藤）"
+        ElseIf shipNam = "jx32" Then
+            shipNam = "建兴32"
         Else
-            shipNamShort = Replace(shipNam, "鼎衡", "dh")
+            shipNam = Replace(shipNam, "dh", "鼎衡")
         End If
-        If i > Sheets.Count Then
-            Sheets.Add After:=Sheets(Sheets.Count) '保证总簿的表数量够
-            Set sht = Sheets(i)
-            sht.Name = shipNam '增加的表名字相同
-            With Sheets(i - 1)
-            .Range("a1:aa3").Copy sht.Range("a1:aa3")
-            .Range(.Range("A4"), .Range("A4").End(xlDown)).Copy sht.Range("a4")
-            .Rows("4:4").Copy
-            sht.Rows("4:73").PasteSpecial Paste:=xlPasteFormats
-            Application.CutCopyMode = False
-            End With
-        End If
-        Set sht = Sheets(i)
-        startRow = Range("b2").End(xlDown).Row + 1
-        endRow = Range("a3").End(xlDown).Row
-        For ro = startRow To endRow
+        startRow = sht.Range("b2").End(xlDown).Row + 1
+        endRow = sht.Range("a3").End(xlDown).Row
+        For ro = 4 To endRow 'endRow
             voy = Cells(ro, 1)
             oilDir = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\" & shipNamShort & "燃*航次报表" & voy & "*.xls?"
             voyDir = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\" & shipNamShort & "航次报表" & voy & "*.xls?"
             If Len(Dir(oilDir)) > 0 Then '如果文件存在
                 Set voyW = Workbooks.Open(Filename:=voyDir)
                 Set oilW = Workbooks.Open(Filename:=oilDir)
+                roOilW = 11
+                For roOilW = 11 To 28 Step 1
+                    If oilW.Sheets(1).Cells(roOilW, 5).Value = " " Then
+                        oilW.Sheets(1).Cells(roOilW, 5).Value = Empty
+                    End If
+                Next roOilW
+                GoTo closeww:
                 filePath = oilW.Path
                 oilNam = oilW.Name
+                Debug.Print oilNam
                 voyNam = voyW.Name
                 rotOil = "'" & filePath & "\[" & oilNam & "]燃油报表'!"
                 rotVoy = "'" & filePath & "\[" & voyNam & "]航次报表'!"
@@ -126,7 +142,7 @@ For Each shipNam In Array("鼎衡1", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡
                 
                 If oilW.Sheets(1).Cells(12, 3) = "滑油LO:(L)" Then
                     sht.Cells(ro, 9).Formula = "=" & rotOil & "$E$13+" & rotOil & "$E$15" '定速期间油耗
-                    sht.Cells(ro, 10).Formula = "=" & rotOil & "$E$19+" & rotOil & "$E$21" '辅机航行期间油耗
+                    sht.Cells(ro, 10).Formula = "=" & rotOil & "$E$19+" & rotOil & "$E$21+" & rotOil & "$E$23"  '辅机航行期间油耗"
                     sht.Cells(ro, 11).Formula = "=" & rotOil & "$E$14+" & rotOil & "$E$16" '机动期间油耗
                     sht.Cells(ro, 12).FormulaR1C1 = "=(RC[-3]+RC[-1])/(RC[-8]/24)"
                     sht.Cells(ro, 13).FormulaR1C1 = "=RC[-4]/(RC[-8]/24)"
@@ -160,15 +176,17 @@ For Each shipNam In Array("鼎衡1", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡
                 Else
                     MsgBox "hi3"
                 End If
-                oilW.Close False
-                voyW.Close False
+closeww:
+                oilW.Close True
+                voyW.Close True
             Else '新的航次报表还没来，去下条船
                 Exit For
             End If
         Next ro
-        i = i + 1
+'        i = i + 1
     End If
-Next shipNam
+nextSHT:
+Next sht
 End Sub
 
         
@@ -289,14 +307,36 @@ shipNamShort = "dh1"
     ActiveCell.FormulaR1C1 = _
         "='\\192.168.0.223\航运在线\10、油料管理部\航次报表\"
 End Sub
-Sub Macro9()
+Sub 长名字到短名字()
 '
 ' Macro9 Macro
 '
 
 '
-For col = 2 To 28
-    fro = Cells(42, col).Formula
-    Debug.Print "CELLS(66," & col & ").formula = """ & fro & """"
-Next
+For i = 1 To Sheets.Count
+    shipNam = Sheets(i).Name
+    If Left(shipNam, 1) = "鼎" Or Left(shipNam, 1) = "建" Then
+        If shipNam = "鼎衡17（万年青）" Then
+            Sheets(i).Name = "dh17"
+        ElseIf shipNam = "鼎衡18（常春藤）" Then
+            Sheets(i).Name = "dh18"
+        ElseIf shipNam = "建兴32" Then
+            Sheets(i).Name = "jx32"
+        Else
+            Sheets(i).Name = Replace(shipNam, "鼎衡", "dh")
+        End If
+    End If
+Next i
+End Sub
+Sub Macro15()
+'
+' Macro15 Macro
+'
+
+'
+For i = 1 To Sheets.Count
+    Sheets(i).Select
+    Range("B4").Select
+    ActiveWindow.FreezePanes = True
+Next i
 End Sub
