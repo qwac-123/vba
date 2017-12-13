@@ -247,8 +247,9 @@ For i = 4 To 15 Step 1
 '      Debug.Print ROB
 '      Debug.Print Space(39) & "40" & Space(5) & "46"
 '      Debug.Print InStr(38, ROB, "L")
-'      Debug.Print Mid(ROB, InStr(35, ROB, ":") + 1, InStr(38, ROB, "L") - InStr(35, ROB, ":"))
-      Cells(i, 17) = Mid(ROB, InStr(35, ROB, ":") + 1, InStr(38, ROB, "L") - InStr(35, ROB, ":")) 'lo
+      instrColon = InStr(35, ROB, ":") + 1
+'      Debug.Print Mid(ROB, instrColon, InStr(instrColon, ROB, "L") - instrColon + 1) 'lo
+      Cells(i, 17) = Mid(ROB, instrColon, InStr(instrColon, ROB, "L") - instrColon + 1) 'lo
       'Debug.Print Mid(rob, InStr(40, rob, ":") + 1, InStr(46, rob, "L") - InStr(40, rob, ":")) 'lo
       Cells(i, 18) = Mid(ROB, InStr(27, ROB, ":") + 1, InStr(30, ROB, "t") - InStr(27, ROB, ":")) 'fw
       'Debug.Print Mid(rob, InStr(27, rob, ":") + 1, InStr(30, rob, "t") - InStr(27, rob, ":")) 'fw
@@ -281,7 +282,7 @@ Next i
     Windows("PERSONAL.xlsb").Activate
     Sheets("船位数据").Select
 If Range("k5") <> "" Then
-    Range("K23:K41").Copy
+    Range("K23:K40").Copy
     Call check_wk船舶动态
     Range("K4").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
         :=False, Transpose:=False
