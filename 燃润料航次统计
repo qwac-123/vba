@@ -89,12 +89,6 @@ Sub 燃润料航次统计()
 '
 For Each sht In Sheets()
     shipNam = sht.Name
-    If shipNam = "dh5" Then
-    
-    ElseIf shipNam = "dh17" Then
-    Else
-    GoTo nextSHT
-    End If
     shipNamShort = sht.Name
     If Left(shipNam, 1) = "d" Or Left(shipNam, 1) = "j" Then
         If shipNam = "dh17" Then
@@ -108,26 +102,40 @@ For Each sht In Sheets()
         End If
         startRow = sht.Range("b2").End(xlDown).Row + 1
         endRow = sht.Range("a3").End(xlDown).Row
-        For ro = 4 To endRow 'endRow
+'        'test用于修改以往的公式，不需要打开表
+'        startRow = 4
+'        endRow = sht.Range("b3").End(xlDown).Row
+'        '/test
+            'test
+'        sht.Select
+            'test
+        For ro = startRow To endRow
             voy = Cells(ro, 1)
+            'test
+'            Cells(ro, 1).Select
+            'test
             oilDir = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\" & shipNamShort & "燃*航次报表" & voy & "*.xls?"
             voyDir = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\" & shipNamShort & "航次报表" & voy & "*.xls?"
             If Len(Dir(oilDir)) > 0 Then '如果文件存在
+                oilNam = Dir(oilDir)
+                voyNam = Dir(voyDir)
+                filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年"
                 Set voyW = Workbooks.Open(Filename:=voyDir)
                 Set oilW = Workbooks.Open(Filename:=oilDir)
-                roOilW = 11
                 For roOilW = 11 To 28 Step 1
                     If oilW.Sheets(1).Cells(roOilW, 5).Value = " " Then
                         oilW.Sheets(1).Cells(roOilW, 5).Value = Empty
                     End If
                 Next roOilW
-                GoTo closeww:
-                filePath = oilW.Path
-                oilNam = oilW.Name
-                Debug.Print oilNam
-                voyNam = voyW.Name
                 rotOil = "'" & filePath & "\[" & oilNam & "]燃油报表'!"
                 rotVoy = "'" & filePath & "\[" & voyNam & "]航次报表'!"
+                'test用于批量修改J列 辅机航行期间 公式
+                
+'                If sht.Cells(ro, 10).Formula <> "=" & rotOil & "$E$19+" & rotOil & "$E$21+" & rotOil & "$E$23" Then '辅机航行期间油耗"
+'                    sht.Cells(ro, 10).Formula = "=" & rotOil & "$E$19+" & rotOil & "$E$21+" & rotOil & "$E$23"
+'                End If
+'                GoTo nextRO:
+'                /test
                 If Left(oilW.Sheets(1).Cells(5, 5).Text, 3) = "总里程" Then
                     sht.Cells(ro, 2).Formula = "=" & rotOil & "$F$5" '总航程里数
                     sht.Cells(ro, 3).Formula = "=" & rotOil & "$B$7" '航次总时间
@@ -137,12 +145,12 @@ For Each sht In Sheets()
                     sht.Cells(ro, 7).Formula = "=" & rotOil & "$H$9" '平均航速
                     sht.Cells(ro, 8).Formula = "=" & rotOil & "$H$6"
                 Else
-                    MsgBox "hi"
+                    MsgBox "需要修改公式，该表和往常不一样"
                 End If
                 
                 If oilW.Sheets(1).Cells(12, 3) = "滑油LO:(L)" Then
                     sht.Cells(ro, 9).Formula = "=" & rotOil & "$E$13+" & rotOil & "$E$15" '定速期间油耗
-                    sht.Cells(ro, 10).Formula = "=" & rotOil & "$E$19+" & rotOil & "$E$21+" & rotOil & "$E$23"  '辅机航行期间油耗"
+                    sht.Cells(ro, 10).Formula = "=" & rotOil & "$E$19+" & rotOil & "$E$21" ' +" & rotOil & "$E$23"  '辅机航行期间油耗"
                     sht.Cells(ro, 11).Formula = "=" & rotOil & "$E$14+" & rotOil & "$E$16" '机动期间油耗
                     sht.Cells(ro, 12).FormulaR1C1 = "=(RC[-3]+RC[-1])/(RC[-8]/24)"
                     sht.Cells(ro, 13).FormulaR1C1 = "=RC[-4]/(RC[-8]/24)"
@@ -155,10 +163,17 @@ For Each sht In Sheets()
                     sht.Cells(ro, 26).Formula = "=" & rotOil & "$F$4" '数量Z
                     sht.Cells(ro, 27).Formula = "=" & rotOil & "$D$4" '航线AA
                 Else
-                    MsgBox "hi2"
+                    MsgBox "hi2要修改公式，该表和往常不一样 "
                 End If
                 
                 If oilW.Sheets(1).Cells(37, 2) = "重油:(mt)" Then
+                    
+                    For coOilW = 2 To 8 Step 1
+                        If oilW.Sheets(1).Cells(41, coOilW).Value = " " Then
+                            oilW.Sheets(1).Cells(41, coOilW).Value = Empty
+                        End If
+                    Next coOilW
+                    
                     sht.Cells(ro, 17).Formula = "=" & rotOil & "$B$41"
                     sht.Cells(ro, 18).Formula = "=" & rotOil & "$C$41"
                     sht.Cells(ro, 19).Formula = "=" & rotOil & "$D$41"
@@ -166,7 +181,13 @@ For Each sht In Sheets()
                     sht.Cells(ro, 21).Formula = "=" & rotOil & "$F$41"
                     sht.Cells(ro, 22).Formula = "=" & rotOil & "$G$41"
                 ElseIf oilW.Sheets(1).Cells(35, 2) = "重油:(mt)" Then
-                    Debug.Print "hi3"
+                    
+                    For coOilW = 2 To 8 Step 1
+                        If oilW.Sheets(1).Cells(39, coOilW).Value = " " Then
+                            oilW.Sheets(1).Cells(39, coOilW).Value = Empty
+                        End If
+                    Next coOilW
+                    
                     sht.Cells(ro, 17).Formula = "=" & rotOil & "$B$39"
                     sht.Cells(ro, 18).Formula = "=" & rotOil & "$C$39"
                     sht.Cells(ro, 19).Formula = "=" & rotOil & "$D$39"
@@ -174,7 +195,7 @@ For Each sht In Sheets()
                     sht.Cells(ro, 21).Formula = "=" & rotOil & "$F$39"
                     sht.Cells(ro, 22).Formula = "=" & rotOil & "$G$39"
                 Else
-                    MsgBox "hi3"
+                    MsgBox "hi3 要修改公式，该表和往常不一样"
                 End If
 closeww:
                 oilW.Close True
@@ -182,6 +203,7 @@ closeww:
             Else '新的航次报表还没来，去下条船
                 Exit For
             End If
+nextRO:
         Next ro
 '        i = i + 1
     End If
@@ -339,4 +361,48 @@ For i = 1 To Sheets.Count
     Range("B4").Select
     ActiveWindow.FreezePanes = True
 Next i
+End Sub
+Sub Macro16()
+'
+' Macro16 Macro
+'
+
+'
+    Range("A1:AA75").Select
+    Range("M51").Activate
+    Selection.Copy
+    ActiveWindow.SmallScroll Down:=18
+    Application.CutCopyMode = False
+    Range("A1:AA75").Copy
+    Range("A1:AA75").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SmallScroll Down:=-24
+    Range("M47").Select
+    ActiveWindow.SmallScroll Down:=-48
+End Sub
+Sub Macro17()
+'
+' Macro17 Macro
+'
+
+'
+Set mainW = ActiveWorkbook
+Set newW = Workbooks.Add
+
+mainW.Sheets(Array("dh1", "dh2", "dh3", "dh5", "dh9", "dh10", "dh15", "dh16", "dh17", "dh18", _
+        "dh7", "jx32")).Copy Before:=newW.Sheets(1)
+    newW.Activate
+    For Each sht In newW.Sheets
+        If sht.Range("A3") = "" Then
+            sht.Delete
+        Else
+            sht.DrawingObjects.Delete
+            sht.Range("A1").CurrentRegion.Copy
+            sht.Range("A1").PasteSpecial Paste:=xlPasteValues
+            Application.CutCopyMode = False
+            sht.Range("b2").End(xlDown).Select
+        End If
+    Next sht
 End Sub
