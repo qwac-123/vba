@@ -1,5 +1,5 @@
 Private Declare Sub Sleep Lib "kernel32" (ByVal dwmilliseconds As Long)
-'v1213,22:44,修改了弃牌后底池结算，重新定义diffallinnum和countallin
+'v1214,22:39 金额结算基本完成，要写显示代码
 'v1130,11:02
 'v1129,22:46 边池分配还有问题
 'v1129,17:05 现在取消能够结束游戏了
@@ -49,6 +49,8 @@ Dim rngTotalPot As Range
 Dim finalSeven As String
 Dim playerAction As String
 
+Dim isNeoStageFirstAllin As Boolean '是之前有人全下过了，在下一次下注期间第一次全下
+
 Dim deckCard As Integer    'dealed cards发出去的牌的张数
 Dim player As Integer
 Dim prevPlayer As Integer
@@ -64,10 +66,10 @@ Dim countDiffAllin As Integer
 Dim countFold As Integer
 Dim countOnTable As Integer
 Dim countThisTurnAction As Integer
-Dim lastRaisePlayer As Integer '最后一个下注的人
-Dim lastRaisePlayerbetTimes As Integer '他的下注人次号码
 Dim lastAllinNum As Integer
 Dim lastDiffAllinNum As Integer
+Dim lastRaisePlayer As Integer '最后一个下注的人
+Dim lastRaisePlayerbetTimes As Integer '他的下注人次号码
 
 Dim maxAllIn As Long
 Dim maxCallChips As Long '最大跟注量
@@ -274,6 +276,7 @@ Call TexasHoldem
 Next tex
 End Function
 Function raiseCallFold() '施工现场
+isNeoStageFirstAllin = stage > 0 And countDiffAllin > -1
 If countAllin + countFold >= 7 Then '除了fold ，全allin了,one man do nothing
     Exit Function
 End If
@@ -422,22 +425,22 @@ If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,�
             If (allinPlayerChipsAndPot(j, 1) < allinPlayerChipsAndPot(i, 1) Or allinPlayerChipsAndPot(i, 1) = 0) And allinPlayerChipsAndPot(j, 1) <> 0 Then '后比前小的话，全下的额度
                 tempPly = allinPlayerChipsAndPot(i, 0)
                 tempChp = allinPlayerChipsAndPot(i, 1)
-                tempPot = allinPlayerChipsAndPot(i, 2)
+                'tempPot = allinPlayerChipsAndPot(i, 2)
                 
                 allinPlayerChipsAndPot(i, 0) = allinPlayerChipsAndPot(j, 0)
                 allinPlayerChipsAndPot(i, 1) = allinPlayerChipsAndPot(j, 1)
-                allinPlayerChipsAndPot(i, 2) = allinPlayerChipsAndPot(j, 2)
+                'allinPlayerChipsAndPot(i, 2) = allinPlayerChipsAndPot(j, 2)
                 
                 allinPlayerChipsAndPot(j, 0) = tempPly
                 allinPlayerChipsAndPot(j, 1) = tempChp
-                allinPlayerChipsAndPot(j, 2) = tempPot
+                'allinPlayerChipsAndPot(j, 2) = tempPot
                 
             ElseIf allinPlayerChipsAndPot(j, 1) = allinPlayerChipsAndPot(i, 1) And allinPlayerChipsAndPot(j, 1) <> 0 Then
                 countDiffAllin = countDiffAllin - 1
                 allinPlayerChipsAndPot(i, 0) = allinPlayerChipsAndPot(i, 0) & allinPlayerChipsAndPot(j, 0)
                 allinPlayerChipsAndPot(j, 0) = ""
                 allinPlayerChipsAndPot(j, 1) = 0
-                allinPlayerChipsAndPot(j, 2) = 0
+                'allinPlayerChipsAndPot(j, 2) = 0
             End If
         Next j
     Next i
@@ -449,7 +452,7 @@ If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,�
             countDiffAllin = countDiffAllin + 1 '新加一个池
             allinPlayerChipsAndPot(countDiffAllin, 1) = maxCallChips
         End If
-        If stage = 3 Or lastOfUs < 2 Then
+        If (stage = 3 And lastOfUs > 1) Or lastOfUs = 1 Then '往后没下注了，把剩下的几个没全下的人名，或者最后一个活人的名字 ，放到最后的池里
             For i = 0 To 7
                 If (Not (playerFold(i) Or playerAllin(i))) Then  '如果有没allin的但是跟注了,而且还是最后一轮下注了，就和最大的allin一个池并把名字加进去
                     allinPlayerChipsAndPot(countDiffAllin, 0) = allinPlayerChipsAndPot(countDiffAllin, 0) & i
@@ -467,8 +470,8 @@ If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,�
     '                    countSameBetPlayer = countSameBetPlayer + 1
     '                End If
                 End If
-                playerCountIn = countThisTurnAction - i - countSameBetPlayer
-            If i > 0 And countDiffAllin - lastDiffAllinNum > 0 Then 'multi allin
+                playerCountIn = countThisTurnAction - (i - lastDiffAllinNum) - countSameBetPlayer
+            If i > lastDiffAllinNum And countDiffAllin - lastDiffAllinNum > 0 Then 'multi allin
 '                If allinPlayerChipsAndPot(i, 1) <> "" Then
                     diffAllin = (allinPlayerChipsAndPot(i, 1) - allinPlayerChipsAndPot(i - 1, 1))
 '                End If
@@ -518,7 +521,7 @@ For i = 0 To 7
     End If
     playerCall(i) = False
     playerRaise(i) = False
-    If Not (ifAllin) And i >= gamePlayed Mod 8 And resetLastAllin Then '第一个不是allin的人是下回合的开始人物
+    If Not (ifAllin Or ifFold) And i >= gamePlayed Mod 8 And resetLastAllin Then  '第一个不是allin的人是下回合的开始人物
         startPlayer = i
         lastRaisePlayer = i
         resetLastAllin = False
@@ -607,7 +610,11 @@ Select Case aiOption
     Case 1 'check or call
 'checkOrCall:
         If maxCallChips - callChips(player) >= playerMoney(player) Then '跟不上了，被迫allin
-            countDiffAllin = countDiffAllin + 1
+            If isNeoStageFirstAllin Then
+                isNeoStageFirstAllin = False
+            Else
+                countDiffAllin = countDiffAllin + 1
+            End If
             diffChips(player) = playerMoney(player)
             realBet(player) = realBet(player) + diffChips(player)
             allinPlayerChipsAndPot(countDiffAllin, 0) = player
@@ -641,10 +648,19 @@ Select Case aiOption
             raiseChips = Int(totalPot / multi / BB) * BB
             End If
         'test'''''''''''
-        raiseChips = 15
+'        If stage = 0 Then
+'            raiseChips = 15
+'        Else
+'            raiseChips = 10
+'        End If
         '/test'''''''''''''''''''''
         If raiseChips + maxCallChips - callChips(player) >= playerMoney(player) Then 'Allin
-            countDiffAllin = countDiffAllin + 1
+            If isNeoStageFirstAllin Then
+                isNeoStageFirstAllin = False
+            Else
+                countDiffAllin = countDiffAllin + 1
+            End If
+            
             playerAction = "all in"
             playerAllin(player) = True
             diffChips(player) = playerMoney(player)
@@ -752,7 +768,11 @@ raiseChip:
         lastRaisePlayerbetTimes = betTimes
     Case 3 'all in
 case3:
-        countDiffAllin = countDiffAllin + 1
+        If isNeoStageFirstAllin Then
+            isNeoStageFirstAllin = False
+        Else
+            countDiffAllin = countDiffAllin + 1
+        End If
         diffChips(player) = playerMoney(player)
         realBet(player) = realBet(player) + diffChips(player)
         allinPlayerChipsAndPot(countDiffAllin, 0) = player
@@ -913,7 +933,7 @@ If allinPlayerChipsAndPot(1, 2) > 0 Then '有边池
     ifSamePat = lenSamPat > 1
         For j = countDiffAllin To 0 Step -1  '有几个池，7是最边池，如果赢了7，就通吃，0就只有0
             If allinPlayerChipsAndPot(j, 0) = "" Then '如果没有高过allin的下注，就会有空项
-                countDiffAllin = countDiffAllin - 1
+                countDiffAllin = countDiffAllin - 1 '可能已经没用了
                 GoTo nextjPot
             End If
             If totalPot = 0 Then '所有的池都分完了，散了吧
@@ -1198,6 +1218,7 @@ earnChips = 0
 ifLastOne = False
 startPlayer = 0
 lastAllinNum = 0
+lastDiffAllin = -1
 maxCallChips = 0
 maxAllIn = 0
 minAllIn = 1000 * BB
