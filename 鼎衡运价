@@ -1,0 +1,161 @@
+Dim countSht As Integer
+Dim ro As Integer
+Dim startRo As Integer
+Dim sourceSht As Worksheet
+
+Sub nan()
+'F:\工作文档\运价水平\沛君市场.xlsx'
+Workbooks("沛君市场.xlsx").Activate
+Sheets("数据源").Select
+End Sub
+Function 鼎衡运费统计()
+Set sourceSht = ActiveSheet
+If MsgBox("第一次？", vbYesNo) = vbYes Then
+    Call 运费表.运费表
+    Call ENPortToCNPort
+    Call prepareColumns
+End If
+startRo = 2
+ro = 2
+For countSht = 1 To Cells(ro, 1).End(xlEnd).Row Step 1
+    If Sheets.Count = 1 Or countSht > Sheets.Count Then '新建表
+        Sheets.Add After:=Sheets(Sheets.Count) '保证总簿的表数量够
+        Sheets(Sheets.Count).Name = sourceSht.Cells(ro, 4).Value '增加的表名字是航线名字
+        Set neoSht = Sheets(Sheets.Count)
+    End If
+    If countSht = 1 Then
+        GoTo nextSHT
+    End If
+    For ro = 2 To [a66666].End(xlUp).Row
+        Call checkRow
+        sourceSht.Cells(ro, 4).Select
+        If sourceSht.Cells(ro, 4).Value <> sourceSht.Cells(ro + 1, 4).Value Then '不同航线
+            sourceSht.Rows(1).Copy neoSht.Row(1)
+            sourceSht.Rows(startRo & ":" & ro).Copy neoSht.Row(2)
+            Exit For
+        End If
+        
+    Next ro
+nextSHT:
+Next countSht
+
+End Function
+Function checkRow()
+isBlue = Cells(ro, 1).Interior.color = 15773696
+eptCel = Cells(ro, 7).Value = "" '是滞期费或别的
+lowQty = Cells(ro, 7).Value < 100 '是滞期费或者别的
+If isBlue Or eptCel Or lowQty Then
+    Rows(ro).Delete
+    ro = ro - 1
+End If
+End Function
+Function testBug()
+For i = 1 To 2
+Debug.Print i
+Next i
+End Function
+Function prepareColumns()
+If sourceSht.AutoFilterMode = False Then
+    Range("a1").AutoFilter
+End If
+    sourceSht.AutoFilter.Sort.SortFields.Clear
+    sourceSht.AutoFilter.Sort.SortFields.Add Key:=Range _
+        (Range("D1"), Range("D1").End(xlDown)), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:= _
+        xlSortNormal
+    With sourceSht.AutoFilter.Sort
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+Range("i1").Value = "运费"
+Range(Range("i2"), Range("i2").End(xlDown)).FormulaR1C1 = _
+        "=IF(RC[-8]=""USD"",TEXT(RC[-1]/RC[-2],""$0.00""),TEXT(RC[-1]/RC[-2],""￥0.00""))"
+End Function
+Function ENPortToCNPort()
+With Columns(4)
+    .Replace What:="/", Replacement:="-", lookAt:=xlPart
+    .Replace What:="yangpu", Replacement:="海南"
+    .Replace What:="0", Replacement:="O"
+    .Replace What:="beihai", Replacement:="北海"
+    .Replace What:="shanghai", Replacement:="上海"
+    .Replace What:="qingzhi", Replacement:="青峙"
+    .Replace What:="HUIZHOU", Replacement:="惠州"
+    .Replace What:="fuzhou", Replacement:="福州"
+    .Replace What:="mawei", Replacement:="马尾"
+    .Replace What:="anping", Replacement:="安平"
+    .Replace What:="taichiung", Replacement:="台中"
+    .Replace What:="taichung", Replacement:="台中"
+    .Replace What:="kaohsiung", Replacement:="高雄"
+    .Replace What:="mailiao", Replacement:="麦寮"
+    .Replace What:="ningo", Replacement:="宁波"
+    .Replace What:="ningbo", Replacement:="宁波"
+    .Replace What:="qinzhou", Replacement:="钦州"
+    .Replace What:="maoming", Replacement:="茂名"
+    .Replace What:="caojing", Replacement:="漕泾"
+    .Replace What:="caojin", Replacement:="漕泾"
+    .Replace What:="nanjing", Replacement:="南京"
+    .Replace What:="yingkou", Replacement:="营口"
+    .Replace What:="zhongshan", Replacement:="中山"
+    .Replace What:="jiangyin", Replacement:="江阴"
+    .Replace What:="dalian", Replacement:="大连"
+    .Replace What:="quanzhou", Replacement:="泉州"
+    .Replace What:="nantong", Replacement:="南通"
+    .Replace What:="tianjin", Replacement:="天津"
+    .Replace What:="dafeng", Replacement:="大丰"
+    .Replace What:="xiamen", Replacement:="厦门"
+    .Replace What:="lanshan", Replacement:="岚山"
+    .Replace What:="jiaxing", Replacement:="嘉兴"
+    .Replace What:="shantou", Replacement:="汕头"
+    .Replace What:="qingdao", Replacement:="青岛"
+    .Replace What:="wujing", Replacement:="吴泾"
+    .Replace What:="basuo", Replacement:="八所"
+    .Replace What:="jieyang", Replacement:="揭阳"
+    .Replace What:="daxie", Replacement:="大榭"
+    .Replace What:="yantai", Replacement:="烟台"
+    .Replace What:="yizheng", Replacement:="仪征"
+    .Replace What:="weifang", Replacement:="潍坊"
+    .Replace What:="tianjin", Replacement:="天健"
+    .Replace What:="jingtang", Replacement:="京唐"
+    .Replace What:="shijing", Replacement:="石井"
+    .Replace What:="taixing", Replacement:="泰兴"
+    .Replace What:="guangdong", Replacement:="三水"
+    .Replace What:="RUDONG", Replacement:="如东"
+    .Replace What:="RUgao", Replacement:="如皋"
+    .Replace What:="wenzhou", Replacement:="温州"
+    .Replace What:="laizhou", Replacement:="莱州"
+    .Replace What:="shandong", Replacement:="山东"
+    .Replace What:="zhoushan", Replacement:="舟山"
+    .Replace What:="zhejiang", Replacement:="镇江"
+    .Replace What:="zhenjiang", Replacement:="镇江"
+    .Replace What:="zhenhai", Replacement:="镇海"
+    .Replace What:="hainan", Replacement:="海南"
+    .Replace What:="changshu", Replacement:="常熟"
+    .Replace What:="zhapu", Replacement:="乍浦"
+    .Replace What:="jinzhou", Replacement:="锦州"
+    .Replace What:="guangzhou", Replacement:="广州"
+    .Replace What:="jiangmen", Replacement:="江门"
+    .Replace What:="nansha", Replacement:="南沙"
+    .Replace What:="yangpu", Replacement:="洋浦"
+    .Replace What:="zhuhai", Replacement:="珠海"
+    .Replace What:="hongkong", Replacement:="香港"
+    .Replace What:="dongguan", Replacement:="东莞"
+    .Replace What:="dongying", Replacement:="东营"
+    .Replace What:="changzhou", Replacement:="常州"
+    .Replace What:="taizhou", Replacement:="台州"
+    .Replace What:="xinhui", Replacement:="新会"
+    .Replace What:="xiaohudao", Replacement:="小虎岛"
+    .Replace What:="bayuquan", Replacement:="鲅鱼圈"
+    .Replace What:="zhajiagang", Replacement:="张家港"
+    .Replace What:="zhangjiagang", Replacement:="张家港"
+    .Replace What:="lianyungang", Replacement:="连云港"
+    .Replace What:="bangkok", Replacement:="曼谷"
+    .Replace What:="ulsan", Replacement:="蔚山"
+    .Replace What:="onsan", Replacement:="蔚山"
+    .Replace What:="PYEONGTAEK", Replacement:="平泽"
+    .Replace What:="pyongtaek", Replacement:="平泽"
+    .Replace What:="pyungtaek", Replacement:="平泽"
+    .Replace What:="yosu", Replacement:="丽水"
+End With
+End Function
