@@ -516,28 +516,30 @@ Next i
 Debug.Print strport
 End Function
 Function 大家庭状态检查()
-arPorts = Array("泉州", "惠州", "钦州", "茂名", "北海", "八所", "洋浦", _
-"连云港", "营口", "漕泾", "岚山", "烟台", "江阴", "高雄", "宁波", "汕头", _
-"台中", "常熟", "镇江", "大丰", "北仑", "丽水", "天津", "小虎岛", "珠海", _
-"东营", "张家港", "镇海", "平泽", "乍浦", "大连", "京唐", "NAMPO", "长兴岛", _
+arPorts = Array("大连", "营口", "秦皇岛", "天津", "烟台", "东营", "莱州", "潍坊", "青岛", _
+ "岚山", "连云港", "泉州", "惠州", "钦州", "茂名", "北海", "八所", "洋浦", _
+ "漕泾", "金山", "江阴", "高雄", "宁波", "汕头", _
+"台中", "常熟", "镇江", "大丰", "北仑", "丽水", "小虎岛", "珠海", _
+ "张家港", "镇海", "平泽", "乍浦", "京唐", "NAMPO", "长兴岛", _
 "麦寮", "南通", "南京", "东莞", "仙人岛", "南沙", "安平", "南沙小虎3#", _
 "厦门", "上海", "香港", "舟山", "新会", "广州", "泰州", "鲅鱼圈", _
-"吴泾", "莱州", "嘉兴", "中山", "常州", "江门", "温州", _
+"吴泾", "嘉兴", "中山", "常州", "江门", "温州", _
  "东联", "小虎石化", "马尾", "洋口", "夏门", "温洲", _
-"石井", "北仑台塑", "福州", "东莞", "嘉兴", "小虎岛", "温州", "濰坊", "青岛", _
+"石井", "北仑台塑", "福州", "东莞", "嘉兴", "小虎岛", "温州", _
 "平仄", "麥寮N5码头", "麥寮", "大山", "锦州", "韩国", "菲律宾", "揭阳", "仪征", _
 "宁波镇司", "杨浦", "北海铁山港码头", "浙江", "扬州", _
-"曹泾", "小虎山")
+"曹泾", "小虎山", "Daesan")
 
 '码头名字
  '"洋浦逸盛",, "天津南港" , "宁波镇海" "宁波台塑",  "宁波北仑", "南京杨巴", "南京仪征",, "宁波大榭"
-    With Range("a1:a60") '处理复制过来的船舶动态
-    .Replace What:="：", Replacement:=":", LookAt:=xlPart
-    .Replace What:="，", Replacement:=":"
-    .Replace What:=",", Replacement:=":"
-    .Replace What:="；", Replacement:=":"
-    .Replace What:=";", Replacement:=":"
-    .Replace What:="。", Replacement:=":"
+    With Range("k4:k19") '处理复制过来的船舶动态
+    .Replace What:="：", Replacement:=";", LookAt:=xlPart
+    .Replace What:=":", Replacement:=";"
+    .Replace What:="，", Replacement:=";"
+    .Replace What:=",", Replacement:=";"
+    .Replace What:="；", Replacement:=";"
+    .Replace What:=";", Replacement:=";"
+    .Replace What:="。", Replacement:=";"
     .Replace What:="{", Replacement:="【"
     .Replace What:="】", Replacement:="】"
     .Replace What:="鼎衡", Replacement:="DH"
@@ -546,17 +548,29 @@ arPorts = Array("泉州", "惠州", "钦州", "茂名", "北海", "八所", "洋
     .Replace What:="轮", Replacement:=""
     .Replace What:="妥", Replacement:="泊"
     .Replace What:="lt", Replacement:="LT"
-    
-    .Replace What:="装货中", Replacement:="靠泊"
-    .Replace What:="开装", Replacement:="靠泊"
+    .Replace What:="ST", Replacement:="号"
+    .Replace What:="ND", Replacement:="号"
+    .Replace What:="RD", Replacement:="号"
+    .Replace What:="st", Replacement:="号"
+    .Replace What:="nd", Replacement:="号"
+    .Replace What:="rd", Replacement:="号"
+    .Replace What:=" ", Replacement:=""
     
     .Replace What:="已到", Replacement:="锚泊"
     .Replace What:="抛锚待泊", Replacement:="锚泊"
     
+    .Replace What:="装货中", Replacement:="靠泊"
+    .Replace What:="卸货中", Replacement:="靠泊"
+    .Replace What:="开装", Replacement:="靠泊"
+    
+    .Replace What:="已完货", Replacement:="完货"
+    
+    
     .Replace What:="预计抵达", Replacement:="ETA"
     .Replace What:="eta", Replacement:="ETA"
+    .Replace What:="预计靠泊", Replacement:="ETB"
     .Replace What:="etb", Replacement:="ETB"
-    .Replace What:="直靠", Replacement:=""
+'    .Replace What:="直靠", Replacement:=""
     
     
     End With
@@ -569,40 +583,83 @@ arPorts = Array("泉州", "惠州", "钦州", "茂名", "北海", "八所", "洋
 '    .Replace What:="{", Replacement:="【"
 '    .Replace What:="】", Replacement:="】"
     
-For r = 1 To 60
-    voyStatus = Cells(r, 1).Value
+For r = 4 To 19
+    If Cells(r, 11) = "" Then
+        GoTo nextr
+    End If
+    voyStatus = Cells(r, 11).Value
     enginStart = InStr(1, voyStatus, "【")
     enginEnd = InStr(enginStart, voyStatus, "】")
     lenEngin = enginEnd - enginStart + 1
     voyStatus = Replace(voyStatus, Mid(voyStatus, enginStart, lenEngin), "") '剔除【】内容
-    
+    Cells(r, 11).Value = voyStatus
     For i = 0 To UBound(arPorts) '查找港口信息
         portInstr = InStr(1, voyStatus, arPorts(i))
         arvInstr = InStr(1, voyStatus, "开往")
-        achInstr = InStr(1, voyStatus, "锚泊")
-        If portInstr > 0 Then
+        etaInstr = InStr(1, voyStatus, "ETA")
+        acrInstr = InStr(1, voyStatus, "锚泊")
+        etbInstr = InStr(1, voyStatus, "ETB")
+        bthInstr = InStr(1, voyStatus, "靠泊")
+        fshInstr = InStr(1, voyStatus, "完货")
+        
+        If portInstr > 0 And port1 = "" Then
             port1 = arPorts(i)
+            port1Instr = portInstr
+            portInstr = 0
+        ElseIf portInstr > 0 And port2 = "" Then
+            port2 = arPorts(i)
+            port2Instr = portInstr
+            portInstr = 0
             Exit For
         End If
     Next i
-    If Cells(r, 11) = "" Then
+'    Cells(r, 1).TextToColumns DataType:=xlDelimited, _
+'    ConsecutiveDelimiter:=True, Semicolon:=True '所选单元格按分号分列
+        
+    If arvInstr > 0 Then '开往XX
+        If port1Instr = arvInstr + 2 Then '开往port1 then
+            etaPort = port1
+            Cells(r, 6).Value = "开往" & etaPort
+        End If
+        If etaInstr > 0 Then '预计抵达**
+            Cells(r, 5).Value = "预计抵达" & etaPort & arvTime(voyStatus, eatInstr - 5)
+            
+            
+        End If
+        
         GoTo nextr
     End If
+    If acrInstr > 0 Then '锚泊
+            Cells(r, 4).Value = "锚泊" & port1
+        
+        If etbInstr > 0 Then '预计靠泊
+        End If
+    End If
+    If bthInstr > 0 Then '靠泊
+    End If
+    If fshInstr > 0 Then '完货
+    End If
+
     Set rngStatus = Cells(r, 6)
     Set rngETA = Cells(r, 7) 'F4
     Set rngETB = Cells(r, 8) 'G4
     strinfo = Cells(r, 11).Value 'K4
     '先检查ETA
     lenPort = 2
-    For i = 0 To 3
-        If InStr(0, strinfo, tri(i)) > 0 Then
-            lenPort = 3
-            Exit For
-        End If
-    Next i
+'    For i = 0 To 3
+'        If InStr(0, strinfo, tri(i)) > 0 Then
+'            lenPort = 3
+'            Exit For
+'        End If
+'    Next i
 
 
 nextr:
 Next r
+Cells(4, 1).TextToColumns DataType:=xlDelimited, _
+ConsecutiveDelimiter:=True, Semicolon:=False '所选单元格按分号分列
+
+End Function
+Function arvTime(voyStr As String, startNum As Integer)
 
 End Function
