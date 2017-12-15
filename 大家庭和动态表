@@ -35,40 +35,21 @@ Function 大家庭动态()
 ' 处理船舶动态 Macro
 ' 将船舶动态信息贴在K1格，首尾相接，然后整理到J列并分列，后接/分列去处理rob数据
 '
-
-'
 If Range("k1") = "" Then
-MsgBox "k1格是空的，是不是你已经点过一次了"
-Exit Function
+    MsgBox "k1格是空的，是不是你已经点过一次了"
+    Exit Function
 End If
-
-
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
-
-Range("d4:e16").Interior.pattern = xlNone
+Range("d4:e16").Interior.Pattern = xlNone
     With Range("k1:k25") '处理复制过来的船舶动态
-    .Replace What:="：", Replacement:=":", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
-    .Replace What:="", Replacement:="", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
-    .Replace What:="鼎衡", Replacement:="DH", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
-    .Replace What:="建兴", Replacement:="JX", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
-    .Replace What:="-", Replacement:="", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
-    .Replace What:="轮", Replacement:="", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
-    .Replace What:="妥", Replacement:="泊", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
+    .Replace What:="：", Replacement:=":", LookAt:=xlPart
+    .Replace What:="鼎衡", Replacement:="DH"
+    .Replace What:="建兴", Replacement:="JX"
+    .Replace What:="-", Replacement:=""
+    .Replace What:="轮", Replacement:=""
+    .Replace What:="妥", Replacement:="泊"
+    .Replace What:="lt", Replacement:="LT"
     End With
 
 For Each rngk In Range("k1:k30")
@@ -97,8 +78,44 @@ Range("k1:k40").ClearContents
 Range("j4:j19").Copy Range("k4:k19")
 Range("a4:a19").Copy Range("j4:j19")
 Range("a1") = "上海鼎衡船队动态信息一览表 " & Format(Date, "yyyy年m月d日 aaaa") '更新日期 Range("G1:I1").FormulaR1C1 = "=IF(RC=0,TEXT(NOW(),""yyyy年m月d日 aaaa""),RC)"
-'tri = Array("张家港", "连云港", "鲅鱼圈", "仙人岛")
-'For r = 4 To 16
+
+
+Set djt = ActiveWorkbook
+Set rngJX = Range("K4:k14")
+Set rngAg = Range("k16:k19")
+Call check_wk船舶动态
+
+rngJX.Copy '大家庭船舶动态复制到动态表
+Range("J4").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+    :=False, Transpose:=False 'DH1-JX32
+rngAg.Copy
+Range("J17").PasteSpecial Paste:=xlPasteValues 'HX - DHE
+    
+Range("L4").Select
+        
+djt.Activate
+Range("h4").Select
+'arPorts = Array("泉州", "惠州", "钦州", "茂名", "北海", "八所", "洋浦", _
+"连云港", "营口", "漕泾", "岚山", "烟台", "江阴", "高雄", "宁波", "汕头", _
+"台中", "常熟", "镇江", "大丰", "北仑", "丽水", "天津", "小虎岛", "珠海", _
+"东营", "张家港", "镇海", "平泽", "乍浦", "大连", "京唐", "NAMPO", "长兴岛", _
+"麦寮", "南通", "南京", "东莞", "仙人岛", "南沙", "安平", "南沙小虎3#", _
+"厦门", "上海", "香港", "舟山", "新会", "广州", "泰州", "鲅鱼圈", _
+"吴泾", "莱州", "嘉兴", "中山", "常州",  "江门", "温州", _
+ "东联", "小虎石化", "马尾", "洋口", "夏门", "温洲", _
+"石井", "北仑台塑", "福州", "东莞", "嘉兴", "小虎岛", "温州", "濰坊", "青岛", _
+"平仄", "麥寮N5码头", "麥寮", "大山", "锦州", "韩国", "菲律宾", "揭阳", "仪征", _
+"宁波镇司", "杨浦", "北海铁山港码头", "浙江", "扬州", _
+"曹泾", "小虎山")
+
+'码头名字
+' "洋浦逸盛",, "天津南港" , "宁波镇海" "宁波台塑",  "宁波北仑", "南京杨巴", "南京仪征",, "宁波大榭"
+
+
+'For r = 4 To 19
+    voyStatus = Cells(r, 11).Value
+    For i = 0 To UBound(arPorts)
+    Next i
 '    If Cells(r, 11) = "" Then
 '        GoTo nextr
 '    End If
@@ -120,27 +137,12 @@ Range("a1") = "上海鼎衡船队动态信息一览表 " & Format(Date, "yyyy年
 'Next r
     
 
-Range("F4:F19").FormulaR1C1 = _
-    "=IF(RC[1]<>"""",""开往""&MID(RC[1],5,3),IF(RC[2]<>"""",""锚泊""&MID(RC[2],5,3),IF(COUNT(FIND(""靠泊"",RC[5])),IF(SUM(ISNUMBER(FIND({""张家港"",""连云港"",""鲅鱼圈"",""仙人岛""},RC[5]))*1),MID(RC[5],FIND(""靠泊"",RC[5]),5),MID(RC[5],FIND(""靠泊"",RC[5]),4)),RC[6]&""完货"")))"
-Range("h4:h19").FormulaR1C1 = _
-    "=IF(ISTEXT(RC[5]),""预计靠泊""&RC[5],"""")"
+'Range("F4:F19").FormulaR1C1 = _
+'        "=IF(RC[1]<>"""",""开往""&MID(RC[1],5,3),IF(OR(RC[2]<>"""",IFERROR(FIND(""锚泊"",RC[5]),0)>0),""锚泊""&MID(RC[5],FIND(""锚泊"",RC[5])+2,3),IF(COUNT(FIND(""靠泊"",RC[5])),IF(SUM(ISNUMBER(FIND({""张家港"",""连云港"",""鲅鱼圈"",""仙人岛""},RC[5]))*1),MID(RC[5],FIND(""靠泊"",RC[5]),5),MID(RC[5],FIND(""靠泊"",RC[5]),4)),RC[6]&""完货"")))"
+'Range("h4:h19").FormulaR1C1 = _
+'    "=IFERROR(IF(SUM(ISNUMBER(FIND({""张家港"",""连云港"",""鲅鱼圈"",""仙人岛""},RC[3]))*1),""预计靠泊""&MID(RC[3],FIND(""已到"",RC[3])+2,3),""预计靠泊""&MID(RC[3],FIND(""已到"",RC[3])+2,2)&"" "")&IF(ISNUMBER(--MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))+1,2)),MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))+1,2),MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))+1,1))&""号""&IF(ISNUMBER(--MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))-4,4)),MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))-4,4)&""LT"",MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))-6,6)),"""")"
 
-Set djt = ActiveWorkbook
-Set rngJX = Range("K4:k14")
-Set rngAg = Range("k16:k19")
-Call check_wk船舶动态
 
-rngJX.Copy '大家庭船舶动态复制到动态表
-Range("J4").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
-    :=False, Transpose:=False 'DH1-JX32
-rngAg.Copy
-Range("J18").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
-    :=False, Transpose:=False 'HX - DHE
-    
-Range("L4").Select
-        
-djt.Activate
-Range("h4").Select
 
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
@@ -237,7 +239,7 @@ Application.DisplayAlerts = False
         ReplaceFormat:=False
 
 
-For i = 4 To 15 Step 1
+For i = 4 To 14 Step 1
     ROB = Cells(i, 15).Text 'column "O"
     If InStr(1, ROB, ":") > 0 Then
         Cells(i, 15) = Mid(ROB, 9, InStr(11, ROB, "t") - 8) 'fo
@@ -270,8 +272,8 @@ For i = 4 To 15 Step 1
     End If
 Next i
 '恢复rob格式
-    Range("O16").Copy
-    Range("O4:R16").PasteSpecial Paste:=xlPasteFormats, Operation:=xlNone, _
+    Range("O15").Copy
+    Range("O4:R14").PasteSpecial Paste:=xlPasteFormats, Operation:=xlNone, _
         SkipBlanks:=False, Transpose:=False
     Application.CutCopyMode = False
     
@@ -489,3 +491,118 @@ Cells(r, c).Select
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 End Sub
+Function ports()
+'Set w = ActiveWorkbook
+'Debug.Print w.Name
+'Set Z = ActiveWorkbook
+'Debug.Print Z.Name
+'i = 1
+'For Each sht In w.Sheets
+'    Range(sht.Range("aa4"), sht.Range("aa4").End(xlDown)).Copy Z.Sheets(2).Cells(i, 10)
+'    i = Z.Sheets(2).Cells(i, 10).End(xlDown).Row + 1
+Next sht
+
+arPorts = Array("泉州", "惠州", "钦州", "茂名", "北海", "八所", "洋浦", "连云港", "营口", "漕泾", "岚山", "烟台", "江阴", "高雄", "宁波", "汕头", "台中", "常熟", "镇江", "大丰", "北仑", "丽水", "天津", "小虎岛", "珠海", "东营", "张家港", "镇海", "平泽", "乍浦", "大连", "京唐", "NAMPO", "长兴岛", "麦寮", "南通", "南京", "东莞", "仙人岛", "南沙", "安平", "南沙小虎3#", "宁波台塑", "厦门", "上海", "香港", "舟山", "新会", "广州", "泰州", "鲅鱼圈", "吴泾", "莱州", "嘉兴", "中山", "常州", "宁波北仑", "南京杨巴", "江门", "温州", "南京仪征", "宁波镇海", "东联", "小虎石化", "马尾", "洋口", "夏门", "温洲", "石井", "北仑台塑", "福州", "东莞", "嘉兴", "小虎岛", "温州", "濰坊", "青岛", "平仄", "麥寮N5码头", "麥寮", "大山", "锦州", "韩国", "菲律宾", "揭阳", "仪征", "宁波镇司", "杨浦", "天津南港", "北海铁山港码头", "洋浦逸盛", "浙江", "扬州", "曹泾", "小虎山", "宁波大榭")
+arEnPorts = Array("nantong", "tianjin", "dafeng", "xiamen", "lanshan", "taichung", "jiaxing", "shantou", "qingdao", "wujing", "basuo", "jieyang", "daxie", "yantai", "yizheng", "weifang", "tianjin", "jingtang", "shijing", "taixing", "guangdong", "RUDONG", "wenzhou", "laizhou", "shandong", "zhoushan", "zhenjiang", "changshu", "zhapu", "jinzhou", "guangzhou", "jiangmen", "yangpu", "zhuhai", "hongkong", "dongguan", "dongying", "changzhou", "xiaohudao", "bayuquan", "zhangjiagang")
+
+For i = 4 To 19
+    Cells(a, 4).Value = Cells(i, 4).Value
+    a = a + 1
+     Cells(a, 4).Value = Cells(i, 5).Value
+     a = a + 1
+'    strport = strport & ",""" & Cells(i, 4).Value & """"
+'    strport = strport & ",""" & Cells(i, 5).Value & """"
+Next i
+Debug.Print strport
+End Function
+Function 大家庭状态检查()
+arPorts = Array("泉州", "惠州", "钦州", "茂名", "北海", "八所", "洋浦", _
+"连云港", "营口", "漕泾", "岚山", "烟台", "江阴", "高雄", "宁波", "汕头", _
+"台中", "常熟", "镇江", "大丰", "北仑", "丽水", "天津", "小虎岛", "珠海", _
+"东营", "张家港", "镇海", "平泽", "乍浦", "大连", "京唐", "NAMPO", "长兴岛", _
+"麦寮", "南通", "南京", "东莞", "仙人岛", "南沙", "安平", "南沙小虎3#", _
+"厦门", "上海", "香港", "舟山", "新会", "广州", "泰州", "鲅鱼圈", _
+"吴泾", "莱州", "嘉兴", "中山", "常州", "江门", "温州", _
+ "东联", "小虎石化", "马尾", "洋口", "夏门", "温洲", _
+"石井", "北仑台塑", "福州", "东莞", "嘉兴", "小虎岛", "温州", "濰坊", "青岛", _
+"平仄", "麥寮N5码头", "麥寮", "大山", "锦州", "韩国", "菲律宾", "揭阳", "仪征", _
+"宁波镇司", "杨浦", "北海铁山港码头", "浙江", "扬州", _
+"曹泾", "小虎山")
+
+'码头名字
+ '"洋浦逸盛",, "天津南港" , "宁波镇海" "宁波台塑",  "宁波北仑", "南京杨巴", "南京仪征",, "宁波大榭"
+    With Range("a1:a60") '处理复制过来的船舶动态
+    .Replace What:="：", Replacement:=":", LookAt:=xlPart
+    .Replace What:="，", Replacement:=":"
+    .Replace What:=",", Replacement:=":"
+    .Replace What:="；", Replacement:=":"
+    .Replace What:=";", Replacement:=":"
+    .Replace What:="。", Replacement:=":"
+    .Replace What:="{", Replacement:="【"
+    .Replace What:="】", Replacement:="】"
+    .Replace What:="鼎衡", Replacement:="DH"
+    .Replace What:="建兴", Replacement:="JX"
+    .Replace What:="-", Replacement:=""
+    .Replace What:="轮", Replacement:=""
+    .Replace What:="妥", Replacement:="泊"
+    .Replace What:="lt", Replacement:="LT"
+    
+    .Replace What:="装货中", Replacement:="靠泊"
+    .Replace What:="开装", Replacement:="靠泊"
+    
+    .Replace What:="已到", Replacement:="锚泊"
+    .Replace What:="抛锚待泊", Replacement:="锚泊"
+    
+    .Replace What:="预计抵达", Replacement:="ETA"
+    .Replace What:="eta", Replacement:="ETA"
+    .Replace What:="etb", Replacement:="ETB"
+    .Replace What:="直靠", Replacement:=""
+    
+    
+    End With
+'
+'    .Replace What:="，", Replacement:=":"
+'    .Replace What:=",", Replacement:=":"
+'    .Replace What:="；", Replacement:=":"
+'    .Replace What:=";", Replacement:=":"
+'    .Replace What:="。", Replacement:=":"
+'    .Replace What:="{", Replacement:="【"
+'    .Replace What:="】", Replacement:="】"
+    
+For r = 1 To 60
+    voyStatus = Cells(r, 1).Value
+    enginStart = InStr(1, voyStatus, "【")
+    enginEnd = InStr(enginStart, voyStatus, "】")
+    lenEngin = enginEnd - enginStart + 1
+    voyStatus = Replace(voyStatus, Mid(voyStatus, enginStart, lenEngin), "") '剔除【】内容
+    
+    For i = 0 To UBound(arPorts) '查找港口信息
+        portInstr = InStr(1, voyStatus, arPorts(i))
+        arvInstr = InStr(1, voyStatus, "开往")
+        achInstr = InStr(1, voyStatus, "锚泊")
+        If portInstr > 0 Then
+            port1 = arPorts(i)
+            Exit For
+        End If
+    Next i
+    If Cells(r, 11) = "" Then
+        GoTo nextr
+    End If
+    Set rngStatus = Cells(r, 6)
+    Set rngETA = Cells(r, 7) 'F4
+    Set rngETB = Cells(r, 8) 'G4
+    strinfo = Cells(r, 11).Value 'K4
+    '先检查ETA
+    lenPort = 2
+    For i = 0 To 3
+        If InStr(0, strinfo, tri(i)) > 0 Then
+            lenPort = 3
+            Exit For
+        End If
+    Next i
+
+
+nextr:
+Next r
+
+End Function
