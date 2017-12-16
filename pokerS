@@ -1,4 +1,5 @@
 Private Declare Sub Sleep Lib "kernel32" (ByVal dwmilliseconds As Long)
+'v1216,2258，下注 0
 'v1130,11:02
 'v1129,22:46 边池分配还有问题
 'v1129,17:05 现在取消能够结束游戏了
@@ -118,21 +119,20 @@ End If
 Call cleaning
 Call shuffle    '洗牌
 Call deal       '发牌
-stage = 0 'preflop
+For stage = 0 To 3
     Call raiseCallFold
-Call flop
-stage = 1 'flop
-    Call raiseCallFold
-Call turn
-stage = 2 'turn
-    Call raiseCallFold
-Call river 'river
-stage = 3
-    Call raiseCallFold
+    Select Case stage
+        Case 0 'flop
+            Call flop
+        Case 1 'turn
+            Call turn
+        Case 2 'river
+            Call river
+    End Select
+Next stage
 Call compareCards
-If MsgBox("next round?", vbOKCancel) = 1 Then
-Else
-    Exit Sub
+If MsgBox("next round?", vbOKCancel) = vbCancel Then
+    Exit Sub '不玩了
 End If
 Next gamePlayed
 End Sub
@@ -214,16 +214,16 @@ For player = 0 To 7
         Range(aRngPlayerName(player)).Value = playerName(Int(Rnd * 43))
     End If
     '/test
-    playerMoney(player) = 2 * BB 'test
-    If player = 5 Then
-        playerMoney(player) = 4 * BB
-    ElseIf player = 3 Then
-        playerMoney(player) = 3 * BB
-    ElseIf player = 1 Then
-        playerMoney(player) = 0.5 * BB
-    ElseIf player = 0 Then
-        playerMoney(player) = 5 * BB
-    End If
+    playerMoney(player) = 10 * BB 'test
+'    If player = 5 Then
+'        playerMoney(player) = 4 * BB
+'    ElseIf player = 3 Then
+'        playerMoney(player) = 3 * BB
+'    ElseIf player = 1 Then
+'        playerMoney(player) = 0.5 * BB
+'    ElseIf player = 0 Then
+'        playerMoney(player) = 5 * BB
+'    End If
     '/test
     Range(aRngMoney(player)) = "$" & playerMoney(player)
     playerCall(player) = False
@@ -391,7 +391,11 @@ preTurn = betTurn
 
 '计算转了几圈了
 ifSameRaisePlayer = player = lastRaisePlayer
-ifSameRaiseCycle = betTimes = lastRaisePlayerbetTimes + 9 'And betTimes > 1
+If stage = 0 Then
+    ifSameRaiseCycle = betTimes = lastRaisePlayerbetTimes + 8
+Else
+    ifSameRaiseCycle = betTimes = lastRaisePlayerbetTimes + 9 'And betTimes > 1
+End If
 'noManRaise = Application.Max(countRaise) = 0
 If ifSameRaisePlayer And ifSameRaiseCycle Then  '又转到最后一个加注的人了
     betTurn = betTurn + 1
@@ -483,6 +487,10 @@ If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,�
             End If
         Next i
     'End If
+ElseIf countAllin > 0 Then '这轮没有新全下的，就普通下注
+    '结算这轮下注
+    allinPlayerChipsAndPot(countDiffAllin, 2) = allinPlayerChipsAndPot(countDiffAllin, 2) + maxCallChips * countThisTurnAction
+    Range(aRngPotMoney(countDiffAllin)) = allinPlayerChipsAndPot(countDiffAllin, 2)
 ElseIf countAllin = 0 Then '没有边池
     allinPlayerChipsAndPot(0, 2) = totalPot
     Range(aRngPotMoney(0)) = allinPlayerChipsAndPot(0, 2)
@@ -538,6 +546,9 @@ lastAllinNum = countAllin
 lastDiffAllinNum = countDiffAllin '最后一个池的号码
 End Function
 Function aiBet()
+Dim calOpt As String
+Dim addOpt As String
+Dim raiseChips As Long
 '0.2 保守，混合，激进 1:1:1,rnd
 'v0.1 随机
 'v0 傻根
@@ -599,7 +610,7 @@ Select Case aiOption
         If maxCallChips - callChips(player) >= playerMoney(player) Then '跟不上了，被迫allin
             Call allInFunc
         Else 'no need to allin
-            Call callFunc
+            Call callFunc(calOpt)
         End If
     Case 2 'bet or raise
         countRaise(player) = countRaise(player) + 1 'ai自用，为了别下注次数太多
@@ -620,6 +631,9 @@ Select Case aiOption
 End Select
 End Function
 Function youBet()
+Dim calOpt As String
+Dim addOpt As String
+Dim raiseChips As Long
 yourOPT:
 ' "  " & maxCallChips - callChips(player) & " " & "to call"
 diffChips(player) = maxCallChips - callChips(player)
@@ -651,14 +665,14 @@ case1:
     Case 2 'bet or raise
         On Error GoTo raiseChip:
 raiseChip:
-        raiseChips = InputBox("     to call:   $" & diffChips(player) & vbCrLf & addOpt & " to :____" & vbCrLf & "stacks: $" & playerMoney(player), addOpt, 2 * callChips(player))
-        raiseChips = CLng(raiseChips)
+        raiseChips = CLng(InputBox("     to call:   $" & diffChips(player) & vbCrLf & addOpt & " to :____" & vbCrLf & "stacks: $" & playerMoney(player), addOpt, 2 * callChips(player)))
+        'raiseChips = CLng(raiseChips)
         Err.Clear
 '        If IsNumeric(raiseChips) = False Then
 '            MsgBox "must be int!"
 '            GoTo raiseChip:
 '        End If
-        If raiseChips = "" Or raiseChips = 0 Then
+        If raiseChips = 0 Then
             Call callFunc(calOpt)
         ElseIf raiseChips > playerMoney(player) Then
             Call allInFunc
