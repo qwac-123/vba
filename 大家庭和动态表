@@ -113,9 +113,9 @@ Range("h4").Select
 
 
 'For r = 4 To 19
-    voyStatus = Cells(r, 11).Value
-    For i = 0 To UBound(arPorts)
-    Next i
+'    voyStatus = Cells(r, 11).Value
+'    For i = 0 To UBound(arPorts)
+'    Next i
 '    If Cells(r, 11) = "" Then
 '        GoTo nextr
 '    End If
@@ -516,8 +516,11 @@ Next i
 Debug.Print strport
 End Function
 Function 大家庭状态检查()
-arPorts = Array("大连", "营口", "秦皇岛", "天津", "烟台", "东营", "莱州", "潍坊", "青岛", _
- "岚山", "连云港", "泉州", "惠州", "钦州", "茂名", "北海", "八所", "洋浦", _
+Dim voyStatus As String
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
+arPorts = Array("大连", "营口", "秦皇岛", "天津", "烟台", "东营", "莱州", "潍坊", "青岛", "岚山", _
+ "连云港", "泉州", "惠州", "钦州", "茂名", "北海", "八所", "洋浦", _
  "漕泾", "金山", "江阴", "高雄", "宁波", "汕头", _
 "台中", "常熟", "镇江", "大丰", "北仑", "丽水", "小虎岛", "珠海", _
  "张家港", "镇海", "平泽", "乍浦", "京唐", "NAMPO", "长兴岛", _
@@ -528,11 +531,23 @@ arPorts = Array("大连", "营口", "秦皇岛", "天津", "烟台", "东营", "
 "石井", "北仑台塑", "福州", "东莞", "嘉兴", "小虎岛", "温州", _
 "平仄", "麥寮N5码头", "麥寮", "大山", "锦州", "韩国", "菲律宾", "揭阳", "仪征", _
 "宁波镇司", "杨浦", "北海铁山港码头", "浙江", "扬州", _
-"曹泾", "小虎山", "Daesan")
+"曹泾", "小虎山", "Daesan", 金山危险品锚地)
+
+arHuaBeiPorts = Array("丹东", "大连", "营口", "锦州", "秦皇岛", "唐山", "京唐", "天津", "黄骅", "鲅鱼圈")
+arHuaDongPorts = Array("龙口", "烟台", "威海", "石岛", "张家埠", "青岛", "日照", "岚山", "连云", _
+"南通", "张家港", "镇江", "南京", "上海", "乍浦", "宁波", "舟山", "石浦", "海门", "温州", "赛岐", _
+"福州", "马尾", "湄州湾", "泉州", "厦门", "东山")
+arHuaNanPorts = Array("汕头", "西堤", "汕尾", "深圳", "广州", "中山", "珠海", "江门", "阳江", _
+"水东", "茂名", "湛江", "霞海", "海安", "北海", "防城", "海口", "三亚", "八所", "海南", "洋浦", "马村")
+
+arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮", "香港", "澳门")
+
+GoTo testLine
+
 
 '码头名字
  '"洋浦逸盛",, "天津南港" , "宁波镇海" "宁波台塑",  "宁波北仑", "南京杨巴", "南京仪征",, "宁波大榭"
-    With Range("k4:k19") '处理复制过来的船舶动态
+    With [a1:a333] 'Range("k4:k19") '处理复制过来的船舶动态
     .Replace What:="：", Replacement:=";", LookAt:=xlPart
     .Replace What:=":", Replacement:=";"
     .Replace What:="，", Replacement:=";"
@@ -541,7 +556,9 @@ arPorts = Array("大连", "营口", "秦皇岛", "天津", "烟台", "东营", "
     .Replace What:=";", Replacement:=";"
     .Replace What:="。", Replacement:=";"
     .Replace What:="{", Replacement:="【"
-    .Replace What:="】", Replacement:="】"
+    .Replace What:="｛", Replacement:="【"
+    .Replace What:="}", Replacement:="】"
+    .Replace What:="｝", Replacement:="】"
     .Replace What:="鼎衡", Replacement:="DH"
     .Replace What:="建兴", Replacement:="JX"
     .Replace What:="-", Replacement:=""
@@ -554,10 +571,16 @@ arPorts = Array("大连", "营口", "秦皇岛", "天津", "烟台", "东营", "
     .Replace What:="st", Replacement:="号"
     .Replace What:="nd", Replacement:="号"
     .Replace What:="rd", Replacement:="号"
+    .Replace What:="今天", Replacement:=Day(Now) & "号"
+    .Replace What:="今晚", Replacement:=Day(Now) & "号晚上"
+    .Replace What:="今早", Replacement:=Day(Now) & "号早上"
+    
     .Replace What:=" ", Replacement:=""
     
     .Replace What:="已到", Replacement:="锚泊"
+    .Replace What:="待泊", Replacement:="锚泊"
     .Replace What:="抛锚待泊", Replacement:="锚泊"
+    .Replace What:="等备货中", Replacement:="锚泊"
     
     .Replace What:="装货中", Replacement:="靠泊"
     .Replace What:="卸货中", Replacement:="靠泊"
@@ -572,30 +595,26 @@ arPorts = Array("大连", "营口", "秦皇岛", "天津", "烟台", "东营", "
     .Replace What:="etb", Replacement:="ETB"
 '    .Replace What:="直靠", Replacement:=""
     
-    
     End With
-'
-'    .Replace What:="，", Replacement:=":"
-'    .Replace What:=",", Replacement:=":"
-'    .Replace What:="；", Replacement:=":"
-'    .Replace What:=";", Replacement:=":"
-'    .Replace What:="。", Replacement:=":"
-'    .Replace What:="{", Replacement:="【"
-'    .Replace What:="】", Replacement:="】"
-    
+testLine:
 For r = 4 To 19
     If Cells(r, 11) = "" Then
         GoTo nextr
     End If
     voyStatus = Cells(r, 11).Value
     enginStart = InStr(1, voyStatus, "【")
-    enginEnd = InStr(enginStart, voyStatus, "】")
-    lenEngin = enginEnd - enginStart + 1
-    voyStatus = Replace(voyStatus, Mid(voyStatus, enginStart, lenEngin), "") '剔除【】内容
+    If enginStart > 0 Then
+        enginEnd = InStr(enginStart, voyStatus, "】")
+        lenEngin = enginEnd - enginStart + 1
+        voyStatus = Replace(voyStatus, Mid(voyStatus, enginStart, lenEngin), "") '剔除【】内容
+    End If
     Cells(r, 11).Value = voyStatus
+    port1 = ""
+    port2 = ""
     For i = 0 To UBound(arPorts) '查找港口信息
         portInstr = InStr(1, voyStatus, arPorts(i))
         arvInstr = InStr(1, voyStatus, "开往")
+        nxtInstr = InStr(1, voyStatus, "下一港")
         etaInstr = InStr(1, voyStatus, "ETA")
         acrInstr = InStr(1, voyStatus, "锚泊")
         etbInstr = InStr(1, voyStatus, "ETB")
@@ -619,25 +638,69 @@ For r = 4 To 19
     If arvInstr > 0 Then '开往XX
         If port1Instr = arvInstr + 2 Then '开往port1 then
             etaPort = port1
-            Cells(r, 6).Value = "开往" & etaPort
+            etaInstr = port1Instr
+        ElseIf port2Instr = arvInstr + 2 Then '开往port1 then
+            etaPort = port2
+            etaInstr = port2Instr
+        Else
+            MsgBox "开往？" & vbCrLf & "按下ctrl+break调试"
         End If
-        If etaInstr > 0 Then '预计抵达**
-            Cells(r, 5).Value = "预计抵达" & etaPort & arvTime(voyStatus, eatInstr - 5)
+        Cells(r, 6).Value = "开往" & etaPort
+        If Len(etaPort) < 3 Then
+            etaPort = etaPort & Space(3 - Len(etaPort))
+        End If
+        
+        If etaInstr > 0 Or (voyStatus Like "*预计*抵达*") Then '预计抵达**
             
-            
+            Debug.Print "预计抵达" & etaPort & etaTime(voyStatus)
+            Cells(r, 7).Value = "预计抵达" & etaPort & etaTime(voyStatus) 'G4
         End If
         
         GoTo nextr
     End If
-    If acrInstr > 0 Then '锚泊
-            Cells(r, 4).Value = "锚泊" & port1
-        
-        If etbInstr > 0 Then '预计靠泊
+    
+    If acrInstr > 0 Then '锚泊XX
+        If port1Instr = arvInstr + 2 Then '开往port1 then
+            etbPort = port1
+        ElseIf port2Instr = arvInstr + 2 Then '开往port1 then
+            etbPort = port2
+        Else
+            MsgBox "锚泊？" & vbCrLf & "按下ctrl+break调试"
         End If
+        Cells(r, 4).Value = "锚泊" & etbPort
+        If Len(etbPort) < 3 Then
+            etbPort = etaPort & Space(3 - Len(etbPort))
+        End If
+        
+        If etbInstr > 0 Or (voyStatus Like "*预计*靠泊*") Then '预计靠泊**
+            Debug.Print "预计靠泊" & etbPort & etbTime(voyStatus)
+            Cells(r, 5).Value = "预计靠泊" & etbPort & etbTime(voyStatus)
+        End If
+        
+        GoTo nextr
     End If
+
     If bthInstr > 0 Then '靠泊
+        If port1Instr = bthInstr + 2 Or bthInstr = port1Instr + Len(port1) Then '靠泊port1 then
+            etbPort = port1
+        ElseIf port2Instr = bthInstr + 2 Or bthInstr = port2Instr + Len(port2) Then '靠泊port1 then
+            etbPort = port2
+        Else
+            MsgBox "靠泊？" & vbCrLf & "按下ctrl+break调试"
+        End If
+        Cells(r, 6).Value = "靠泊" & etbPort
+        GoTo nextr
     End If
     If fshInstr > 0 Then '完货
+        If fshInstr = port1Instr + Len(port1) Then  'port1完货
+            fshPort = port1
+        ElseIf fshInstr = port2Instr + Len(port2) Then 'port2 完货
+            fshPort = port2
+        Else
+            MsgBox "完货？" & vbCrLf & "按下ctrl+break调试"
+        End If
+        
+        Cells(r, 4).Value = fshPort & "完货"
     End If
 
     Set rngStatus = Cells(r, 6)
@@ -659,7 +722,170 @@ Next r
 Cells(4, 1).TextToColumns DataType:=xlDelimited, _
 ConsecutiveDelimiter:=True, Semicolon:=False '所选单元格按分号分列
 
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
 End Function
-Function arvTime(voyStr As String, startNum As Integer)
+Function 船舶动态处理()
+'datetemp = "2017/12/18 22:00:00"
+'Debug.Print CDate(datetemp)
+'Debug.Print DateDiff("h", Now, datetemp)
+'Debug.Print (TimeValue(datetemp) - TimeValue(Now)) * 24
 
+
+Dim voyStr As String
+Dim regxHour, regxDate, s$, StrNew$
+voyStr = ActiveCell.Value
+Debug.Print voyStr
+
+Set regxHour = CreateObject("vbscript.regexp")
+Set regxDate = CreateObject("vbscript.regexp")
+'Set regxDuoDate = CreateObject("vbscript.regexp")
+Set regxPureNum = CreateObject("vbscript.regexp")
+
+regxHour.Pattern = "\d\d\d\d" '四位数的时间
+regxDate.Pattern = "(|[0-2])\d号"      '夹杂在其他字符之间的一位数的日期
+'regxDuoDate.Pattern = "[0-2]\d号" '夹杂在其他字符之间的两位数的日期
+'regxPureNum.Pattern = "\D+"
+
+'regxHour.Global = True 'false:找到第一个匹配就停止，true:对全文进行处理
+'regxDate.Global = True
+'regxDuoDate.Global = True
+'regxPureNum.Global = True
+
+Set arDate = regxDate.Execute(voyStr)
+For Each sDate In arDate
+    Debug.Print sDate
+    Debug.Print sDate.firstindex
+Next sDate
+
+
+Set arHour = regxHour.Execute(voyStr)
+For Each sHour In arHour
+    Debug.Print sHour
+    Debug.Print sHour.firstindex
+Next sHour
+
+End Function
+Function 获取ETB()
+Dim voyStr As String
+Dim regxHour, regxDate
+voyStr = ActiveCell.Value
+
+Set regxHour = CreateObject("vbscript.regexp")
+Set regxDate = CreateObject("vbscript.regexp")
+Set regxETB = CreateObject("vbscript.regexp")
+
+regxHour.Pattern = "\d\d\d\d" '四位数的时间
+regxDate.Pattern = "(|[0-2])\dTH"      '
+regxETB.Pattern = "预计\S+靠泊" ' "\S+" '    '
+
+Set arETB = regxETB.Execute(voyStr)
+For Each sETB In arETB
+    Debug.Print sETB
+    voyStr = sETB
+    Debug.Print sETB.firstindex
+Next sETB
+
+Set arDate = regxDate.Execute(voyStr)
+For Each sDate In arDate
+    Debug.Print sDate
+    Debug.Print sDate.firstindex
+Next sDate
+Set arHour = regxHour.Execute(voyStr)
+For Each sHour In arHour
+    Debug.Print sHour
+    Debug.Print sHour.firstindex
+Next sHour
+End Function
+Function 获取并组建数组()
+strr = "array("
+For r = 1 To 1000
+    If Cells(r, 1) = "" Then
+        strr = Left(strr, Len(strr) - 2) & ")"
+        Exit For
+    End If
+    strr = strr & """" & Cells(r, 1).Value & """, "
+Next r
+Debug.Print strr
+End Function
+Function replacePorts()
+
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+arHuaBeiPorts = Array("丹东", "大连", "营口", "锦州", "秦皇岛", "唐山", "京唐", "天津", "黄骅", "鲅鱼圈")
+arHuaDongPorts = Array("龙口", "烟台", "威海", "石岛", "张家埠", "青岛", "日照", "岚山", "潍坊", "连云港", _
+"南通", "如东", "张家港", "镇江", "镇江", "南京", "大丰", "大榭", "江阴", "常熟", "泰兴", _
+"上海", "嘉兴", "吴泾", "漕泾", "乍浦", "宁波", "舟山", "石浦", "海门", "温州", "华东+华东")
+
+arHuaNanPorts = Array("赛岐", "福州", "马尾", "湄州湾", "泉州", "厦门", "东山", _
+"汕头", "西堤", "汕尾", "深圳", "广州", "南沙", "东莞", "惠州", "揭阳", "小虎岛", "中山", "珠海", "江门", "阳江", _
+"水东", "茂名", "湛江", "霞海", "海安", "北海", "防城", "海口", "三亚", "八所", "海南", "洋浦", "马村", "华东+华东")
+
+arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮", "香港", "澳门", "港澳台+港澳台")
+
+arKoreaPorts = Array("丽水", "蔚山", "韩国+韩国")
+
+With Cells(1, 1).CurrentRegion
+    For i = 0 To UBound(arHuaBeiPorts)
+        .Replace What:=arHuaBeiPorts(i), Replacement:="华北"
+    Next i
+    For j = 0 To UBound(arHuaDongPorts)
+        .Replace What:=arHuaDongPorts(j), Replacement:="华东"
+    Next j
+    For k = 0 To UBound(arHuaNanPorts)
+        .Replace What:=arHuaNanPorts(k), Replacement:="华南"
+    Next k
+    For l = 0 To UBound(arTaiwanPorts)
+        .Replace What:=arTaiwanPorts(l), Replacement:="港澳台"
+    Next l
+End With
+
+Application.ScreenUpdating = True
+Application.DisplayAlerts = True
+End Function
+Function etaTime(voyStr As String)
+Dim regxHour, regxDate
+
+Set regxHour = CreateObject("vbscript.regexp")
+Set regxDate = CreateObject("vbscript.regexp")
+
+regxHour.Pattern = "\d\d\d\d" '四位数的时间
+regxDate.Pattern = "(|[0-2])\d号" '一位或两位的日期
+
+Set arDate = regxDate.Execute(voyStr)
+For Each sDate In arDate
+    etaTime = etaTime & sDate
+    Debug.Print sDate
+    Debug.Print sDate.firstindex
+Next sDate
+
+Set arHour = regxHour.Execute(voyStr)
+For Each sHour In arHour
+    etaTime = etaTime & sHour & "LT"
+    Debug.Print sHour
+    Debug.Print sHour.firstindex
+Next sHour
+End Function
+Function etbTime(voyStr As String)
+Dim regxHour, regxDate
+
+Set regxHour = CreateObject("vbscript.regexp")
+Set regxDate = CreateObject("vbscript.regexp")
+
+regxHour.Pattern = "\d\d\d\d" '四位数的时间
+regxDate.Pattern = "(|[0-2])\d号" '一位或两位的日期
+
+Set arDate = regxDate.Execute(voyStr)
+For Each sDate In arDate
+    etbTime = etbTime & sDate
+    Debug.Print sDate
+    Debug.Print sDate.firstindex
+Next sDate
+
+Set arHour = regxHour.Execute(voyStr)
+For Each sHour In arHour
+    etbTime = etbTime & sHour & "LT"
+    Debug.Print sHour
+    Debug.Print sHour.firstindex
+Next sHour
 End Function
