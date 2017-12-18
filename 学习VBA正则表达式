@@ -1,0 +1,259 @@
+
+'\w → word 首字母 w
+'表示26个英文字符【A-Za-z】以及下划线【_】和数字【0-9】的集合，
+'.Pattern ="\w" 等价于 .Pattern ="[0-9a-z_A-Z]"
+'
+'其中有英文字符很好理解，因为英语中的word肯定是由英文字母构成的。
+'另外，在VBA编程中，变量还可以含有数字和下划线，因此数字和下划线也被当做构成统一word的要素。
+'
+'除此之外的其它字符，都不算构成word的要素了。
+'\d '→ digit 首字母 d
+'表示数字【0-9】的集合，
+'.Pattern ="\d" 等价于 .Pattern ="[0-9]"
+'\s  separate 首字母 s   或space、tab、return简称str字符的首字母。
+'表示分隔符号 含space 空格【 】或【char(32)】、回车vbCr【char(13)】、换行vbLf【char(10)】、vbTab【char(9)】等，
+'全部ASCII码值为： char(9)、char(10)、char(11)、char(12)、char(13)、char(32)（空格）
+'
+'分隔符号的单独分开是\t   tab 首字母  vbTab【chr(9)】或 其反集 \T
+'
+'\v   verticaltab 首字母  vbVerticalTab【chr(11)】或 其反集 \V
+'
+'\f   formfeed 首字母  vbFormFeed【chr(12)】或 其反集 \F
+'
+'\r   回车 return 首字母 r 而在VBA中对应的是：vbCr【chr(13)】或 其反集 \R   （Cr是Carriage Return的简称，是机械式打字机时代，字车carriage回复return 到最左边开始的意思 ）
+'     苹果机(MAC OS系统) 采用回车符Cr 表示下一行.
+'
+'\n   换行 newline 首字母n  vbLf【chr(10)】或 其反集 \N
+'   （Lf是Line Feed的简称，是机械式打字机时代，回车的同时自动滚进一行的意思 ）
+'     UNIX/Linux系统采用 换行符Lf 表示下一行.
+'
+'\r\n 回车换行  vbCrLf【chr(13) & chr(10)】
+'     Dos和windows系统 采用 回车+换行CrLf 表示下一行,
+'
+'
+'=================
+'
+'接下来介绍，对上述几个常用元序列/集合，使用小写字母时是有效，含有的意思，
+'而使用大写字母时是无效，排除（不含有）的意思，
+'
+'如:
+'
+'\W → word 首字母 大写 W 标记的【英文字母、数字、下划线】的序列/集合的反集
+'
+'小写字母w .Pattern ="\w" 等价于 .Pattern ="[0-9a-z_A-Z]"
+'
+'大写字母W .Pattern ="\W" 等价于 .Pattern ="[^0-9a-z_A-Z]"
+'
+'
+'2.
+'
+'\D → digit 首字母 大写 D 标记的【数字】的序列/集合的反集
+'
+'小写字母d .Pattern ="\d" 等价于 .Pattern ="[0-9]"
+'
+'大写字母D .Pattern ="\D" 等价于 .Pattern ="[^0-9]"
+'
+'
+'3.
+'
+'\S → separate 首字母 大写 S 标记的不可见换行字符的序列/集合的反集
+'
+'小写字母s .Pattern ="\s" 等价于 含有char 9,10,11,12,13,32
+'
+'大写字母S .Pattern ="\S" 等价于 不含有char 9,10,11,12,13,32
+
+'\b 和 \B
+'
+'begin 的首字母 b
+'
+'意义： 以上述\s separate 集合分隔后得到的每一个 \w word 中的第1个begin字符。
+'
+'如:
+'abe sau
+'dty12 f_34
+'
+'执行小写字母b .Pattern ="\b." 则得到每一个word的首字母：a s d f
+'
+'=====
+'
+'执行大写字母B .Pattern ="\B." 则得到每一个word的首字母以外的字符：b e a u t y 1 2 _ 3 4
+Function 船舶动态处理()
+Dim voyStr As String
+Dim regx, s$, StrNew$
+voyStr = ActiveCell.Value
+Set regx = CreateObject("vbscript.regexp")
+regx.Pattern = "\d\d\d\d"
+regx.Global = True 'false:找到第一个匹配就停止，true:对全文进行处理
+regx.IgnoreCase = True 'false:区分大小写，True:忽略大小写
+regx.MultiLine = True 'false:全文开头^结尾$,true:每行开头^结尾$'它影响且只影响元字符^和$的意义。值为False，无论目标文本是多少行，整个文本中则只有一个开始位置，^表示第一行的开始；只有一个行结束位置，$表示文本末尾位置。值为True，那么，^和$分别表示每一行的行首和行尾位置。
+Set arNew = regx.Execute(voyStr)
+For Each sTime In arNew
+    Debug.Print sTime
+Next sTime
+End Function
+Function ttt()
+Debug.Print TQ("abcdefg", 0, 1, "a")
+End Function
+Function TQ(txt$, Optional k = 0, Optional pt = 1, Optional s$ = "")
+
+    If IsNumeric(pt) Then pt = Choose(pt, "\w", "[^a-zA-Z]", "\D", "[^a-z]", "[^A-Z]", "\W", "\d")
+    With CreateObject("VBScript.RegExp")
+        .Global = True
+        .Pattern = pt
+        If .test(txt) Then
+            If k = 0 Then
+                TQ = .Replace(txt, s)
+            ElseIf k > 0 Then
+                If InStr(k, ".") Then
+                    Set Ma = .Execute(txt)
+                    ReDim a(0 To Ma.Count - 1)
+                    For Each m In Ma
+                        a(c) = m: c = c + 1
+                    Next
+                    If s = "" Then s = " "
+                    TQ = Join(a, s)
+                Else
+                    TQ = .Execute(txt)(k - 1)
+                End If
+            Else 'k < 0
+                If InStr(k, ".") Then
+                    TQ = .Execute(txt)(Int(-k) - 1).SubMatches(Mid(k, InStr(k, ".") + 1) - 1)
+                Else
+                    Set sMa = .Execute(txt)(-k - 1).SubMatches
+                    ReDim b(0 To sMa.Count - 1)
+                    For Each m In sMa
+                        b(c) = m: c = c + 1
+                    Next
+                    If s = "" Then s = " "
+                    TQ = Join(b, s)
+                End If
+            End If
+        Else
+            If k = 0 And s = "" Then TQ = txt Else TQ = ""
+        End If
+    End With
+'    第一参数【txt】：必须，为提取对象字符串或其单元格引用地址
+'
+'第二参数【k】: 提取模式兼提取位置
+'  ①  默认k=0【零】时为Replace模式，按pattern进行replace置换
+'置换结果按第四参数s，该s参数默认="",即把正则匹配结果直接置换去掉。
+'   如果该参数=其它字符，那么置换结果为指定字符s内容
+'   但如果是特殊字符$1、$2……这样的，代表按正则提取的第n组结果内容进行置换
+'
+'  ② -1
+'        k>0【正整数】时为Matches模式， 返回按pattern提取同类组后第k组的字符结果
+'  ② -2
+'       k>0 且含小数点[.]时，直接提取全部Matches结果，并转入数组a后 join合并输出。一般都输入k=1.1即可。
+'
+'
+'  ③ -1
+'       k<0 【负整数】时为SubMatches模式，返回pattern提取后指定大组对应的小组的全部字符结果，并转入数组b后 join合并输出。
+'  ③ -2
+'       k<0且含小数点[.]时【负小数】时为SubMatches模式，返回按多组pattern提取后[整数部分]大组的[小数部分]小组的字符结果
+'
+'       整数部分为：Int(-k) - 1)
+'      小数部分未：Mid(k, InStr(k, ".") + 1) - 1
+'    如k=-3.1 即为提取第3组的第1小组部分字符 → 3.1
+'
+'
+'第三参数【pt】：正则pattern，输入或默认常用pattern
+'该参数为1-7的有效数值时，使用默认预置的常用pattern效果如下：
+'参数pt        pattern                                 效果
+'=1      \w or [0-9a-zA-Z] or [a-zA-Z0-9]   匹配置换英数字符，保留返回文字字符。
+'=2      [^a-zA-Z]                                   匹配置换非英字符，保留返回英文字符。
+'=3      \D                                              匹配置换非数字符，保留返回数字字符。
+'=4      [^a-z]                                        匹配置换非小写英字，保留返回小写英字符。
+'=5      [^A-Z]                                       匹配置换非大写英字，保留返回大写英字符。
+'=6      \W or [^0-9a-zA-Z]                      匹配置换非英非数字，保留返回英数字符。
+'=7      \d                                              匹配置换数字字符，保留返回英字以及汉字字符。
+'
+'增加了第四参数【s】： 置换时，可选择置换结果，默认="" 即直接置换掉。
+'也可以置换为自己需要的内容，
+'或者进行组置换如 "$1" 或 "$2"等
+End Function
+Function regeee()
+Dim regx, s$, StrNew$
+s = "test str    "
+Set regx = CreateObject("vbscript.regexp")
+regx.Pattern = "\s+$"
+regx.Global = True 'false:找到第一个匹配就停止，true:对全文进行处理
+regx.IgnoreCase = True 'false:区分大小写，True:忽略大小写
+regx.MultiLine = True 'false:全文开头^结尾$,true:每行开头^结尾$'它影响且只影响元字符^和$的意义。值为False，无论目标文本是多少行，整个文本中则只有一个开始位置，^表示第一行的开始；只有一个行结束位置，$表示文本末尾位置。值为True，那么，^和$分别表示每一行的行首和行尾位置。
+StrNew = regx.Replace(s, "")
+MsgBox StrNew
+End Function
+Function 全文本的开头结尾加@()
+    Dim reg, s$
+    s = "Aaa" & vbLf & "bbb"   '这里用vblf 表示行之间的换行符
+    Set reg = CreateObject("vbscript.regexp")
+    reg.Pattern = "^|$" '开头或结尾
+    reg.Global = True
+    reg.MultiLine = False '默认为false
+    s = reg.Replace(s, "@") '整个文本的开头或结尾处替换为@
+    MsgBox s
+End Function
+Function 多行开头结尾加@()
+    Dim reg, s$
+    s = "Aaa" & vbLf & "bbb"   '这里用vblf 表示行之间的换行符
+    Set reg = CreateObject("vbscript.regexp")
+    reg.Pattern = "^|$"
+    reg.Global = True
+    reg.MultiLine = True
+    s = reg.Replace(s, "@") '整个文本的每行的开头或结尾处替换为@
+    MsgBox s
+End Function
+Function ChkEmail()
+    Dim reg, s$
+    s = InputBox("请输入一个电子邮箱:")
+    Set reg = CreateObject("vbscript.regexp")
+    reg.Pattern = "^\S+@\S+$" '从开头^开始，\s是不可见字符，\S任意可见字符字符，（\s = ^\S）+一个以上的，@ "@"，\S+任意多个字符，$结尾，更为严格的表达式为“^[\w.-]+@[\w.-]+$”
+    If reg.test(s) Then
+        MsgBox "你输入的电子邮箱格式正确:  " & s 'True,目标文本S中找到了正则模式的匹配
+    Else
+        MsgBox "你输入的电子邮箱格式不正确!"
+    End If
+End Function
+Function 给数字后加KG()
+    Dim reg, s$
+    s = "他们体重分别是：张三56，李四49，王五60。"
+    Set reg = CreateObject("vbscript.regexp")
+    reg.Pattern = "(\d+)" '对任意多数字字符
+    reg.Global = True
+    s = reg.Replace(s, "$1KG") '对于匹配到的字符，$1表示这段字符中第一个匹配到的
+    MsgBox s
+'        $1是一个很特殊的变量,它由美元符号与数字编号组成
+'        如果正则表达式中有两个或两个以上的捕获性括号,
+'        则按照左括号”(“从左到右顺序编号,自动命名为$1,$2,$3….,共支持99组.
+'        要指出的是,如果找到多个匹配,那么每个匹配中的特殊变量名是一样的.
+'        这个例中共有三个匹配其值分别为56,49,60.第一个匹配的变量名是$1,
+'        第二和第三个匹配的变量名仍然是$1,只是每个匹配中$1保存的值是不一样的.
+'    最后一点,作为替换参数的一部分,$1变量与字面字符共同组成替换字符串时,
+'    它们之间不用 & 符号连接,并且 $1 必须放在一个双引号中;而如果是用其它普通变量与字面字符联结组成替换文本时,
+'    则必须用 & 符号联接,这一点与VBA代码使用方法相同.
+'$* $&,匹配到的字符串
+'$`,匹配字符串之前的文本
+'$',匹配字符串之后的文本
+'$_,目标文本
+' 一个较特殊的状况,如果上面所述的特殊变量符不是作为变量使用,
+' 而是要以它们作为字面字符的替换文本,那么就要对它们转义,
+' 方法是在它们之前加一个美元符号$.如$$&
+End Function
+Function 提取英文字符()
+'\w表示[a-z],[A-Z],[0-9],_
+    Dim reg, k, mh, strA$
+    strA = "苹果:iphone_5s;诺基亚:Nokia_1020"
+    Set reg = CreateObject("vbscript.regexp")
+    reg.Pattern = "\w+"
+    reg.Global = True
+    Set mh = reg.Execute(strA) '  Execute方法返回的集合对象mh,有两个属性:
+    Debug.Print mh.Count 'Execute方法成功匹配的次数,mh匹配到的字符串的个数
+    For Each mhk In mh
+        Debug.Print mhk.Value
+    Next
+    '上下两者等价
+    For i = 0 To mh.Count - 1
+        Debug.Print mh(i).Value 'value可不写，
+        Debug.Print mh(i).firsindex '匹配到的字符串在原来字符串里的位置
+        Debug.Print mh(i).Length '匹配到的字符串的长度
+    Next i
+End Function
