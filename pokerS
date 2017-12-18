@@ -1,5 +1,6 @@
 Private Declare Sub Sleep Lib "kernel32" (ByVal dwmilliseconds As Long)
-'v1216,2258，下注 0
+'v1218,22:58，基本可行
+'v1216,22:58 下注为0
 'v1130,11:02
 'v1129,22:46 边池分配还有问题
 'v1129,17:05 现在取消能够结束游戏了
@@ -214,7 +215,7 @@ For player = 0 To 7
         Range(aRngPlayerName(player)).Value = playerName(Int(Rnd * 43))
     End If
     '/test
-    playerMoney(player) = 10 * BB 'test
+    playerMoney(player) = (player + 1) * BB 'test
 '    If player = 5 Then
 '        playerMoney(player) = 4 * BB
 '    ElseIf player = 3 Then
@@ -268,19 +269,15 @@ For k = 0 To 51  '循环产生52个不重复随机数，做?梢桓鍪閟huffl
 Next k
 'Next a
 End Function
-Function zctex()
-For tex = 0 To 3
-Call TexasHoldem
-Next tex
-End Function
 Function raiseCallFold() '施工现场
-isNeoStageFirstAllin = stage > 0 And countDiffAllin > -1
+isNeoStageFirstAllin = True
+'isNeoStageFirstAllin = stage > 0 And countDiffAllin > 0 '是否翻牌后有新的allin
 If countAllin + countFold >= 7 Then '除了fold ，全allin了,one man do nothing
     Exit Function
 End If
 betTurn = 0
 betTimes = 0
-If stage = 0 And betTimes = 0 Then 'And (betTurn = 0 Or betTimes = 0) Then 'preflop,start,sb bb
+If stage = 0 Then 'And betTimes = 0 Then 'And (betTurn = 0 Or betTimes = 0) Then 'preflop,start,sb bb
     playerSB = (gamePlayed) Mod 8 '小盲注位
     playerBB = (gamePlayed + 1) Mod 8 '大盲注位
     
@@ -297,18 +294,17 @@ If stage = 0 And betTimes = 0 Then 'And (betTurn = 0 Or betTimes = 0) Then 'pref
     Range(aRngMoney(playerBB)).Value = playerMoney(playerBB)
     Range(aRngBetCondition(playerBB)) = "BB"
     Range(aRngBet(playerBB)) = callChips(playerBB)
-    lastRaisePlayer = playerBB
     totalPot = totalPot + SB + BB
     rngTotalPot = totalPot
     maxCallChips = BB '下轮改为maxCall
 End If
 Do
 i = betTimes Mod 8 '还要不要一圈圈来
-    If betTurn > 10 Or betTimes > 100 Then 'test''''''''''
-        MsgBox "一直在下注圈"
+    If betTimes > 100 Then 'test''''''''''
+        MsgBox "一直在下注圈，请按ctrl+break"
         brrr = 1
     End If 'test''''''''''''''
-    If stage = 0 And betTurn = 0 Then   'preflop,start,sb bb
+    If stage = 0 Then   'preflop,start,sb bb
         player = (gamePlayed + i + 2) Mod 8 '从UTG开始循环
         prevPlayer = (gamePlayed + i + 1) Mod 8
         Range(aRngBetCondition(player)).Select
@@ -354,8 +350,8 @@ Sleep 600
         Range(aRngBetCondition(player)).Font.ThemeColor = xlThemeColorDark1 '白色字体
         allinPlayerChipsAndPot(lastDiffAllinNum, 2) = allinPlayerChipsAndPot(lastDiffAllinNum, 2) + Range(aRngBet(player)).Value
         Range(aRngBet(player)) = ""
-        Range(aRngHand(player + 1, 1)) = "" '牌拿走,二维数组从1开始
-        Range(aRngHand(player + 1, 2)) = ""
+'        Range(aRngHand(player + 1, 1)) = "" '牌拿走,二维数组从1开始
+'        Range(aRngHand(player + 1, 2)) = ""
         playerCall(player) = False
         playerRaise(player) = False
         playerAllin(player) = False
@@ -391,12 +387,12 @@ preTurn = betTurn
 
 '计算转了几圈了
 ifSameRaisePlayer = player = lastRaisePlayer
-If stage = 0 Then
+If lastRaisePlayer = playerBB And lastRaisePlayerbetTimes = 0 Then
     ifSameRaiseCycle = betTimes = lastRaisePlayerbetTimes + 8
 Else
     ifSameRaiseCycle = betTimes = lastRaisePlayerbetTimes + 9 'And betTimes > 1
 End If
-'noManRaise = Application.Max(countRaise) = 0
+
 If ifSameRaisePlayer And ifSameRaiseCycle Then  '又转到最后一个加注的人了
     betTurn = betTurn + 1
 End If
@@ -414,9 +410,11 @@ loopBet:
 Loop While ifLoopBet
 countOnTable = 8 - countFold
 
+lastOfUs = 8 - countAllin - countFold '/test如果还有人没allin，或者到了下一轮又allin了怎么办
 
 If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,结算下注，计算边池
     '数组位置countAllin,countDiffAllin处是空的，因为是数字进去后再+1的，countAllin -1有数值
+    countDiffAllin = countDiffAllin - 1
     startPot = lastDiffAllinNum
     endPot = countDiffAllin
     For i = startPot To endPot - 1 '将边池数组按照玩家全下的金额从小到大排列，如果之前已经有几个边池了，就排序后面的
@@ -441,59 +439,71 @@ If countAllin - lastAllinNum > 0 Then '这一轮有new全下的，没有就过,�
     Next i
     
     '还在场上没全下的
-    lastOfUs = 8 - countAllin - countFold '/test如果还有人没allin，或者到了下一轮又allin了怎么办
     'If lastOfUs > 0 Then  '最后一轮下注结束了，>=allin，还有人没fold或allin
-        If maxCallChips > maxAllIn Then
-            countDiffAllin = countDiffAllin + 1 '新加一个池
-            allinPlayerChipsAndPot(countDiffAllin, 1) = maxCallChips
-        End If
-        If (stage = 3 And lastOfUs > 1) Or lastOfUs = 1 Then '往后没下注了，把剩下的几个没全下的人名，或者最后一个活人的名字 ，放到最后的池里
-            Call assemblePlayer
-        End If
-        countSameBetPlayer = 0
-        For i = lastDiffAllinNum To countDiffAllin '如果之前已经有几个边池了，就整理汇集后面的
-                If i > lastDiffAllinNum Then  '之前有相同allin的，造成池比allin人数少
-                    If Len(allinPlayerChipsAndPot(i - 1, 0)) > 1 Then '写到一起去,如果i=last会报错
-                        countSameBetPlayer = Len(allinPlayerChipsAndPot(i - 1, 0)) - 1
-                    End If
-    '            ElseIf i = countDiffAllin Then '最后一个diffallin了，还有重复项的话
-    '                If allinPlayerChipsAndPot(i, 1) = "" Then '写到一起去,如果i=last会报错
-    '                    countSameBetPlayer = countSameBetPlayer + 1
-    '                End If
+    If maxCallChips > maxAllIn Then
+        countDiffAllin = countDiffAllin + 1 '新加一个池
+        allinPlayerChipsAndPot(countDiffAllin, 1) = maxCallChips
+        isNeoStageFirstAllin = False
+    Else
+    End If
+    If (stage = 3 And lastOfUs > 1) Or lastOfUs = 1 Then '往后没下注了，把剩下的几个没全下的人名，或者最后一个活人的名字 ，放到最后的池里
+        Call assemblePlayer
+    End If
+    countSameBetPlayer = 0
+    For i = lastDiffAllinNum To countDiffAllin '如果之前已经有几个边池了，就整理汇集后面的
+            If i > lastDiffAllinNum Then  '之前有相同allin的，造成池比allin人数少
+                If Len(allinPlayerChipsAndPot(i - 1, 0)) > 1 Then '写到一起去,如果i=last会报错
+                    countSameBetPlayer = Len(allinPlayerChipsAndPot(i - 1, 0)) - 1
                 End If
-                playerCountIn = countThisTurnAction - (i - lastDiffAllinNum) - countSameBetPlayer
-            If i > lastDiffAllinNum And countDiffAllin - lastDiffAllinNum > 0 Then 'multi allin
-'                If allinPlayerChipsAndPot(i, 1) <> "" Then
-                    diffAllin = (allinPlayerChipsAndPot(i, 1) - allinPlayerChipsAndPot(i - 1, 1))
+'            ElseIf i = countDiffAllin Then '最后一个diffallin了，还有重复项的话
+'                If allinPlayerChipsAndPot(i, 1) = "" Then '写到一起去,如果i=last会报错
+'                    countSameBetPlayer = countSameBetPlayer + 1
 '                End If
-                'diffCallAllin = maxCallChips - allinPlayerChipsAndPot(countDiffAllin - lastAllinNum - 1, 1) '如果加注超过最后一个全下的注
             End If
-            If i = lastDiffAllinNum Then '主池，或者这一轮的第一个边池,potowner在后面每轮都结算
-                allinPlayerChipsAndPot(i, 2) = allinPlayerChipsAndPot(i, 2) + allinPlayerChipsAndPot(i, 1) * countThisTurnAction 'countThisTurnAction
-                Range(aRngPotMoney(i)) = allinPlayerChipsAndPot(i, 2) '金额
-            Else 'If i < countDiffAllin Then
-                'potOwner(i) = 1 '/test''''''''''''''''''''''''''''''''''''''''''
-                allinPlayerChipsAndPot(i, 2) = diffAllin * playerCountIn
-                Range(aRngPotNum(i)) = "sd.pot" & (i)
-                Range(aRngPotMoney(i)) = allinPlayerChipsAndPot(i, 2)
-                Range(aRngPotNum(i)).Borders.LineStyle = xlContinuous
-                Range(aRngPotMoney(i)).Borders.LineStyle = xlContinuous
+            playerCountIn = countThisTurnAction - (i - lastDiffAllinNum) - countSameBetPlayer
+        If i > lastDiffAllinNum And countDiffAllin - lastDiffAllinNum > 0 Then 'multi allin
+'                If allinPlayerChipsAndPot(i, 1) <> "" Then
+                diffAllin = (allinPlayerChipsAndPot(i, 1) - allinPlayerChipsAndPot(i - 1, 1))
+'                End If
+            'diffCallAllin = maxCallChips - allinPlayerChipsAndPot(countDiffAllin - lastAllinNum - 1, 1) '如果加注超过最后一个全下的注
+        End If
+        If i = lastDiffAllinNum Then '主池，或者这一轮的第一个边池,potowner在后面每轮都结算
+            allinPlayerChipsAndPot(i, 2) = allinPlayerChipsAndPot(i, 2) + allinPlayerChipsAndPot(i, 1) * countThisTurnAction 'countThisTurnAction
+            Range(aRngPotMoney(i)) = allinPlayerChipsAndPot(i, 2) '金额
+        Else 'If i < countDiffAllin Then
+            'potOwner(i) = 1 '/test''''''''''''''''''''''''''''''''''''''''''
+            allinPlayerChipsAndPot(i, 2) = diffAllin * playerCountIn
+            Range(aRngPotNum(i)) = "sd.pot" & (i)
+            Range(aRngPotMoney(i)) = allinPlayerChipsAndPot(i, 2)
+            Range(aRngPotNum(i)).Borders.LineStyle = xlContinuous
+            Range(aRngPotMoney(i)).Borders.LineStyle = xlContinuous
 '            ElseIf diffAllin > 0 Then '后面call的超过这一轮最大的所有allin，再有一个边池
 '                allinPlayerChipsAndPot(i, 2) = diffCallAllin * playerCountIn '最后一个加注的人的算法要重写
 '                Range(aRngPotNum(i)) = "sd.pot" & (i)
 '                Range(aRngPotMoney(i)) = allinPlayerChipsAndPot(i, 2)
 '                Range(aRngPotNum(i)).Borders.LineStyle = xlContinuous
 '                Range(aRngPotMoney(i)).Borders.LineStyle = xlContinuous
-            End If
-        Next i
-    'End If
-ElseIf countAllin > 0 Then '这轮没有新全下的，就普通下注
+        End If
+    Next i
+    If isNeoStageFirstAllin Then
+        countDiffAllin = countDiffAllin + 1
+    End If
+Else 'If countAllin > 0 Then '这轮没有新全下的，就普通下注
     '结算这轮下注
     allinPlayerChipsAndPot(countDiffAllin, 2) = allinPlayerChipsAndPot(countDiffAllin, 2) + maxCallChips * countThisTurnAction
+    If countDiffAllin > 0 Then
+        Range(aRngPotNum(countDiffAllin)) = "sd.pot" & (countDiffAllin)
+    Else
+        Range(aRngPotNum(countDiffAllin)) = "pot"
+    End If
+    Range(aRngPotNum(countDiffAllin), aRngPotMoney(countDiffAllin)).Borders.LineStyle = xlContinuous
     Range(aRngPotMoney(countDiffAllin)) = allinPlayerChipsAndPot(countDiffAllin, 2)
-ElseIf countAllin = 0 Then '没有边池
-    allinPlayerChipsAndPot(0, 2) = totalPot
-    Range(aRngPotMoney(0)) = allinPlayerChipsAndPot(0, 2)
+    If (stage = 3 And lastOfUs > 1) Or lastOfUs = 1 Then '往后没下注了，把剩下的几个没全下的人名，或者最后一个活人的名字 ，放到最后的池里
+        Call assemblePlayer
+    End If
+'Else 'If countAllin = 0 Then '没有边池
+'    allinPlayerChipsAndPot(0, 2) = totalPot
+'    Range(aRngPotMoney(0)) = allinPlayerChipsAndPot(0, 2)
 End If
 
 
@@ -511,7 +521,7 @@ For i = 0 To 7
         countThisTurnAction = countThisTurnAction + 1
         Range(aRngBetCondition(i)) = ""
         Range(aRngBet(i)) = ""
-        Range(aRngBetCondition(i)).Interior.pattern = xlNone '无填充
+        Range(aRngBetCondition(i)).Interior.Pattern = xlNone '无填充
         Range(aRngBetCondition(i)).Font.ThemeColor = xlThemeColorLight1 '黑色字
     End If
     playerCall(i) = False
@@ -521,7 +531,7 @@ For i = 0 To 7
         lastRaisePlayer = i
         resetLastAllin = False
     End If
-    If countAllin >= 7 Then '如果*大家都全下了，就摊牌直接到结算，手牌染色
+    If countAllin + countFold >= 7 Or stage = 3 Then '如果*大家都全下了，就摊牌直接到结算，手牌染色
         Range(aRngHand(i + 1, 1)).Offset(1, 0) = Range(aRngHand(i + 1, 1)).Value
         Range(aRngHand(i + 1, 2)).Offset(1, 0) = Range(aRngHand(i + 1, 2)).Value
         isDim = Left(Range(aRngHand(i + 1, 1)).Offset(1, 0).Text, 1) = "h"
@@ -621,7 +631,9 @@ Select Case aiOption
         Else 'If totalPot > 300 Then
             raiseChips = Int(totalPot / multi / BB) * BB
         End If
-        
+        'test
+        raiseChips = 10
+        '/test
         If raiseChips + maxCallChips - callChips(player) >= playerMoney(player) Then 'Allin
             Call allInFunc
         Else '不是全下
@@ -697,9 +709,9 @@ Function callFunc(calllOption As String)
     playerAction = calllOption
 End Function
 Function raiseFunc(raiseMoney As Long, raiseOption As String)
-    diffChips(player) = raiseChips + maxCallChips - callChips(player)
+    diffChips(player) = raiseMoney + maxCallChips - callChips(player)
     realBet(player) = realBet(player) + diffChips(player)
-    callChips(player) = maxCallChips + raiseChips
+    callChips(player) = maxCallChips + raiseMoney
     maxCallChips = callChips(player)
     playerAction = raiseOption
     playerCall(player) = True
@@ -709,12 +721,11 @@ Function raiseFunc(raiseMoney As Long, raiseOption As String)
     lastRaisePlayerbetTimes = betTimes
 End Function
 Function allInFunc()
-'全下函数
-    If isNeoStageFirstAllin Then '如果是新一轮的第一个全下，就把当前的全下金额记载最后一个池上，保证allinpot连续
-        isNeoStageFirstAllin = False
-    Else
-        countDiffAllin = countDiffAllin + 1
-    End If
+''全下函数
+'    If isNeoStageFirstAllin Then
+'        countDiffAllin = countDiffAllin + 1
+'        isNeoStageFirstAllin = False
+'    End If
     diffChips(player) = playerMoney(player)
     realBet(player) = realBet(player) + diffChips(player)
     allinPlayerChipsAndPot(countDiffAllin, 0) = player
@@ -733,16 +744,17 @@ Function allInFunc()
         End If
     End If
     callChips(player) = allinPlayerChipsAndPot(countDiffAllin, 1)
+    countDiffAllin = countDiffAllin + 1
+    countAllin = countAllin + 1
     playerCall(player) = True
     playerAllin(player) = True
     playerAction = "all in"
-    countAllin = countAllin + 1
 End Function
 Function assemblePlayer()
 '如果有没allin的但是跟注了,而且还是最后一轮下注了，就和最大的allin一个池并把名字加进去
 '或者是最后一轮了，把所有人名弄进主池
 For i = 0 To 7
-    If (Not (playerFold(i) Or playerAllin(i))) Then
+    If Not (playerFold(i) Or playerAllin(i)) Then
         allinPlayerChipsAndPot(countDiffAllin, 0) = allinPlayerChipsAndPot(countDiffAllin, 0) & i
     End If
 Next i
@@ -830,26 +842,8 @@ Call calcPots
 
 '赢家通吃
 winnerWinner:
-totalPot = 0
-rngTotalPot.Value = ""
-'/test below need to change
-'For i = 0 To countSameMax
-'    player = maxPlayer(i)
-'    a = MsgBox("winner is :   player " & maxPlayer(i) & "  " & Range(aRngPlayerName(player)).Value & vbCrLf & _
-'                "pattern is :   " & maxPatDeck(i) & vbCrLf & _
-'                player & " win  $" & earnChips, vbOKOnly, "Winner")
-'
-'    playerMoney(player) = playerMoney(player) + earnChips
-'    Range(aRngMoney(player)) = playerMoney(player)
-'    Debug.Print "第 " & gamePlayed & " 轮"
-'    Debug.Print "得奖人数:  " & countSameMax + 1
-'    Debug.Print "最大牌型:  " & maxPatDeck(i)
-'    Debug.Print "公共牌:   " & deck(communityCards(0)) & deck(communityCards(1)) & deck(communityCards(2)) & _
-'    deck(communityCards(3)) & deck(communityCards(4))
-'    Debug.Print "赢家:  " & player, deck(hand(player, 0)), deck(hand(player, 1))
-'    Debug.Print "------------------------------------"
-'    Exit For 'ceshi'''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'Next i
+'rngTotalPot.Value = ""
+
 
 End Function
 Function calcPots()
@@ -1079,7 +1073,8 @@ nextiWinner:
     Next i
 Else '没有边池，一样的牌型就分，没有一样的就通吃
     strSamePatPlrWinner = "winner is :   " & vbCrLf
-    If Len(samePatPlr(0)) > 0 Then
+    If Len(samePatPlr(0)) > 0 Then '有相同牌型
+    Debug.Print totalPot / Len(samePatPlr(0))
         earnChips = totalPot / Len(samePatPlr(0))
         For i = 1 To Len(samePatPlr(0))
             player = Mid(samePatPlr(0), i, 1)
@@ -1089,17 +1084,19 @@ Else '没有边池，一样的牌型就分，没有一样的就通吃
             rngTotalPot = totalPot
             Range(aRngMoney(player)) = playerMoney(player)
             allinPlayerChipsAndPot(0, 2) = allinPlayerChipsAndPot(0, 2) - earnChips
-            Range(aRngPotMoney(0)) = Range(aRngPotMoney(0)).Value - earnChips
+            Range(aRngPotMoney(0)) = allinPlayerChipsAndPot(0, 2) - earnChips
         Next i
-    Else
+        MsgBox strSamePatPlrWinner
+    Else '只有一个赢家通吃
         player = allPlayerPatAndDecek(0, 0)
         earnChips = totalPot
         strSamePatPlrWinner = strSamePatPlrWinner & "  player: " & player & " " & Range(aRngPlayerName(player)).Value & "  $" & earnChips & vbCrLf & "  " & allPlayerPatAndDecek(0, 2)
         playerMoney(player) = playerMoney(player) + earnChips
         totalPot = totalPot - earnChips
-        rngTotalPot = totalPot
+        rngTotalPot.Value = totalPot
         Range(aRngMoney(player)) = playerMoney(player)
-        Range(aRngPotMoney(0)) = Range(aRngPotMoney(0)).Value - earnChips
+        Range(aRngPotMoney(0)).Value = allinPlayerChipsAndPot(0, 2) - earnChips
+        MsgBox strSamePatPlrWinner
     End If
 End If
 End Function
@@ -1108,7 +1105,7 @@ Function anonceWinner()
 End Function
 Function cleaning()
 For i = 0 To 7
-    allinPlayerChipsAndPot(i, 0) = 0
+    allinPlayerChipsAndPot(i, 0) = ""
     allinPlayerChipsAndPot(i, 1) = 0
     allinPlayerChipsAndPot(i, 2) = 0
     allPlayerPatAndDecek(i, 0) = ""
@@ -1116,7 +1113,7 @@ For i = 0 To 7
     allPlayerPatAndDecek(i, 2) = ""
     countRaise(i) = 0
     diffChips(i) = 0
-    potOwner(i) = ""
+    'potOwner(i) = ""
     countRaise(i) = 0
     playerCall(i) = False
     playerRaise(i) = False
@@ -1125,7 +1122,7 @@ For i = 0 To 7
     Range(aRngPotMoney(0)).Value = ""
     Range(aRngBetCondition(i)).Value = ""
     Range(aRngMoney(i)).Offset(1, -3) = "" '清除掉筹码格子下面的牌型
-    Range(aRngBetCondition(i)).Interior.pattern = xlNone '无填充
+    Range(aRngBetCondition(i)).Interior.Pattern = xlNone '无填充
     Range(aRngBetCondition(i)).Font.ThemeColor = xlThemeColorLight1 '黑色字
     Range(aRngBet(i)).Value = ""
     Range(aRngHand(i + 1, 1), aRngHand(i + 1, 2)).Value = ""
@@ -1147,6 +1144,11 @@ For i = 0 To 7
         Range(aRngPotMoney(i), aRngPotNum(i)).Value = ""
         Range(aRngHand(i + 1, 1), aRngHand(i + 1, 2)).Offset(1, 0).FormulaR1C1 = "=IF(ISTEXT(R[-1]C),""|||"","""")"
     Else
+        If playerMoney(i) <= 0 Then
+            playerMoney(i) = 100 * BB
+            Range(aRngMoney(i)) = "$" & playerMoney(i)
+            MsgBox (Range(aRngPlayerName(i)) & " rebuy")
+        End If
         Range(aRngHand(i + 1, 1), aRngHand(i + 1, 2)).Offset(1, 0).FormulaR1C1 = "=IF(ISTEXT(R[-1]C),R[-1]C,"""")"
     End If
     Range(aRngHand(i + 1, 1), aRngHand(i + 1, 2)).Offset(1, 0).Font.ThemeColor = xlThemeColorLight1 '黑色字
@@ -1155,15 +1157,16 @@ For i = 0 To 7
     totalWin(i) = 0
 Next i
 countAllin = 0
-countDiffAllin = -1
+countDiffAllin = 0
 countFold = 0
 countOnTable = 8
 countThisTurnAction = 8
 earnChips = 0
 ifLastOne = False
+isNeoStageFirstAllin = True
 startPlayer = 0
 lastAllinNum = 0
-lastDiffAllin = -1
+lastDiffAllin = 0
 maxCallChips = 0
 maxAllIn = 0
 minAllIn = 1000 * BB
@@ -1520,5 +1523,7 @@ Function helpme()
 'Fish--鱼：一般高水平的玩家对那些输不起，牌品差的玩家的贬意称呼。
 'Shark --鲨鱼: 一般指能够赢钱的高手?
 End Function
+
+
 
 
