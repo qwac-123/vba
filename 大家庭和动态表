@@ -206,38 +206,38 @@ Application.ScreenUpdating = False
 Application.DisplayAlerts = False
 '处理ISMSrob
 
-    Range("o4:o15").Select
-    Selection.Replace What:="油", Replacement:="", LookAt:=xlPart, _
+    With Range("o4:o15")
+    .Replace What:="油", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="重", Replacement:="", LookAt:=xlPart, _
+    .Replace What:="重", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="轻", Replacement:="", LookAt:=xlPart, _
+    .Replace What:="轻", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="滑", Replacement:="", LookAt:=xlPart, _
+    .Replace What:="滑", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="淡", Replacement:="", LookAt:=xlPart, _
+    .Replace What:="淡", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="水", Replacement:="", LookAt:=xlPart, _
+    .Replace What:="水", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="吨", Replacement:="MT", LookAt:=xlPart, _
+    .Replace What:="吨", Replacement:="MT", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    'Selection.Replace What:="轻", Replacement:="", LookAt:=xlPart, _
+    '.Replace What:="轻", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    'Selection.Replace What:="滑", Replacement:="", LookAt:=xlPart, _
+    '.Replace What:="滑", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    'Selection.Replace What:="淡", Replacement:="", LookAt:=xlPart, _
+    '.Replace What:="淡", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-
+    End With
 
 For i = 4 To 14 Step 1
     ROB = Cells(i, 15).Text 'column "O"
@@ -311,83 +311,79 @@ Set dongtaibiao = ActiveWorkbook
 
 Call check_wk大家庭动态
 End Sub
-Sub ddd大家庭下航次()
-r = ActiveCell.Row
-Set loadP = Cells(r, 4)
-Set discP = Cells(r, 5)
-Set NextV = Cells(r, 9)
-Cells(r, 4) = Left(NextV.Value, InStr(3, NextV.Value, "-") - 1)
-Cells(r, 5) = Right(NextV.Value, Len(NextV.Value) - InStr(3, NextV.Value, "-"))
-NextV.Value = ""
-End Sub
+Function ddd大家庭下航次(r As Integer)
+Call check_wk大家庭动态
+'Set loadP = Cells(r, 4)
+'Set discP = Cells(r, 5)
+'Set NextV = Cells(r, 9)
+NextV = Cells(r, 9).Value
+Cells(r, 4) = Left(NextV, InStr(3, NextV, "-") - 1)
+Cells(r, 5) = Right(NextV, Len(NextV) - InStr(3, NextV, "-"))
+Cells(r, 9).Value = ""
+End Function
 Sub aaa快速下航次()
 'v1.1下下航次能够粘贴回下航次格子
 'v1.0
 Dim kaishi, jieshu, i As Integer, str, abc As String
 Dim r
-Dim c
 r = ActiveCell.Row
-c = ActiveCell.Column
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
 '首先统一航次命令格式
-    Cells(r, 2).Select
-    Selection.Replace What:="v", Replacement:="V", LookAt:=xlPart, _
+    Cells(r, 2).Replace What:="v", Replacement:="V", LookAt:=xlPart
+    With Cells(r, 19)
+    .Replace What:="v", Replacement:="V", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Cells(r, 19).Select
-    Selection.Replace What:="v", Replacement:="V", LookAt:=xlPart, _
+    .Replace What:=Chr(10), Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:=Chr(10), Replacement:="", LookAt:=xlPart, _
+    .Replace What:="【", Replacement:="(", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="【", Replacement:="(", LookAt:=xlPart, _
+    .Replace What:="】", Replacement:=")", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="】", Replacement:=")", LookAt:=xlPart, _
+    .Replace What:="—", Replacement:="-", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="—", Replacement:="-", LookAt:=xlPart, _
+    .Replace What:="--", Replacement:="-", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="--", Replacement:="-", LookAt:=xlPart, _
+    .Replace What:="  ", Replacement:=" ", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="  ", Replacement:=" ", LookAt:=xlPart, _
+    .Replace What:="　", Replacement:=" ", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="　", Replacement:=" ", LookAt:=xlPart, _
+    .Replace What:="，", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="，", Replacement:="", LookAt:=xlPart, _
+    .Replace What:=",", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:=",", Replacement:="", LookAt:=xlPart, _
+    .Replace What:="吨", Replacement:="MT", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="吨", Replacement:="MT", LookAt:=xlPart, _
+    .Replace What:="（", Replacement:="(", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="（", Replacement:="(", LookAt:=xlPart, _
+    .Replace What:="）", Replacement:=")", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="）", Replacement:=")", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
-  '问号会替换整个格子  'Selection.Replace What:="?", Replacement:=" ", LookAt:=xlPart, _
+  '问号会替换整个格子  '.Replace What:="?", Replacement:=" ", LookAt:=xlPart, _
     '    SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
       '  ReplaceFormat:=False
-    Selection.Replace What:=" ", Replacement:=" ", LookAt:=xlPart, _
+    .Replace What:=" ", Replacement:=" ", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="　", Replacement:=" ", LookAt:=xlPart, _
+    .Replace What:="　", Replacement:=" ", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    Selection.Replace What:="±5%", Replacement:="", LookAt:=xlPart, _
+    .Replace What:="±5%", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-
+    End With
 str = Trim(Cells(r, 19).Text)
 If str = "" Then
 Exit Sub
@@ -483,11 +479,12 @@ Cells(r, 13) = Mid(Cells(r, 19), cargo, lencar)
 Cells(r, 14) = Mid(Cells(r, 19), quanti, 6)
 
 Cells(r, 19) = xiahangci1 & xiahangci2
-Cells(r, c) = Left(str, 5)
+Cells(r, 2) = Left(str, 5)
 endsub:
 '航次更新结束
 
-Cells(r, c).Select
+Cells(r, 2).Select
+ddd大家庭下航次 (r)
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 End Sub
@@ -611,6 +608,14 @@ For r = 4 To 19
     Cells(r, 11).Value = voyStatus
     port1 = ""
     port2 = ""
+    portInstr = 0
+    arvInstr = 0
+    nxtInstr = 0
+    etaInstr = 0
+    acrInstr = 0
+    etbInstr = 0
+    bthInstr = 0
+    fshInstr = 0
     For i = 0 To UBound(arPorts) '查找港口信息
         portInstr = InStr(1, voyStatus, arPorts(i))
         arvInstr = InStr(1, voyStatus, "开往")
@@ -652,7 +657,7 @@ For r = 4 To 19
         
         If etaInstr > 0 Or (voyStatus Like "*预计*抵达*") Then '预计抵达**
             
-            Debug.Print "预计抵达" & etaPort & etaTime(voyStatus)
+            'Debug.Print "预计抵达" & etaPort & etaTime(voyStatus)
             Cells(r, 7).Value = "预计抵达" & etaPort & etaTime(voyStatus) 'G4
         End If
         
@@ -703,12 +708,12 @@ For r = 4 To 19
         Cells(r, 4).Value = fshPort & "完货"
     End If
 
-    Set rngStatus = Cells(r, 6)
-    Set rngETA = Cells(r, 7) 'F4
-    Set rngETB = Cells(r, 8) 'G4
-    strinfo = Cells(r, 11).Value 'K4
-    '先检查ETA
-    lenPort = 2
+'    Set rngStatus = Cells(r, 6)
+'    Set rngETA = Cells(r, 7) 'F4
+'    Set rngETB = Cells(r, 8) 'G4
+'    strinfo = Cells(r, 11).Value 'K4
+'    '先检查ETA
+'    lenPort = 2
 '    For i = 0 To 3
 '        If InStr(0, strinfo, tri(i)) > 0 Then
 '            lenPort = 3
