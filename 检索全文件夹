@@ -1,0 +1,141 @@
+Sub 合并全年()
+'Range("A1").CurrentRegion.Offset(1, 0).ClearContents
+Application.ScreenUpdating = False
+Dim arr(1 To 10000) As String
+Dim f, cFile, i%, k%, x%
+Dim wb As Workbook
+
+arr(1) = "\\192.168.0.223\航运在线\3.2、操作部\1  各轮航次文件夹"
+i = 1: k = 1
+
+Set zb = ActiveWorkbook
+Set zsh = ActiveSheet
+
+'If MsgBox("是否清除当前表的内容", vbYesNo) = vbYes Then
+'    Cells.Delete '删除当前表的内容
+'Else
+''不删表，继续
+'End If
+
+Do While i < UBound(arr)
+    If arr(i) = "" Then Exit Do
+    f = Dir(arr(i), vbDirectory)
+    Do While f <> "" '
+        If InStr(f, ".") = 0 And 1 Then '没有"."说明是文件夹名字 文件夹里面第一个是".", 第二个是"..",往后是看得见的文件夹
+'            If Right(f, 1) = "年" And f <> "2017年" Then '非2017年文件夹不要
+'                GoTo dirf
+'            End If
+            k = k + 1
+            arr(k) = arr(i) & f & "\"
+        End If
+dirf:
+        f = Dir
+    Loop
+    i = i + 1
+Loop
+
+For x = 22 To UBound(arr) '使用前请检查arr(22)是不是第一个2017文件夹
+    If arr(x) = "" Then
+        Exit For
+    End If
+    Debug.Print Right(arr(x), 2)
+    initialName = Left(arr(x), 2)
+    If initialName <> "鼎衡" And initialName <> "建兴" And Right(arr(x), 2) <> "年\" Then
+        GoTo nextxx:
+    End If
+    
+    cFile = Dir(arr(x) & "*.xls?")
+    Do While cFile <> ""
+        baobiao = arr(x) & cFile
+        Set fs = CreateObject("scripting.FileSystemObject")
+        Set f = fs.GetFile(baobiao)
+        'Debug.Print Now 'Month(f.DateLastModified)
+'        If Month(f.DateLastModified) < Month(Now) Then '如果是以前的，就不整合了
+'            'GoTo nextFile:
+'        ElseIf InStr(5, baobiao, "燃") = 0 And InStr(5, baobiao, "然") = 0 Then '这是航次报表
+'            Call 航次报表整合
+'        Else '这是燃润料报表
+'            Call 燃润料报表整合
+'        End If
+nextFile:
+        cFile = Dir
+    Loop
+nextxx:
+Next x
+
+zsh.Cells(rowzbEnd, 1).Select
+ActiveWindow.FreezePanes = False
+Range("b2").Select
+ActiveWindow.FreezePanes = True
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
+End Sub
+Sub wew()
+Dim arr(1 To 10000) As String
+arr(1) = "\\192.168.0.223\航运在线\3.2、操作部\1  各轮航次文件夹\"
+i = 1: k = 1
+ro = 1
+'arr数组下是文件夹名字，形如
+'i=1,k=1
+'arr(1)     C:\z
+'arr(2)     c:\z\1
+'arr(3)     c:\z\2
+'arr(4)     c:\z\3
+'i=2,k=4    c:\z\3
+'arr(5),k=5,c:\z\1\1
+'arr(6)     c:\z\1\2
+'
+'
+'
+'
+'
+oriSlashNum = Len(arr(1)) - Len(Replace(arr(1), "\", ""))
+Do While i < UBound(arr)
+    If arr(i) = "" Then Exit Do
+    f = Dir(arr(i), vbDirectory)
+    countiSlash = Len(arr(i)) - Len(Replace(arr(i), "\", ""))
+    fileLevel = countiSlash - oriSlashNum
+    'countiSlash,i的文件夹层数
+    Do While f <> "" '循环扫描当前arr(i)下的所有文件夹
+        If InStr(f, ".") = 0 And 1 Then '没有"."说明是文件夹名字 文件夹里面第一个是".", 第二个是"..",往后是看得见的文件夹
+            'If countiSlash - oriSlashNum Then
+            
+            Select Case fileLevel
+            Case 0 '根目录下，都是船名文件夹
+                If Not (f Like "鼎衡*" Or f Like "建兴*") Or f = "鼎衡6" Or f = "鼎衡12" Or f = "鼎衡11" Then
+                    GoTo dirf
+                End If
+            Case 1 '年份
+                If Not (f Like "*17*") Then '有2017和2017年
+                    GoTo dirf
+                End If
+'            Case 2 '航次信息
+'                GoTo countin 'V1713 惠州-洋浦 3000吨 MEG
+            Case 3 '1合同2航次命令
+                If Not (f Like "*bl*" Or f Like "*BL*") Then '
+                    GoTo dirf
+                End If
+            'Case 4 'BL文件
+                If f Like "*作废" Then
+                    GoTo dirf
+                End If
+            End Select
+countin:
+            k = k + 1
+            arr(k) = arr(i) & f & "\"
+            strK = arr(k)
+            If fileLevel = 4 Then
+                Cells(ro, 1) = arr(k)
+                ro = ro + 1
+            End If
+            Debug.Print Len(strK) - Len(Replace(strK, "\", ""))
+            
+        End If
+dirf:
+        f = Dir
+    Loop
+nextLevel:
+    i = i + 1
+Loop
+Debug.Print "end  ", k
+End Sub
