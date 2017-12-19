@@ -1,3 +1,5 @@
+'v4 现在联动大家庭和动态表
+    对大家庭动态用正则表达式处理
 Dim zuotian
 Dim dajiating
 Dim dongtaibiao
@@ -28,6 +30,7 @@ Application.DisplayAlerts = 1
 Workbooks(Format(Date - zuotian, "船舶动态（yyyy-mm-dd）.xl\sx")).Activate
 End Sub
 Function 大家庭动态()
+'v4 将表内公式改为vba正则表达式
 'V3 删除了DH7
 'V2 etb未完成，增加了ANGEL123 DHE
 'v1.1 预计靠泊时间也写了一个简陋的函数进去
@@ -50,6 +53,7 @@ Range("d4:e16").Interior.Pattern = xlNone
     .Replace What:="轮", Replacement:=""
     .Replace What:="妥", Replacement:="泊"
     .Replace What:="lt", Replacement:="LT"
+    .Replace What:="th", Replacement:="TH"
     End With
 
 For Each rngk In Range("k1:k30")
@@ -82,7 +86,7 @@ Range("a1") = "上海鼎衡船队动态信息一览表 " & Format(Date, "yyyy年
 
 Set djt = ActiveWorkbook
 Set rngJX = Range("K4:k14")
-Set rngAg = Range("k16:k19")
+Set rngAg = Range("k15:k19")
 Call check_wk船舶动态
 
 rngJX.Copy '大家庭船舶动态复制到动态表
@@ -143,7 +147,7 @@ Range("h4").Select
 '    "=IFERROR(IF(SUM(ISNUMBER(FIND({""张家港"",""连云港"",""鲅鱼圈"",""仙人岛""},RC[3]))*1),""预计靠泊""&MID(RC[3],FIND(""已到"",RC[3])+2,3),""预计靠泊""&MID(RC[3],FIND(""已到"",RC[3])+2,2)&"" "")&IF(ISNUMBER(--MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))+1,2)),MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))+1,2),MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))+1,1))&""号""&IF(ISNUMBER(--MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))-4,4)),MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))-4,4)&""LT"",MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))-6,6)),"""")"
 
 
-
+Call 大家庭状态检查
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 
@@ -206,7 +210,7 @@ Application.ScreenUpdating = False
 Application.DisplayAlerts = False
 '处理ISMSrob
 
-    With Range("o4:o15")
+    With Range("o4:o14")
     .Replace What:="油", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
@@ -240,24 +244,32 @@ Application.DisplayAlerts = False
     End With
 
 For i = 4 To 14 Step 1
-    ROB = Cells(i, 15).Text 'column "O"
-    If InStr(1, ROB, ":") > 0 Then
+    ROB = Cells(i, 15).Value 'column "O"
+    If InStr(1, ROB, ":") > 0 Then '是isms的动态
         Cells(i, 15) = Mid(ROB, 9, InStr(11, ROB, "t") - 8) 'fo
         'Debug.Print Mid(rob, 9, InStr(11, rob, "t") - 8)
-      Cells(i, 16) = Mid(ROB, InStr(16, ROB, ":") + 1, InStr(19, ROB, "t") - InStr(16, ROB, ":")) 'do
+        Cells(i, 16) = Mid(ROB, InStr(16, ROB, ":") + 1, InStr(19, ROB, "t") - InStr(16, ROB, ":")) 'do
       'Debug.Print Mid(rob, InStr(16, rob, ":") + 1, InStr(19, rob, "t") - InStr(16, rob, ":")) 'do
 '      Debug.Print ROB
 '      Debug.Print Space(39) & "40" & Space(5) & "46"
 '      Debug.Print InStr(38, ROB, "L")
-      instrColon = InStr(35, ROB, ":") + 1
+        instrColon = InStr(35, ROB, ":") + 1
 '      Debug.Print Mid(ROB, instrColon, InStr(instrColon, ROB, "L") - instrColon + 1) 'lo
-      Cells(i, 17) = Mid(ROB, instrColon, InStr(instrColon, ROB, "L") - instrColon + 1) 'lo
+         Cells(i, 17) = Mid(ROB, instrColon, InStr(instrColon, ROB, "L") - instrColon + 1) 'lo
       'Debug.Print Mid(rob, InStr(40, rob, ":") + 1, InStr(46, rob, "L") - InStr(40, rob, ":")) 'lo
-      Cells(i, 18) = Mid(ROB, InStr(27, ROB, ":") + 1, InStr(30, ROB, "t") - InStr(27, ROB, ":")) 'fw
+        Cells(i, 18) = Mid(ROB, InStr(27, ROB, ":") + 1, InStr(30, ROB, "t") - InStr(27, ROB, ":")) 'fw
       'Debug.Print Mid(rob, InStr(27, rob, ":") + 1, InStr(30, rob, "t") - InStr(27, rob, ":")) 'fw
     End If
     
     If InStr(1, ROB, "/") > 0 Then
+        If Left(ROB, 1) = "F" Then
+            ROB = Replace(ROB, "FO", "")
+            ROB = Replace(ROB, "DO", "")
+            ROB = Replace(ROB, "LUB", "")
+            ROB = Replace(ROB, "FW", "")
+            ROB = Replace(ROB, " ", "")
+        End If
+        Cells(i, 15) = ROB
         '分列rob
         Cells(i, 15).TextToColumns Destination:=Cells(i, 15), DataType:=xlDelimited, _
         TextQualifier:=xlDoubleQuote, ConsecutiveDelimiter:=False, Tab:=True, _
@@ -514,8 +526,7 @@ Debug.Print strport
 End Function
 Function 大家庭状态检查()
 Dim voyStatus As String
-Application.ScreenUpdating = 0
-Application.DisplayAlerts = 0
+'dim oriPort as string
 arPorts = Array("大连", "营口", "秦皇岛", "天津", "烟台", "东营", "莱州", "潍坊", "青岛", "岚山", _
  "连云港", "泉州", "惠州", "钦州", "茂名", "北海", "八所", "洋浦", _
  "漕泾", "金山", "江阴", "高雄", "宁波", "汕头", _
@@ -528,7 +539,7 @@ arPorts = Array("大连", "营口", "秦皇岛", "天津", "烟台", "东营", "
 "石井", "北仑台塑", "福州", "东莞", "嘉兴", "小虎岛", "温州", _
 "平仄", "麥寮N5码头", "麥寮", "大山", "锦州", "韩国", "菲律宾", "揭阳", "仪征", _
 "宁波镇司", "杨浦", "北海铁山港码头", "浙江", "扬州", _
-"曹泾", "小虎山", "Daesan", 金山危险品锚地)
+"曹泾", "小虎山", "东霍山", "大山", "锦石")
 
 arHuaBeiPorts = Array("丹东", "大连", "营口", "锦州", "秦皇岛", "唐山", "京唐", "天津", "黄骅", "鲅鱼圈")
 arHuaDongPorts = Array("龙口", "烟台", "威海", "石岛", "张家埠", "青岛", "日照", "岚山", "连云", _
@@ -539,13 +550,15 @@ arHuaNanPorts = Array("汕头", "西堤", "汕尾", "深圳", "广州", "中山"
 
 arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮", "香港", "澳门")
 
-GoTo testLine
+'GoTo testLine
 
 
 '码头名字
  '"洋浦逸盛",, "天津南港" , "宁波镇海" "宁波台塑",  "宁波北仑", "南京杨巴", "南京仪征",, "宁波大榭"
-    With [a1:a333] 'Range("k4:k19") '处理复制过来的船舶动态
-    .Replace What:="：", Replacement:=";", LookAt:=xlPart
+    With Range("k4:k19") '[a1:a333] 'Range("k4:k19") '处理复制过来的船舶动态
+    .Replace What:="：", Replacement:=";", LookAt:=xlPart, _
+        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
+        ReplaceFormat:=False
     .Replace What:=":", Replacement:=";"
     .Replace What:="，", Replacement:=";"
     .Replace What:=",", Replacement:=";"
@@ -556,21 +569,23 @@ GoTo testLine
     .Replace What:="｛", Replacement:="【"
     .Replace What:="}", Replacement:="】"
     .Replace What:="｝", Replacement:="】"
-    .Replace What:="鼎衡", Replacement:="DH"
-    .Replace What:="建兴", Replacement:="JX"
     .Replace What:="-", Replacement:=""
-    .Replace What:="轮", Replacement:=""
     .Replace What:="妥", Replacement:="泊"
-    .Replace What:="lt", Replacement:="LT"
-    .Replace What:="ST", Replacement:="号"
-    .Replace What:="ND", Replacement:="号"
-    .Replace What:="RD", Replacement:="号"
     .Replace What:="st", Replacement:="号"
     .Replace What:="nd", Replacement:="号"
     .Replace What:="rd", Replacement:="号"
+    .Replace What:="th", Replacement:="号"
     .Replace What:="今天", Replacement:=Day(Now) & "号"
     .Replace What:="今晚", Replacement:=Day(Now) & "号晚上"
     .Replace What:="今早", Replacement:=Day(Now) & "号早上"
+    
+    .Replace What:="yeosu", Replacement:="丽水"
+    .Replace What:="daesan", Replacement:="大山"
+    .Replace What:="中化码头", Replacement:=""
+    .Replace What:="危险品", Replacement:=""
+    .Replace What:="锚地", Replacement:=""
+    .Replace What:="锚地", Replacement:=""
+    .Replace What:="台塑", Replacement:="宁波"
     
     .Replace What:=" ", Replacement:=""
     
@@ -586,6 +601,7 @@ GoTo testLine
     .Replace What:="已完货", Replacement:="完货"
     
     
+    .Replace What:="计划", Replacement:="预计"
     .Replace What:="预计抵达", Replacement:="ETA"
     .Replace What:="eta", Replacement:="ETA"
     .Replace What:="预计靠泊", Replacement:="ETB"
@@ -595,6 +611,15 @@ GoTo testLine
     End With
 testLine:
 For r = 4 To 19
+    oriStatus = Cells(r, 6).Value
+    If Left(oriStatus, 1) = "开" Then
+        oriPort = Mid(oriStatus, 3, 6)
+    ElseIf Mid(oriStatus, 2, 1) = "泊" Then
+        oriPort = Mid(oriStatus, 3, 6)
+    ElseIf Right(oriStatus, 1) = "货" Then
+        oriPort = Left(oriStatus, Len(oriStatus) - 2)
+    End If
+    Cells(r, 11).Select
     If Cells(r, 11) = "" Then
         GoTo nextr
     End If
@@ -605,9 +630,11 @@ For r = 4 To 19
         lenEngin = enginEnd - enginStart + 1
         voyStatus = Replace(voyStatus, Mid(voyStatus, enginStart, lenEngin), "") '剔除【】内容
     End If
-    Cells(r, 11).Value = voyStatus
+    'Cells(r, 11).Value = voyStatus
     port1 = ""
     port2 = ""
+    etaPort = ""
+    etbPort = ""
     portInstr = 0
     arvInstr = 0
     nxtInstr = 0
@@ -656,32 +683,36 @@ For r = 4 To 19
         End If
         
         If etaInstr > 0 Or (voyStatus Like "*预计*抵达*") Then '预计抵达**
-            
-            'Debug.Print "预计抵达" & etaPort & etaTime(voyStatus)
             Cells(r, 7).Value = "预计抵达" & etaPort & etaTime(voyStatus) 'G4
+            Cells(r, 8).Value = ""
         End If
-        
         GoTo nextr
     End If
     
     If acrInstr > 0 Then '锚泊XX
-        If port1Instr = arvInstr + 2 Then '开往port1 then
+        If port1Instr = acrInstr + 2 Or acrInstr = port1Instr + Len(port1) Then '锚泊port1 then
             etbPort = port1
-        ElseIf port2Instr = arvInstr + 2 Then '开往port1 then
+        ElseIf port2Instr = acrInstr + 2 Or acrInstr = port2Instr + Len(port2) Then '锚泊port1 then
             etbPort = port2
         Else
             MsgBox "锚泊？" & vbCrLf & "按下ctrl+break调试"
         End If
-        Cells(r, 4).Value = "锚泊" & etbPort
+        Cells(r, 6).Value = "锚泊" & etbPort
         If Len(etbPort) < 3 Then
-            etbPort = etaPort & Space(3 - Len(etbPort))
+            etbPort = etbPort & Space(3 - Len(etbPort))
         End If
         
         If etbInstr > 0 Or (voyStatus Like "*预计*靠泊*") Then '预计靠泊**
-            Debug.Print "预计靠泊" & etbPort & etbTime(voyStatus)
-            Cells(r, 5).Value = "预计靠泊" & etbPort & etbTime(voyStatus)
+            If etbInstr > 0 Then
+                voyStatus = Right(voyStatus, Len(voyStatus) - etbInstr)
+            ElseIf voyStatus Like "*预计*靠泊*" Then
+                voyStatus = Right(voyStatus, Len(voyStatus) - InStr(1, voyStatus, "预计"))
+            End If
+            Cells(r, 8).Value = "预计靠泊" & etbPort & etbTime(voyStatus)
+        Else
+            Cells(r, 8).Value = "预计靠泊" & etbPort & "时间待定"
         End If
-        
+        Cells(r, 7).Value = ""
         GoTo nextr
     End If
 
@@ -694,6 +725,7 @@ For r = 4 To 19
             MsgBox "靠泊？" & vbCrLf & "按下ctrl+break调试"
         End If
         Cells(r, 6).Value = "靠泊" & etbPort
+        Range(Cells(r, 7), Cells(r, 8)).Value = ""
         GoTo nextr
     End If
     If fshInstr > 0 Then '完货
@@ -705,30 +737,11 @@ For r = 4 To 19
             MsgBox "完货？" & vbCrLf & "按下ctrl+break调试"
         End If
         
-        Cells(r, 4).Value = fshPort & "完货"
+        Cells(r, 6).Value = fshPort & "完货"
+        Range(Cells(r, 7), Cells(r, 8)).Value = ""
     End If
-
-'    Set rngStatus = Cells(r, 6)
-'    Set rngETA = Cells(r, 7) 'F4
-'    Set rngETB = Cells(r, 8) 'G4
-'    strinfo = Cells(r, 11).Value 'K4
-'    '先检查ETA
-'    lenPort = 2
-'    For i = 0 To 3
-'        If InStr(0, strinfo, tri(i)) > 0 Then
-'            lenPort = 3
-'            Exit For
-'        End If
-'    Next i
-
-
 nextr:
 Next r
-Cells(4, 1).TextToColumns DataType:=xlDelimited, _
-ConsecutiveDelimiter:=True, Semicolon:=False '所选单元格按分号分列
-
-Application.ScreenUpdating = 1
-Application.DisplayAlerts = 1
 End Function
 Function 船舶动态处理()
 'datetemp = "2017/12/18 22:00:00"
