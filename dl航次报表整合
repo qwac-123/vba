@@ -1,0 +1,315 @@
+'Option Explicit
+Dim arr(1 To 10000) As String
+
+Dim hangciDiYiCi As Boolean
+Dim ranrunDiYiCi As Boolean
+Dim openedOil As Boolean
+Dim openedVoy As Boolean
+
+Dim i As Integer
+Dim rng0 As Range
+Dim rng1 As Object
+Dim rng2 As Object
+Dim rng3 As Object
+
+Dim w As Object
+Dim wsh As Object
+Dim zb As Object
+Dim zsh As Object
+
+Dim rowGangKou As Long '港口所在行
+Dim rowzbEnd As Long
+Dim rowXiJieHead As Long '行号数据类型是long
+Dim rowXiJieEnd As Long
+
+Dim str As String '单元格内容
+Dim shipNum As String '从input里得到的，都是string
+Dim shipName As String
+Dim fileDir As String '文件夹位置
+Dim voy As String '记录航次号
+
+Dim dakaibaobiao As Variant ' 在VBA中，对于For Each m In a，若a是数组，m只能声明为variant 变量，这是语法决定的。
+Dim baobiao As Variant '同上
+
+Dim zuoweiuzihoudejieweimeishenmeyisi
+Sub ccc航次报表统一整合()
+'v1.7 现在可以正确找到航次报表的细节时间了
+'v1.6 现在可以正确找到油料表头了
+'v1.5 重做了船名输入选择
+'v1.4 增加了开头提示清除表
+'v1.3 修改了冻结拆分窗格部分
+'v1.2 增加了船名输入以便于选择报表文件夹
+'v1.1 '增加了判断是否打开过油料表oil 和航次表voy
+ 'v1.0可以整合航次报表和燃润料报表到一张表里
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
+
+arr(1) = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\"
+
+Call 获取所有文件夹
+Call 开始整合
+Do
+Debug.Print shipNum
+If shipNum = "     " Then
+    MsgBox "请输入正确的数字"
+End If
+shipNum = InputBox("请输入船名数字，如鼎衡10就输入10", "船名数字", "10")
+Loop While Len(shipNum) > 2
+If shipNum = "" Then
+    Exit Sub
+End If
+Select Case shipNum
+    Case 17
+        shipName = "鼎衡17（万年青）"
+    Case 18
+        shipName = "鼎衡18（常春藤）"
+    Case 32
+        shipName = "建兴32"
+    Case Else
+        shipName = "鼎衡" & shipNum
+End Select
+fileDir = _
+"\\192.168.0.223\航运在线\10、油料管理部\航次报表\" _
+& shipName & "\" & Year(Date) & "年"
+ChDir fileDir
+dakaibaobiao = Application.GetOpenFilename(FileFilter:="Excel文件 (*.xls; *.xlsx),*.xls; *.xlsx,所有文件(*.*),*.*", _
+       title:="Excel选择", MultiSelect:=True) '选择要被合并的簿
+
+If Not IsArray(dakaibaobiao) Then '如果点了取消就结束
+    Exit Sub
+End If
+
+ranrunDiYiCi = True
+hangciDiYiCi = True
+openedOil = False
+openedVoy = False
+Set zb = ActiveWorkbook
+Set zsh = ActiveSheet
+
+If MsgBox("是否清除当前表的内容", vbYesNo) = vbYes Then
+    Cells.Delete '删除当前表的内容
+Else
+'退出
+End If
+
+For Each baobiao In dakaibaobiao
+    If InStr(5, baobiao, "燃") = 0 Then '这是航次报表
+        Call 航次报表整合
+    Else '这是燃润料报表
+        Call 燃润料报表整合
+    End If
+Next baobiao
+ActiveWindow.FreezePanes = False
+Range("b2").Select
+ActiveWindow.FreezePanes = True
+'处理航次区域
+If openedVoy Then
+    zsh.Columns("c:d").NumberFormatLocal = "ddmmyyhhmm"
+    Columns("A:A").ColumnWidth = 4
+    Columns("B:B").ColumnWidth = 17.35
+    Columns("C:C").ColumnWidth = 9.5
+    Columns("D:D").ColumnWidth = 9.5
+    Columns("e:i").ColumnWidth = 5.4
+    Rows.RowHeight = 15
+End If
+'处理燃润料区域
+If openedOil Then
+    For i = 1 To Range("r1").End(xlDown).Row
+        str = Cells(i, 17).Text
+        If InStr(1, str, "本航次加") Then
+            Cells(i, 17) = "+"
+        ElseIf InStr(1, str, "航次末结") Then
+            Cells(i, 17) = "end"
+        End If
+    Next
+    Columns(16).ColumnWidth = 4
+    Columns(17).ColumnWidth = 5
+    Columns(18).ColumnWidth = 5.88
+    Columns(19).ColumnWidth = 5.88
+End If
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
+End Sub
+Function 获取所有文件夹()
+i = 1: k = 1
+arDenyShip = Array("鼎衡6", "鼎衡12", "恒信HX", "金色恩典GA", "金色祝福GB", "金色信约GC", "金色王朝GD", "永翔29") '"鼎衡7",
+Do While i < UBound(arr)
+    If arr(i) = "" Then Exit Do
+    folderLevel = Len(arr(i)) - Len(Replace(arr(i), "\", ""))
+    f = Dir(arr(i), vbDirectory)
+    Do While f <> "" '
+        If f = "." Or f = ".." Then   '是看不见的文件
+            GoTo dirf
+        ElseIf f = "" Then
+            Debug.Print 1
+            
+        Else
+            Select Case folderLevel
+                Case 6 ' \\192\航运\10油料\航次报表\
+                    For countShip = 0 To UBound(arDenyShip)
+                        If f = arDenyShip(countShip) Then
+                            GoTo dirf
+                        End If
+                    Next countShip
+                Case 7 ' \\192\航运\10油料\航次报表\鼎衡1\
+                    If Right(f, 1) = "年" And f <> "2017年" Then '非2017年文件夹不要
+                        GoTo dirf
+                    End If
+                Case 8 ' \\192\航运\10油料\航次报表\鼎衡1\2017年\
+                    
+            End Select
+            k = k + 1
+            arr(k) = arr(i) & f & "\"
+        End If
+dirf:
+        f = Dir
+    Loop
+    i = i + 1
+Loop
+End Function
+Function 获取航次号(fileName As String)
+Dim regVoy, s$, StrNew$
+Set regVoy = CreateObject("vbscript.regexp")
+regVoy.Pattern = "\d\d\d\d"
+Set arVoy = regVoy.Execute(fileName)
+For Each voyNum In arVoy
+    Debug.Print voyNum
+Next voyNum
+End Function
+Function 开始整合()
+For x = 22 To UBound(arr) '使用前请检查arr(22)是不是第一个2017文件夹
+    If arr(x) = "" Then
+        Exit For
+    End If
+    Debug.Print Right(arr(x), 2)
+    initialName = Left(arr(x), 2)
+    If initialName <> "鼎衡" And initialName <> "建兴" And Right(arr(x), 2) <> "年\" Then
+        GoTo nextxx:
+    End If
+    
+    cFile = Dir(arr(x) & "*.xls?")
+    Do While cFile <> ""
+        baobiao = arr(x) & cFile
+        Set fs = CreateObject("scripting.FileSystemObject")
+        Set f = fs.GetFile(baobiao)
+        'Debug.Print Now 'Month(f.DateLastModified)
+        If Month(f.DateLastModified) < Month(Now) Then '如果是以前的，就不整合了
+            'GoTo nextFile:
+        ElseIf InStr(5, baobiao, "燃") = 0 And InStr(5, baobiao, "然") = 0 Then '这是航次报表
+            Call 航次报表整合
+        Else '这是燃润料报表
+            Call 燃润料报表整合
+        End If
+nextFile:
+        cFile = Dir
+    Loop
+nextxx:
+Next x
+End Function
+Function 燃润料报表整合()
+'v2.2 现在能够正确找到表头位置了
+'v2.1 增加了判断是否打开过油料表
+'v2.0 从原来的sub改为sub航次报表统一整合()下的一个function
+'v1.0 油料报表整合 Macro
+Dim rngGezi As Object
+Dim rowOilHead As Long
+Dim rowOilAdd As Long
+Dim rowOilEnd As Long
+    Set w = Workbooks.Open(baobiao)
+    Set wsh = w.Sheets("燃油报表")
+    voy = Mid(w.Name, InStr(11, w.Name, "V") + 1, 4)
+    If rowOilHead = 0 Then
+        For Each rngGezi In Range("b36:b44")
+            If rngGezi = "FO:" Then
+                rowOilHead = rngGezi.Row
+                Exit For
+            End If
+        Next rngGezi
+    End If
+    If ranrunDiYiCi Then
+        wsh.Range(Cells(rowOilHead, 1), Cells(rowOilHead, 3)).Copy zsh.Cells(1, 17) '油料表头
+        zsh.Cells(1, 16) = Mid(w.Name, 1, InStr(3, w.Name, "燃") - 1) '船名
+        ranrunDiYiCi = False
+    End If
+    rowzbEnd = zsh.Cells(66666, 17).End(xlUp).Row + 1
+    If Len(wsh.Cells(rowOilHead + 2, 2).Text & wsh.Cells(rowOilHead + 2, 3).Text) = 0 Then '判断本航次加装这一行是否有加油
+        wsh.Range(Cells(rowOilHead + 4, 1), Cells(rowOilHead + 4, 3)).Copy zsh.Cells(rowzbEnd, 17) '只复制航次末结存
+    Else
+        Union(wsh.Range(Cells(rowOilHead + 2, 1), Cells(rowOilHead + 2, 3)), wsh.Range(Cells(rowOilHead + 4, 1), Cells(rowOilHead + 4, 3))).Copy zsh.Cells(rowzbEnd, 17) '本航次加装和航次末结存
+    End If
+    zsh.Cells(rowzbEnd, 16) = voy
+w.Close
+openedOil = True
+End Function
+Function 航次报表整合()
+'v2.2 现在只选中可见单元格
+'v2.1 增加了判断是否打开过航次表
+'v2.0 从原来的sub改为sub航次报表统一整合()下的一个function
+'v1.171114 最后调整了格子大小
+'v1.0 航次报表整合 Macro
+    Set w = Workbooks.Open(baobiao)
+    Set wsh = w.Sheets("航次报表")
+    Set rng0 = wsh.Range("b5,d5") '航次开始结束
+    rowzbEnd = zsh.Cells(66666, 3).End(xlUp).Row + 1
+    rowGangKou = wsh.Cells(8, 3).End(xlDown).Row - 1 '靠离泊时间的最后一条位置
+    voy = Mid(w.Name, InStr(6, w.Name, "V") + 1, 4)
+    zsh.Cells(rowzbEnd, 1) = voy
+    If rowXiJieHead = 0 Then
+        rowXiJieHead = rowZhaoHead() '细节的开头位置，每个表应该都一样的开头
+    End If
+    zsh.Cells(rowzbEnd, 2) = "航次开始结束时间"
+    rng0.Copy zsh.Cells(rowzbEnd, 3)
+    rowXiJieEnd = rowFindEnd() '细节的最后一条位置
+    If hangciDiYiCi Then
+        Set rng1 = wsh.Range(Cells(6, 1), Cells(6, 3)) '靠离泊时间区域
+        rng1.Copy zsh.Cells(1, 2)
+        zsh.Range("a1") = Mid(w.Name, 1, InStr(3, w.Name, "航") - 1) 'a1格写船名
+        hangciDiYiCi = False
+    End If
+    Set rng1 = wsh.Range(Cells(8, 1), Cells(rowGangKou, 3)) '靠离泊时间区域
+    Set rng2 = wsh.Range(Cells(rowXiJieHead, 1), Cells(rowXiJieEnd, 3)) '.SpecialCells(xlCellTypeVisible)  '靠离泊细节区域
+    Set rng3 = wsh.Range(Cells(rowXiJieHead, 5), Cells(rowXiJieEnd, 12)) '.SpecialCells(xlCellTypeVisible)  '细节区域原因
+    Union(rng1, rng2).Copy zsh.Cells(rowzbEnd + 1, 2)
+'    rng1.Copy zsh.Cells(rowzbEnd + 1, 2)
+'    rng2.Copy zsh.Cells(rowzbEnd + 1 + (rowGangKou - 7), 2)
+    rng3.Copy zsh.Cells(rowzbEnd + rowGangKou - 6, 5)
+w.Close
+openedVoy = True
+End Function
+Function rowZhaoHead()
+Dim strgezi As String
+Dim rngGezi As Object
+For Each rngGezi In Range("a25:a55") '找到开头的位置
+    If rngGezi.Text = "（纯装卸货时间、补给、抛锚等待、靠泊作业准备时间）" Then '如果是"船位 Location"会导致选中前面30行
+        rowZhaoHead = rngGezi.Row + 1
+        Exit Function
+    End If
+Next rngGezi
+End Function
+Function rowFindEnd()
+'v1.3 现在可以正确统计最后一行
+'v1.2 现在可以正确统计连续空行而不是累计空行，并排除隐藏单元格（dh9的）
+'
+Dim cishu
+Dim i
+Dim rngGezi As Object
+cishu = 0
+For Each rngGezi In Range(Cells(rowXiJieHead, 3), Cells(80, 3))  '.SpecialCells(xlCellTypeVisible)
+    'Debug.Print rngGezi
+    rowXiJieEnd = rngGezi.Row
+    If Cells(rowXiJieEnd, 1) = "合计Total" Then
+        rowFindEnd = rowXiJieEnd - 1 - cishu
+        Exit Function
+    End If
+    If Cells(rowXiJieEnd, 4) = "" Then
+        cishu = cishu + 1
+    Else
+        cishu = 0
+    End If
+    
+    If cishu > 3 Then '如果连续3次
+        rowFindEnd = rowXiJieEnd - cishu
+        Exit Function
+    End If
+Next rngGezi
+End Function
