@@ -1,4 +1,4 @@
-'Option Explicit
+
 Dim arr(1 To 10000) As String
 
 Dim hangciDiYiCi As Boolean
@@ -7,6 +7,8 @@ Dim openedOil As Boolean
 Dim openedVoy As Boolean
 
 Dim i As Integer
+Dim iArrStart As Integer
+Dim iArrEnd As Integer
 Dim rng0 As Range
 Dim rng1 As Object
 Dim rng2 As Object
@@ -32,7 +34,8 @@ Dim dakaibaobiao As Variant ' 在VBA中，对于For Each m In a，若a是数组�
 Dim baobiao As Variant '同上
 
 Dim zuoweiuzihoudejieweimeishenmeyisi
-Sub ccc航次报表统一整合()
+Sub dataloy航次报表统一整合()
+'v2.0 一件整合所有表
 'v1.7 现在可以正确找到航次报表的细节时间了
 'v1.6 现在可以正确找到油料表头了
 'v1.5 重做了船名输入选择
@@ -47,102 +50,78 @@ Application.DisplayAlerts = 0
 arr(1) = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\"
 
 Call 获取所有文件夹
+Call 排序
 Call 开始整合
-Do
-Debug.Print shipNum
-If shipNum = "     " Then
-    MsgBox "请输入正确的数字"
-End If
-shipNum = InputBox("请输入船名数字，如鼎衡10就输入10", "船名数字", "10")
-Loop While Len(shipNum) > 2
-If shipNum = "" Then
-    Exit Sub
-End If
-Select Case shipNum
-    Case 17
-        shipName = "鼎衡17（万年青）"
-    Case 18
-        shipName = "鼎衡18（常春藤）"
-    Case 32
-        shipName = "建兴32"
-    Case Else
-        shipName = "鼎衡" & shipNum
-End Select
-fileDir = _
-"\\192.168.0.223\航运在线\10、油料管理部\航次报表\" _
-& shipName & "\" & Year(Date) & "年"
-ChDir fileDir
-dakaibaobiao = Application.GetOpenFilename(FileFilter:="Excel文件 (*.xls; *.xlsx),*.xls; *.xlsx,所有文件(*.*),*.*", _
-       title:="Excel选择", MultiSelect:=True) '选择要被合并的簿
 
-If Not IsArray(dakaibaobiao) Then '如果点了取消就结束
-    Exit Sub
-End If
-
-ranrunDiYiCi = True
-hangciDiYiCi = True
-openedOil = False
-openedVoy = False
-Set zb = ActiveWorkbook
-Set zsh = ActiveSheet
-
-If MsgBox("是否清除当前表的内容", vbYesNo) = vbYes Then
-    Cells.Delete '删除当前表的内容
-Else
-'退出
-End If
-
-For Each baobiao In dakaibaobiao
-    If InStr(5, baobiao, "燃") = 0 Then '这是航次报表
-        Call 航次报表整合
-    Else '这是燃润料报表
-        Call 燃润料报表整合
-    End If
-Next baobiao
-ActiveWindow.FreezePanes = False
-Range("b2").Select
-ActiveWindow.FreezePanes = True
-'处理航次区域
-If openedVoy Then
-    zsh.Columns("c:d").NumberFormatLocal = "ddmmyyhhmm"
-    Columns("A:A").ColumnWidth = 4
-    Columns("B:B").ColumnWidth = 17.35
-    Columns("C:C").ColumnWidth = 9.5
-    Columns("D:D").ColumnWidth = 9.5
-    Columns("e:i").ColumnWidth = 5.4
-    Rows.RowHeight = 15
-End If
-'处理燃润料区域
-If openedOil Then
-    For i = 1 To Range("r1").End(xlDown).Row
-        str = Cells(i, 17).Text
-        If InStr(1, str, "本航次加") Then
-            Cells(i, 17) = "+"
-        ElseIf InStr(1, str, "航次末结") Then
-            Cells(i, 17) = "end"
-        End If
-    Next
-    Columns(16).ColumnWidth = 4
-    Columns(17).ColumnWidth = 5
-    Columns(18).ColumnWidth = 5.88
-    Columns(19).ColumnWidth = 5.88
-End If
+For ctsht = 1 To Sheets.Count
+With Sheets(ctsht)
+    .FreezePanes = False
+    .Range("b2").Select
+    .FreezePanes = True
+    '处理航次区域
+    .Columns("c:d").NumberFormatLocal = "ddmmyyhhmm"
+    .Columns("A:A").ColumnWidth = 4
+    .Columns("B:B").ColumnWidth = 17.35
+    .Columns("C:C").ColumnWidth = 9.5
+    .Columns("D:D").ColumnWidth = 9.5
+    .Columns("e:i").ColumnWidth = 5.4
+    .Rows.RowHeight = 15
+    '处理燃润料区域
+    
+    .Columns(17).Replace What:="*航次末结存*", Replacement:="end", LookAt:=xlPart
+    .Columns(17).Replace What:="*加装*", Replacement:="+"
+    .Columns(16).ColumnWidth = 4
+    .Columns(17).ColumnWidth = 5
+    .Columns(18).ColumnWidth = 5.88
+    .Columns(19).ColumnWidth = 5.88
+End With
+Next ctsht
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Sub
 Function 获取所有文件夹()
+Dim arShipNvoy(4, 4)
+Dim f As String
 i = 1: k = 1
-arDenyShip = Array("鼎衡6", "鼎衡12", "恒信HX", "金色恩典GA", "金色祝福GB", "金色信约GC", "金色王朝GD", "永翔29") '"鼎衡7",
+arDenyShip = Array("鼎衡6", "鼎衡12", "恒信HX", "金色恩典GA", "金色祝福GB", "金色信约GC", "金色王朝GD", "永翔29", "鼎衡7") '
+
+iArrStart = 0
+isFile = True
 Do While i < UBound(arr)
-    If arr(i) = "" Then Exit Do
+    If arr(i) = "" Then
+        iArrEnd = k
+        Exit Do
+    End If
     folderLevel = Len(arr(i)) - Len(Replace(arr(i), "\", ""))
+    
+    If folderLevel = 8 Then
+        shipName = Mid(arr(i), 36, InStr(37, arr(i), "\") - 36)
+        On Error Resume Next
+        Set Ws = ActiveWorkbook.Sheets(shipName)
+        If Ws Is Nothing Then
+            Sheets.Add After:=Sheets(Sheets.Count)
+            Sheets(Sheets.Count).Name = shipName
+            Set Ws = Nothing
+        Else
+            Set Ws = Nothing
+        End If
+        existVoy = Sheets(shipName).[a66666].End(xlUp).Value
+        
+        If isFile Then
+            iArrStart = k + 1
+            isFile = False
+        End If
+        
+    ElseIf folderLevel = 9 Then
+        iArrEnd = k
+        Exit Function
+    End If
     f = Dir(arr(i), vbDirectory)
     Do While f <> "" '
         If f = "." Or f = ".." Then   '是看不见的文件
             GoTo dirf
         ElseIf f = "" Then
             Debug.Print 1
-            
         Else
             Select Case folderLevel
                 Case 6 ' \\192\航运\10油料\航次报表\
@@ -156,7 +135,11 @@ Do While i < UBound(arr)
                         GoTo dirf
                     End If
                 Case 8 ' \\192\航运\10油料\航次报表\鼎衡1\2017年\
-                    
+                    'f="dh1航次报表V17XX.XLS"
+                    fVoy = 获取航次号(f)
+                    If fVoy <= existVoy Then
+                        GoTo dirf
+                    End If
             End Select
             k = k + 1
             arr(k) = arr(i) & f & "\"
@@ -166,6 +149,7 @@ dirf:
     Loop
     i = i + 1
 Loop
+iArrEnd = k
 End Function
 Function 获取航次号(fileName As String)
 Dim regVoy, s$, StrNew$
@@ -173,36 +157,49 @@ Set regVoy = CreateObject("vbscript.regexp")
 regVoy.Pattern = "\d\d\d\d"
 Set arVoy = regVoy.Execute(fileName)
 For Each voyNum In arVoy
-    Debug.Print voyNum
+    获取航次号 = CInt(voyNum)
 Next voyNum
 End Function
-Function 开始整合()
-For x = 22 To UBound(arr) '使用前请检查arr(22)是不是第一个2017文件夹
-    If arr(x) = "" Then
-        Exit For
-    End If
-    Debug.Print Right(arr(x), 2)
-    initialName = Left(arr(x), 2)
-    If initialName <> "鼎衡" And initialName <> "建兴" And Right(arr(x), 2) <> "年\" Then
-        GoTo nextxx:
-    End If
-    
-    cFile = Dir(arr(x) & "*.xls?")
-    Do While cFile <> ""
-        baobiao = arr(x) & cFile
-        Set fs = CreateObject("scripting.FileSystemObject")
-        Set f = fs.GetFile(baobiao)
-        'Debug.Print Now 'Month(f.DateLastModified)
-        If Month(f.DateLastModified) < Month(Now) Then '如果是以前的，就不整合了
-            'GoTo nextFile:
-        ElseIf InStr(5, baobiao, "燃") = 0 And InStr(5, baobiao, "然") = 0 Then '这是航次报表
-            Call 航次报表整合
-        Else '这是燃润料报表
-            Call 燃润料报表整合
+Function 排序()
+kStart = iArrStart
+For i = 108 To iArrEnd - 1
+    shipName = Mid(arr(i), 36, InStr(37, arr(i), "\") - 36)
+    nextShipName = Mid(arr(i + 1), 36, InStr(37, arr(i + 1), "\") - 36)
+    If shipName <> nextShipName Then
+        kEnd = i
+        If Len(shipName) > 8 Then
+            startInstr = 55
+        Else
+            startInstr = 45
         End If
-nextFile:
-        cFile = Dir
-    Loop
+        For ii = kStart To kEnd - 1
+            For jj = ii + 1 To kEnd
+                shipVoy = 获取航次号(Mid(arr(ii), startInstr, InStr(57, arr(ii), "\") - startInstr))
+                nextShipVoy = 获取航次号(Mid(arr(jj), startInstr, InStr(57, arr(jj), "\") - startInstr))
+                If shipVoy > nextShipVoy Then
+                    temp = arr(ii)
+                    arr(ii) = arr(jj)
+                    arr(jj) = temp
+            
+                End If
+            Next jj
+        Next ii
+        kStart = kEnd + 1
+    End If
+Next i
+End Function
+Function 开始整合()
+For x = iArrStart To iArrEnd '使用前请检查arr(22)是不是第一个2017文件夹
+    If arr(x) = "" Then
+        Exit Function
+    End If
+    baobiao = Left(arr(x), Len(arr(x)) - 1)
+    cFile = Dir(baobiao)
+    If InStr(5, baobiao, "燃") = 0 And InStr(5, baobiao, "然") = 0 Then '这是航次报表
+        Call 航次报表整合
+    Else '这是燃润料报表
+        Call 燃润料报表整合
+    End If
 nextxx:
 Next x
 End Function
@@ -215,6 +212,8 @@ Dim rngGezi As Object
 Dim rowOilHead As Long
 Dim rowOilAdd As Long
 Dim rowOilEnd As Long
+    shipName = Mid(baobiao, 36, InStr(37, baobiao, "\") - 36)
+    Set zsh = Workbooks("dataloy航次报表.xlsx").Worksheets(shipName)
     Set w = Workbooks.Open(baobiao)
     Set wsh = w.Sheets("燃油报表")
     voy = Mid(w.Name, InStr(11, w.Name, "V") + 1, 4)
@@ -247,18 +246,22 @@ Function 航次报表整合()
 'v2.0 从原来的sub改为sub航次报表统一整合()下的一个function
 'v1.171114 最后调整了格子大小
 'v1.0 航次报表整合 Macro
+    shipName = Mid(arr(i), 36, InStr(37, arr(i), "\") - 36)
+    Set zsh = Workbooks("dataloy航次报表.xlsx").Worksheets(shipName)
     Set w = Workbooks.Open(baobiao)
     Set wsh = w.Sheets("航次报表")
     Set rng0 = wsh.Range("b5,d5") '航次开始结束
+    lnDPorts = wsh.[h4].Value & "-" & wsh.[h5].Value
     rowzbEnd = zsh.Cells(66666, 3).End(xlUp).Row + 1
-    rowGangKou = wsh.Cells(8, 3).End(xlDown).Row - 1 '靠离泊时间的最后一条位置
+    rowGangKou = wsh.Cells(7, 3).End(xlDown).Row  '靠离泊时间的最后一条位置
     voy = Mid(w.Name, InStr(6, w.Name, "V") + 1, 4)
     zsh.Cells(rowzbEnd, 1) = voy
-    If rowXiJieHead = 0 Then
-        rowXiJieHead = rowZhaoHead() '细节的开头位置，每个表应该都一样的开头
-    End If
+    'If rowXiJieHead = 0 Then
+    rowXiJieHead = rowZhaoHead() '细节的开头位置，每个表应该都一样的开头
+    'End If
     zsh.Cells(rowzbEnd, 2) = "航次开始结束时间"
     rng0.Copy zsh.Cells(rowzbEnd, 3)
+    zsh.Cells(rowzbEnd, 5).Value = lnDPorts
     rowXiJieEnd = rowFindEnd() '细节的最后一条位置
     If hangciDiYiCi Then
         Set rng1 = wsh.Range(Cells(6, 1), Cells(6, 3)) '靠离泊时间区域
@@ -270,8 +273,6 @@ Function 航次报表整合()
     Set rng2 = wsh.Range(Cells(rowXiJieHead, 1), Cells(rowXiJieEnd, 3)) '.SpecialCells(xlCellTypeVisible)  '靠离泊细节区域
     Set rng3 = wsh.Range(Cells(rowXiJieHead, 5), Cells(rowXiJieEnd, 12)) '.SpecialCells(xlCellTypeVisible)  '细节区域原因
     Union(rng1, rng2).Copy zsh.Cells(rowzbEnd + 1, 2)
-'    rng1.Copy zsh.Cells(rowzbEnd + 1, 2)
-'    rng2.Copy zsh.Cells(rowzbEnd + 1 + (rowGangKou - 7), 2)
     rng3.Copy zsh.Cells(rowzbEnd + rowGangKou - 6, 5)
 w.Close
 openedVoy = True
@@ -287,6 +288,7 @@ For Each rngGezi In Range("a25:a55") '找到开头的位置
 Next rngGezi
 End Function
 Function rowFindEnd()
+'v2 之前没能解决最后一行的问题
 'v1.3 现在可以正确统计最后一行
 'v1.2 现在可以正确统计连续空行而不是累计空行，并排除隐藏单元格（dh9的）
 '
@@ -294,10 +296,11 @@ Dim cishu
 Dim i
 Dim rngGezi As Object
 cishu = 0
-For Each rngGezi In Range(Cells(rowXiJieHead, 3), Cells(80, 3))  '.SpecialCells(xlCellTypeVisible)
+For rowXiJieEnd = rowXiJieHead To 80
+
+'For Each rngGezi In Range(Cells(rowXiJieHead, 3), Cells(80, 3))  '.SpecialCells(xlCellTypeVisible)
     'Debug.Print rngGezi
-    rowXiJieEnd = rngGezi.Row
-    If Cells(rowXiJieEnd, 1) = "合计Total" Then
+    If Cells(rowXiJieEnd, 1) = "合计Total" Or Left(Cells(rowXiJieEnd, 1), 4) = "Note" Then
         rowFindEnd = rowXiJieEnd - 1 - cishu
         Exit Function
     End If
@@ -311,5 +314,6 @@ For Each rngGezi In Range(Cells(rowXiJieHead, 3), Cells(80, 3))  '.SpecialCells(
         rowFindEnd = rowXiJieEnd - cishu
         Exit Function
     End If
-Next rngGezi
+Next rowXiJieEnd
 End Function
+
