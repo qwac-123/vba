@@ -1,225 +1,109 @@
-Attribute VB_Name = "¸÷º½´Î±¨±íÕûºÏ"
-Option Explicit
-
-Dim hangciDiYiCi As Boolean
-Dim ranrunDiYiCi As Boolean
-Dim openedOil As Boolean
-Dim openedVoy As Boolean
-
-Dim i As Integer
-
-Dim rng1 As Object
-Dim rng2 As Object
-Dim rng3 As Object
-
-Dim w As Object
-Dim wsh As Object
-Dim zb As Object
-Dim zsh As Object
-
-Dim rowGangKou As Long '¸Û¿ÚËùÔÚĞĞ
-Dim rowzbEnd As Long
-Dim rowXiJieHead As Long 'ĞĞºÅÊı¾İÀàĞÍÊÇlong
-Dim rowXiJieEnd As Long
-
-Dim str As String 'µ¥Ôª¸ñÄÚÈİ
-Dim shipNum As String '´ÓinputÀïµÃµ½µÄ£¬¶¼ÊÇstring
-Dim shipName As String
-Dim fileDir As String 'ÎÄ¼ş¼ĞÎ»ÖÃ
-Dim voy As String '¼ÇÂ¼º½´ÎºÅ
-
-Dim dakaibaobiao As Variant ' ÔÚVBAÖĞ£¬¶ÔÓÚFor Each m In a£¬ÈôaÊÇÊı×é£¬mÖ»ÄÜÉùÃ÷Îªvariant ±äÁ¿£¬ÕâÊÇÓï·¨¾ö¶¨µÄ¡£
-Dim baobiao As Variant 'Í¬ÉÏ
-
-Dim zuoweiuzihoudejieweimeishenmeyisi
-Sub º½´Î±¨±íÍ³Ò»ÕûºÏ()
-'v1.5 ÖØ×öÁË´¬ÃûÊäÈëÑ¡Ôñ
-'v1.4 Ôö¼ÓÁË¿ªÍ·ÌáÊ¾Çå³ı±í
-'v1.3 ĞŞ¸ÄÁË¶³½á²ğ·Ö´°¸ñ²¿·Ö
-'v1.2 Ôö¼ÓÁË´¬ÃûÊäÈëÒÔ±ãÓÚÑ¡Ôñ±¨±íÎÄ¼ş¼Ğ
-'v1.1 'Ôö¼ÓÁËÅĞ¶ÏÊÇ·ñ´ò¿ª¹ıÓÍÁÏ±íoil ºÍº½´Î±ívoy
- 'v1.0¿ÉÒÔÕûºÏº½´Î±¨±íºÍÈ¼ÈóÁÏ±¨±íµ½Ò»ÕÅ±íÀï
-Application.ScreenUpdating = 0
-Application.DisplayAlerts = 0
-Do
-Debug.Print shipNum
-If shipNum = "     " Then
-    MsgBox "ÇëÊäÈëÕıÈ·µÄÊı×Ö"
-End If
-shipNum = InputBox("ÇëÊäÈë´¬ÃûÊı×Ö£¬Èç¶¦ºâ10¾ÍÊäÈë10", "´¬ÃûÊı×Ö", "10")
-Loop While Len(shipNum) > 2
-If shipNum = "" Then
-    Exit Sub
-End If
-Select Case shipNum
-    Case 17
-        shipName = "¶¦ºâ17£¨ÍòÄêÇà£©"
-    Case 18
-        shipName = "¶¦ºâ18£¨³£´ºÌÙ£©"
-    Case 32
-        shipName = "½¨ĞË32"
-    Case Else
-        shipName = "¶¦ºâ" & shipNum
-End Select
-fileDir = _
-"\\192.168.0.223\º½ÔËÔÚÏß\10¡¢ÓÍÁÏ¹ÜÀí²¿\º½´Î±¨±í\" _
-& shipName & "\" & Year(Date) & "Äê"
-ChDir fileDir
-dakaibaobiao = Application.GetOpenFilename(FileFilter:="ExcelÎÄ¼ş (*.xls; *.xlsx),*.xls; *.xlsx,ËùÓĞÎÄ¼ş(*.*),*.*", _
-       Title:="ExcelÑ¡Ôñ", MultiSelect:=True) 'Ñ¡ÔñÒª±»ºÏ²¢µÄ²¾
-
-If Not IsArray(dakaibaobiao) Then 'Èç¹ûµãÁËÈ¡Ïû¾Í½áÊø
-    Exit Sub
-End If
-
-ranrunDiYiCi = True
-hangciDiYiCi = True
-openedOil = False
-openedVoy = False
-Set zb = ActiveWorkbook
-Set zsh = ActiveSheet
-
-If MsgBox("ÊÇ·ñÇå³ıµ±Ç°±íµÄÄÚÈİ", vbOKCancel) = vbOK Then
-    Cells.Delete 'É¾³ıµ±Ç°±íµÄÄÚÈİ
-Else
-'ÍË³ö
-End If
-
-For Each baobiao In dakaibaobiao
-    If InStr(5, baobiao, "È¼") = 0 Then 'ÕâÊÇº½´Î±¨±í
-        Call º½´Î±¨±íÕûºÏ
-    Else 'ÕâÊÇÈ¼ÈóÁÏ±¨±í
-        Call È¼ÈóÁÏ±¨±íÕûºÏ
+'v2 è¿™æ¬¡æ˜¯æŠŠæ‰€æœ‰èˆªæ¬¡æŠ¥è¡¨çš„å†…å®¹é›†åˆåˆ°ä¸€èµ·
+Function å¢åŠ è¡¨å¹¶æ”¹å()
+shipLonNamArr = Array("é¼è¡¡1", "é¼è¡¡10", "é¼è¡¡15", "é¼è¡¡16", "é¼è¡¡17*", "é¼è¡¡18*", "é¼è¡¡2", "é¼è¡¡3", "å»ºå…´32", "é¼è¡¡5", "é¼è¡¡7", "é¼è¡¡9", "é¼è¡¡A", "é¼è¡¡E", "å¤©ä½¿1", "å¤©ä½¿2", "å¤©ä½¿3", "å¤©ä½¿11")
+shipNamArr = Array("DH1", "DH10", "DH15", "DH16", "DH17", "DH18", "DH2", "DH3", "JX32", "DH5", "DH7", "DH9", "DHA", "DHE", "AG1", "AG2", "AG3", "AG11")
+For i = 0 To UBound(shipNamArr)
+    On Error Resume Next
+    Sheets(i + 1).Name = shipNamArr(i)
+    Debug.Print Err.Number
+    If Err.Number = 9 Then
+        Sheets.Add after:=Sheets(i)
+        Sheets(i + 1).Name = shipNamArr(i)
     End If
-Next baobiao
+Next i
+End Function
+Function æ•´åˆæ•´åˆ()
+shipLongNameArr = Array("é¼è¡¡1", "é¼è¡¡2", "é¼è¡¡3", "é¼è¡¡5", "é¼è¡¡9", "é¼è¡¡10", "é¼è¡¡15", "é¼è¡¡16", "é¼è¡¡17*", "é¼è¡¡18*", "é¼è¡¡7", "å»ºå…´32", "é¼è¡¡A", "é¼è¡¡E", "å¤©ä½¿1", "å¤©ä½¿2", "å¤©ä½¿3", "å¤©ä½¿11")
+shipNameArr = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "DH7", "JX32", "DHA", "DHE", "AG1", "AG2", "AG3", "AG11")
 
-ActiveWindow.FreezePanes = False
-Range("b2").Select
-ActiveWindow.FreezePanes = True
-'´¦Àíº½´ÎÇøÓò
-If openedVoy Then
-    zsh.Columns("c:d").NumberFormatLocal = "ddmmyyhhmm"
-    Columns("A:A").ColumnWidth = 4
-    Columns("B:B").ColumnWidth = 17.35
-    Columns("C:C").ColumnWidth = 9.5
-    Columns("D:D").ColumnWidth = 9.5
-    Columns("e:i").ColumnWidth = 5.4
-    Rows.RowHeight = 12
-End If
-'´¦ÀíÈ¼ÈóÁÏÇøÓò
-If openedOil Then
-    For i = 2 To Range("L2").End(xlDown).Row
-        str = Cells(i, 12).Text
-        If InStr(1, str, "±¾º½´Î¼Ó") Then
-            Cells(i, 12) = "+"
-        Else
-            Cells(i, 12) = "end"
+For isht = 2 To UBound(shipNameArr) + 1
+    Set sht = Sheets(isht)
+    shipNam = shipLongNameArr(isht - 1)
+    shipNamShort = sht.Name
+    
+    If sht.[b3].Value <> "" Then
+        startRow = sht.[b3].End(xlDown).Row + 1
+    ElseIf sht.[b2].Value = "" Then
+        startRow = 3
+    Else
+        startRow = 2
+    End If
+    endRow = sht.[a1].End(xlDown).Row
+    voy = sht.Cells(startRow, 1).Value
+    Call è·å–è¯¥èˆ¹æ‰€æœ‰å¤§äºç­‰äºæ‰€éœ€èˆªæ¬¡çš„æ–‡ä»¶(shipNam, voy)
+    For ro = startRow To endRow
+        voy = sht.Cells(ro, 1).Value
+        oilDir = "\\192.168.0.223\èˆªè¿åœ¨çº¿\10ã€æ²¹æ–™ç®¡ç†éƒ¨\èˆªæ¬¡æŠ¥è¡¨\" & shipNam & "\2017å¹´\" & "*ç‡ƒ*èˆªæ¬¡æŠ¥è¡¨*" & voy & "*.xls?"
+        voyDir = "\\192.168.0.223\èˆªè¿åœ¨çº¿\10ã€æ²¹æ–™ç®¡ç†éƒ¨\èˆªæ¬¡æŠ¥è¡¨\" & shipNam & "\2017å¹´\" & "*èˆªæ¬¡æŠ¥è¡¨*" & voy & "*.xls?"
+        
+        If Dir(oilDir) = Dir(voyDir) Then
+            
+        voy = "V" & voy
+        If Len(Dir(voyDir)) > 0 Then 'å¦‚æœæ–‡ä»¶å­˜åœ¨
+            
+            oilNam = Dir(oilDir)
+            voyNam = Dir(voyDir)
+            filePath = "\\192.168.0.223\èˆªè¿åœ¨çº¿\10ã€æ²¹æ–™ç®¡ç†éƒ¨\èˆªæ¬¡æŠ¥è¡¨\" & shipNam & "\2017å¹´\"
+            Set oilW = Workbooks.Open(fileName:=oilDir)
+            Set voyW = Workbooks.Open(fileName:=oilDir)
+            filePath = voyW.Path & "\"
+            
+            oilW.SaveAs filePath & shipNamShort & "ç‡ƒæ¶¦æ–™èˆªæ¬¡æŠ¥è¡¨" & voy & ".xlsx"
+            voyW.SaveAs filePath & shipNamShort & "èˆªæ¬¡æŠ¥è¡¨" & voy & ".xlsx"
+            
+            oilW.Close False
+            voyW.Close False
+            Kill 1
+            Kill 2
         End If
-    Next
-    Columns("k").ColumnWidth = 4
-    Columns("l").ColumnWidth = 5
-    Columns("m:n").ColumnWidth = 5.88
+    Next ro
+Next isht
+End Function
+Function è·å–è¯¥èˆ¹æ‰€æœ‰å¤§äºç­‰äºæ‰€éœ€èˆªæ¬¡çš„æ–‡ä»¶(shipNam, voy)
+i = 0
+fileDir = "\\192.168.0.223\èˆªè¿åœ¨çº¿\10ã€æ²¹æ–™ç®¡ç†éƒ¨\èˆªæ¬¡æŠ¥è¡¨\" & shipNam & "\2017å¹´\"
+wjm = Dir(fileDir)
+Do
+If æå–èˆªæ¬¡å·(wjm) >= voy Then
+    arFiles(i) = wjm
+    i = i + 1
 End If
-Application.ScreenUpdating = 1
-Application.DisplayAlerts = 1
-End Sub
-Function È¼ÈóÁÏ±¨±íÕûºÏ()
-'v2.2 ĞŞ¸ÄÁË±äÁ¿£¬Ôö¼ÓÕÒFO:¹¦ÄÜ
-'v2.1 Ôö¼ÓÁËÅĞ¶ÏÊÇ·ñ´ò¿ª¹ıÓÍÁÏ±í
-'v2.0 ´ÓÔ­À´µÄsub¸ÄÎªsubº½´Î±¨±íÍ³Ò»ÕûºÏ()ÏÂµÄÒ»¸öfunction
-'v1.0 ÓÍÁÏ±¨±íÕûºÏ Macro
-Dim rngGezi As Object
-Dim rngOilHead As Object
-Dim rngOilAdd As Object
-Dim rngOilEnd As Object
-    Set w = Workbooks.Open(baobiao)
-    Set wsh = w.Sheets("È¼ÓÍ±¨±í")
-    voy = Mid(w.Name, InStr(11, w.Name, "V") + 1, 4)
-For Each rngGezi In Range("b36:b44")
-    If rngGezi = "FO:" Then
-        rngOilHead = Range(Cells(rngGezi.Row, 2), Cells(rngGezi.Row, 3))
-    End If
-Next rngGezi
-rowOilAdd = Range(Cells(rngGezi.Row + 2, 2), Cells(rngGezi.Row + 2, 3))
-rowOilEnd = Range(Cells(rngGezi.Row + 4, 2), Cells(rngGezi.Row + 4, 3))
-    If ranrunDiYiCi Then
-        rngOilHead.Copy zsh.Cells(1, 12)
-        zsh.Cells(1, 11) = Mid(w.Name, 1, InStr(3, w.Name, "È¼") - 1)
-        ranrunDiYiCi = False
-    End If
-    rowzbEnd = zsh.Cells(66666, 12).End(xlUp).Row + 1
-    If Len(wsh.Range("b40").Text & wsh.Range("c40").Text) = 0 Then 'ÅĞ¶Ï±¾º½´Î¼Ó×°ÕâÒ»ĞĞÊÇ·ñÓĞ¼ÓÓÍ
-        rowOilEnd.Copy zsh.Cells(rowzbEnd, 12) 'Ö»¸´ÖÆº½´ÎÄ©½á´æ
-    Else
-        Union(rowOilAdd, rowOilEnd).Copy zsh.Cells(rowzbEnd, 12) '±¾º½´Î¼Ó×°ºÍº½´ÎÄ©½á´æ
-    End If
-    zsh.Cells(rowzbEnd, 11) = voy
-w.Close
-openedOil = True
+Loop While (1)
 End Function
-Function º½´Î±¨±íÕûºÏ()
-'v2.2 ÏÖÔÚÖ»Ñ¡ÖĞ¿É¼ûµ¥Ôª¸ñ
-'v2.1 Ôö¼ÓÁËÅĞ¶ÏÊÇ·ñ´ò¿ª¹ıº½´Î±í
-'v2.0 ´ÓÔ­À´µÄsub¸ÄÎªsubº½´Î±¨±íÍ³Ò»ÕûºÏ()ÏÂµÄÒ»¸öfunction
-'v1.171114 ×îºóµ÷ÕûÁË¸ñ×Ó´óĞ¡
-'v1.0 º½´Î±¨±íÕûºÏ Macro
-    Set w = Workbooks.Open(baobiao)
-    Set wsh = w.Sheets("º½´Î±¨±í")
-    voy = Mid(w.Name, InStr(6, w.Name, "V") + 1, 4)
-    If hangciDiYiCi Then
-        rowGangKou = wsh.Cells(8, 3).End(xlDown).Row '¿¿Àë²´Ê±¼äµÄ×îºóÒ»ÌõÎ»ÖÃ
-        rowXiJieHead = rowZhaoHead() 'Ï¸½ÚµÄ¿ªÍ·Î»ÖÃ
-        rowXiJieEnd = rowFindEnd() 'Ï¸½ÚµÄ×îºóÒ»ÌõÎ»ÖÃ
-        Set rng1 = wsh.Range(Cells(6, 1), Cells(rowGangKou, 3)) '¿¿Àë²´Ê±¼äÇøÓò
-        Set rng2 = wsh.Range(Cells(rowXiJieHead, 1), Cells(rowXiJieEnd, 3)).SpecialCells(xlCellTypeVisible) '¿¿Àë²´Ï¸½ÚÇøÓò
-        Set rng3 = wsh.Range(Cells(rowXiJieHead, 5), Cells(rowXiJieEnd, 12)).SpecialCells(xlCellTypeVisible) 'Ï¸½ÚÇøÓòÔ­Òò
-        Union(rng1, rng2).Copy zsh.Cells(1, 2)
-        rng3.Copy zsh.Cells(rowGangKou - 4, 5)
-        zsh.Cells(3, 1) = voy
-        zsh.Range("a1") = Mid(w.Name, 1, InStr(3, w.Name, "º½") - 1) 'a1¸ñĞ´´¬Ãû
-        hangciDiYiCi = False
-    Else
-        rowzbEnd = zsh.Cells(66666, 5).End(xlUp).Row + 1
-        rowXiJieHead = rowZhaoHead() 'Ï¸½ÚµÄ¿ªÍ·Î»ÖÃ
-        rowXiJieEnd = rowFindEnd() 'Ï¸½ÚµÄ×îºóÒ»ÌõÎ»ÖÃ
-        Set rng1 = wsh.Range(Cells(8, 1), Cells(rowGangKou, 3)) '¿¿Àë²´Ê±¼äÇøÓò
-        Set rng2 = wsh.Range(Cells(rowXiJieHead, 1), Cells(rowXiJieEnd, 3)).SpecialCells(xlCellTypeVisible)  '¿¿Àë²´Ï¸½ÚÇøÓò
-        Set rng3 = wsh.Range(Cells(rowXiJieHead, 5), Cells(rowXiJieEnd, 12)).SpecialCells(xlCellTypeVisible)  'Ï¸½ÚÇøÓòÔ­Òò
-        Union(rng1, rng2).Copy zsh.Cells(rowzbEnd, 2)
-        rng3.Copy zsh.Cells(rowzbEnd + rowGangKou - 7, 5)
-        zsh.Cells(rowzbEnd, 1) = voy
-    End If
-w.Close
-openedVoy = True
+Function w()
+Call è·å–è¯¥èˆ¹æ‰€æœ‰å¤§äºç­‰äºæ‰€éœ€èˆªæ¬¡çš„æ–‡ä»¶("é¼è¡¡2", "1743")
+Call é€‰å–è¯¥èˆªæ¬¡æ–‡ä»¶("é¼è¡¡2", "1743")
 End Function
-Function rowZhaoHead()
-Dim strgezi As String
-Dim rngGezi As Object
-For Each rngGezi In Range("a25:a55") 'ÕÒµ½¿ªÍ·µÄÎ»ÖÃ
-    If rngGezi.Text = "£¨´¿×°Ğ¶»õÊ±¼ä¡¢²¹¸ø¡¢Å×ÃªµÈ´ı¡¢¿¿²´×÷Òµ×¼±¸Ê±¼ä£©" Then 'Èç¹ûÊÇ"´¬Î» Location"»áµ¼ÖÂÑ¡ÖĞÇ°Ãæ30ĞĞ
-        rowZhaoHead = rngGezi.Row + 1
-        Exit Function
-    End If
-Next rngGezi
+Function é€‰å–è¯¥èˆªæ¬¡æ–‡ä»¶(shipNam, voy)
+fileDir = "\\192.168.0.223\èˆªè¿åœ¨çº¿\10ã€æ²¹æ–™ç®¡ç†éƒ¨\èˆªæ¬¡æŠ¥è¡¨\" & shipNam & "\2017å¹´\"
+wjm = Dir(fileDir)
+Do
+If wjm Like "*ç‡ƒ*" & voy Then
+    oilNam = wjm
+    wjm = Dir
+ElseIf wjm Like "*èˆªæ¬¡*" & voy Then
+    voyNam = Dir
+Else
+    wjm = Dir
+End If
+Loop While (oilNam = "" Or voyNam = "" Or oilNam = voyNam)
+Debug.Print oilNam <> "" And voyNam <> "" And oilNam <> voyNam
 End Function
-Function rowFindEnd()
-'v1.2 ÏÖÔÚ¿ÉÒÔÕıÈ·Í³¼ÆÁ¬Ğø¿ÕĞĞ¶ø²»ÊÇÀÛ¼Æ¿ÕĞĞ£¬²¢ÅÅ³ıÒş²Øµ¥Ôª¸ñ£¨dh9µÄ£©
-'
-Dim cishu
-Dim i
-Dim rngGezi As Object
-cishu = 0
-'Range(Cells(rowXiJieHead, 3), Cells(80, 3)).SpecialCells(xlCellTypeVisible).Select 'Ñ¡ÖĞ¿É¼ûµ¥Ôª¸ñ
-For Each rngGezi In Range(Cells(rowXiJieHead, 3), Cells(80, 3)).SpecialCells(xlCellTypeVisible)
-    rowXiJieEnd = rngGezi.Row
-    If Cells(rowXiJieEnd, 4) = "" Then
-        cishu = cishu + 1
-    Else
-        cishu = 0
-    End If
-    If cishu > 2 Then 'Èç¹ûÁ¬Ğø3´Î
-        rowFindEnd = rowXiJieEnd - cishu
-        Exit Function
-    End If
-Next rngGezi
+Function æå–èˆªæ¬¡å·(fileName)
+fileName = Application.Asc(fileName)
+Set regVoy = CreateObject("vbscript.regexp")
+regVoy.Pattern = "\d\d\d\d"
+Set voySet = regVoy.Execute(fileName) '  Executeæ–¹æ³•è¿”å›çš„é›†åˆå¯¹è±¡mh,æœ‰ä¸¤ä¸ªå±æ€§:
+For Each voy In voySet
+    æå–æ•°å­— = voy.Value
+Next
+End Function
+Function æå–æ•°å­—(rngValue)
+rngValue = Application.Asc(rngValue)
+Set regNum = CreateObject("vbscript.regexp")
+regNum.Pattern = "\d+.\d+"
+Set mh = regNum.Execute(rngValue) '  Executeæ–¹æ³•è¿”å›çš„é›†åˆå¯¹è±¡mh,æœ‰ä¸¤ä¸ªå±æ€§:
+For Each mhk In mh
+    æå–æ•°å­— = mhk.Value
+Next
 End Function
