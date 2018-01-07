@@ -1,115 +1,172 @@
 Sub 颜总表分解()
 Set zong = ActiveSheet
-yi = "一，小巧玲珑身材组美女有大福利啦！东方美旗袍丽人国际俱乐部招募一支小巧玲珑身材的旗袍走秀队员零基础学习旗袍走秀。"
-mingziyi = "小个子"
-er = "二，大长腿美眉组有大福利啦！东方美旗袍丽人国际俱乐部招募一支身高165以上旗袍走秀队员零基础学习旗袍走秀。"
-mingzier = "大长腿"
-san = "三，大龄姐姐组大福利啦，东方美旗袍丽人国际俱乐部招募一支65岁左右最美夕阳红旗袍走秀队员零基础学习旗袍走秀。"
-mingzisan = "大姐姐"
-si = "四，福美组特胖姐妹大福利啦，东方美旗袍丽人国际俱乐部招募一支穿特大尺码旗袍走秀队员零基础学习旗袍走秀。"
-mingzisi = "特胖"
-wu = "五，喜欢奥黛旗袍的姐妹有大福利啦，东方美旗袍丽人国际俱乐部招募一支穿奥黛旗袍的走秀队员零基础学习时装走秀（注意：奥黛组走时装步）"
-mingziwu = "奥黛"
-liu = "六，爱好伦巴舞的姐妹们有福利啦！东方美旗袍丽人国际俱乐部招募一支穿旗袍跳伦巴舞的姐妹队伍零基础学习伦巴舞。"
-mingziliu = "伦巴"
-qi = "七，旗袍拉丁伦巴舞11月11日10:30~12:00开班，指导老师：田网妹"
-mingziqi = "拉丁七"
-ba = "  八，东方美欲组建旗袍拉丁伦巴艺术表演团队。请有拉丁伦巴基础的姐妹们速度报名。350元10次课1件秋冬款玫红丝绒旗袍。"
-mingziba = "拉丁表演八"
-jiuyi = "一、表演班(每周六13:30~5:00，十次课，送自选旗袍一件)"
-mingzijiuyi = "表演班"
-jiuer = "二、中级班(周六15:00~16:30，指导老师:魏祥珍)"
-mingzijiuer = "中级班"
-xulie = Array(yi, er, san, si, wu, liu, qi, ba, jiuyi, jiuer)
-mingzi = Array(mingziyi, mingzier, mingzisan, mingzisi, mingziwu, mingziliu, mingziqi, mingziba, mingzijiuyi, mingzijiuer)
 i = 0
-For r = 1 To 250
-    If Cells(r, 1) = xulie(i) Then
+rend = [A66666].End(xlUp).Row
+
+For r = 1 To rend
+    If Cells(r, 1) = "序号" Then
         rrngEnd = Cells(r, 1).End(xlDown).Row
-        Sheets.Add After:=Sheets(Sheets.Count) '
-        Sheets(Sheets.Count).Name = mingzi(i)
+        Sheets.Add after:=Sheets(Sheets.Count) '
+        On Error Resume Next
+        Sheets(Sheets.Count).Name = zong.Cells(r + 1, 3).Value
+        If Err.Number = 1004 Then '重复的表名
+            Sheets(Sheets.Count).Name = zong.Cells(r + 1, 3).Value & r
+        End If
+        
         
         zong.Select
         Range(Cells(r, 1), Cells(rrngEnd, 4)).Copy
-        Sheets(mingzi(i)).Select
+        Sheets(Sheets.Count).Select
         Range("a1").Activate
         ActiveSheet.Paste
         zong.Select
+        r = rrngEnd
         i = i + 1
-        If i = 10 Then
-            Exit For
-        End If
     End If
 Next r
+End Sub
+Sub 颜总表转换为微信消息()
+'Dim arRngMsg(50)
+i = 1
+rend = [A66666].End(xlUp).Row
+arCNNum = Array("一", "二", "三", "四", "五", "六", "七", "八", "九", "〇")
+
+For r = 1 To rend
+    If Cells(r, 1) = "班级" Then
+        nameStr = nameStr & arCNNum(i - 1) & "、" & Cells(r, 2).Value & " "
+    ElseIf Cells(r, 1) = "指导老师" Then
+        nameStr = nameStr & Cells(r, 2).Value & "老师"
+    ElseIf Cells(r, 1) = "序号" Then
+        rend = Cells(r, 1).End(xlDown).Row
+        For minir = r + 1 To rend
+            nameStr = nameStr & " " & Cells(minir, 1) & "." & Cells(minir, 2)
+        Next minir
+        Cells(2 * i, 10) = nameStr
+        'arRngMsg(i - 1) = rngMsg
+        
+        i = i + 1
+        nameStr = ""
+    End If
+Next r
+Range(Cells(2, 10), Cells(i * 2 - 1, 10)).Copy
+End Sub
+Sub 颜总表转为证书PS用TXT()
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+arTitle = Array("姓名", "指导老师", "班级", "年", "月", "日", "编号")
+arCNNum = Array("〇", "一", "二", "三", "四", "五", "六", "七", "八", "九")
+arABNum = Array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+Set crtsht = ActiveSheet
+
+On Error Resume Next
+If Sheets("ps用txt") Is Nothing Then
+    Sheets.Add(after:=crtsht).Name = "ps用txt"
+End If
+
+Set psSht = Sheets("ps用txt")
+psSht.Cells.Clear
+For i = 0 To UBound(arTitle)
+    psSht.Cells(1, i + 1).Value = arTitle(i)
+Next i
+crtsht.Activate
+crtshtEnd = crtsht.[A66666].End(xlUp).Row
+For ro = 1 To crtshtEnd
+    If crtsht.Cells(ro, 1).Value = "序号" Then
+        Set strng = crtsht.Cells(ro + 1, 2)
+        Set edrng = crtsht.Cells(ro + 1, 8).End(xlDown)
+        edrow = edrng.Row
+        Set psShtEnd = psSht.[A66666].End(xlUp).Offset(1, 0)
+        Range(strng, edrng).Copy
+        psShtEnd.PasteSpecial (xlPasteValues)
+        ro = edrng.Row
+    End If
+Next ro
+psSht.Activate
+
+With Range([d2], [f2].End(xlDown))
+    For i = 0 To 9
+        .Replace i, arCNNum(i), xlPart
+    Next i
+End With
+startNum = 1 ' InputBox("上一批最后一个人的编号", "起始编号")
+
+
+endNum = Format([a2].End(xlDown).Row - 1, "201700000")
+[g2].Value = Format(startNum, "201700000")
+    [g2].DataSeries Rowcol:=xlColumns, _
+        Step:=1, Stop:=endNum
+        
+[a1].CurrentRegion.Copy
+
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
 End Sub
 Sub 处理颜总的接龙报名()
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
-isfirst = MsgBox("第一次？", vbYesNo)
-If isfirst = 6 Then 'yes
-    Cells.Replace What:="?", Replacement:="", LookAt:=xlWhole
-End If
-arNum = Array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1)
-arHanNum = Array("零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十")
-Set rngHead = ActiveCell
+Set rngHead = Selection
+
 If Len(rngHead) > 100 Then '这一串是长城长
+    Call 处理单个长名单(rngHead)
+Else
+    Call 处理多行名单(rngHead)
+End If
+
+Call 添加班级编号(rngHead)
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
+End Sub
+Function 处理单个长名单(rngHead)
+
     With rngHead
-        For i = 0 To 9
-        .Replace What:=arNum(i), Replacement:=" ", LookAt:=xlPart
-        Next i
+        rngHead.Value = 剔除数字(rngHead.Value)
+        .Replace What:="(", Replacement:=" ", lookat:=xlPart
+        .Replace What:="（", Replacement:=" "
+        .Replace What:=")", Replacement:=" "
+        .Replace What:="）", Replacement:=" "
         .Replace What:="，", Replacement:=" "
+        .Replace What:="，", Replacement:=" "
+        .Replace What:=",", Replacement:=" "
         .Replace What:=".", Replacement:=" "
         .Replace What:="．", Replacement:=" "
         .Replace What:="、", Replacement:=" "
         .Replace What:="。", Replacement:=" "
-        .Replace What:="，", Replacement:=" "
         .Replace What:="：", Replacement:=" "
         .Replace What:=":", Replacement:=" "
+        
         .TextToColumns DataType:=xlDelimited, _
-         ConsecutiveDelimiter:=True, Space:=True
+         ConsecutiveDelimiter:=True, Space:=True '以空格分列
+         '先不关闭分列，因为第一个格子很可能是空的
     End With
+    
     If rngHead = "" Then
         rngHead.Value = 1
     End If
     rngHead.TextToColumns DataType:=xlDelimited, _
-         ConsecutiveDelimiter:=True, Space:=False
+         ConsecutiveDelimiter:=True, Space:=False '关闭分列
+    
     endCol = rngHead.End(xlToRight).Column
     ro = rngHead.Row
+    
     For i = 1 To endCol Step 1
         Rows(ro + i).Insert
         Cells(ro + i, 1).Value = i + 1
         Cells(ro + i, 2).Value = Cells(ro, i + 2).Value
         Cells(ro, i + 2).Value = Empty
     Next i
-    Exit Sub
-End If
+End Function
+Function 处理多行名单(rngHead)
 '列表的名单处理
-If rngHead.Value = "" Then
-    MsgBox "请选中名单第一名"
-    Exit Sub
-ElseIf InStr(1, rngHead.Text, ".") = 0 Then
-    MsgBox "请选中名单第一名"
-    Exit Sub
-ElseIf Left(rngHead.Text, InStr(1, rngHead.Text, ".") - 1) <> 1 Then
-    MsgBox "请选中名单第一名"
-    Exit Sub
-End If
-If Cells(rngHead.Row + 1, rngHead.Column) = "" Then
-    Set rngEnd = rngHead
-Else
-    Set rngEnd = rngHead.End(xlDown)
-End If
+
+Set rngEnd = rngHead.End(xlDown)
+
 Do While Not (IsNumeric(Left(rngEnd.Text, 1))) '如果最后一格不是数字开头就向上找
     Set rngEnd = Cells(rngEnd.Row - 1, rngEnd.Column)
 Loop
 
 
 With Range(rngHead, rngEnd)
-    .Replace What:="w", Replacement:=" ", LookAt:=xlPart
-    For i = 0 To 10
-    .Replace What:=arHanNum(i), Replacement:=arNum(i)
-    Next i
-    .Replace What:="，", Replacement:=" "
+    .Replace What:="，", Replacement:=" ", lookat:=xlPart
     .Replace What:=".", Replacement:=" "
     .Replace What:="．", Replacement:=" "
     .Replace What:="(", Replacement:=" "
@@ -168,7 +225,7 @@ Cells(i, 1).Select
     b = Cells(i + 1, 1).Value
     a = Cells(i, 1).Value
     If i = rngHeadrow + rngEndrow - 1 Then
-        Exit Sub
+        Exit Function
     End If
     
     diff = b - a
@@ -185,9 +242,52 @@ Cells(i, 1).Select
        Next cishu
     End If
     Next i
-Application.ScreenUpdating = True
-Application.DisplayAlerts = True
-End Sub
+End Function
+Function 添加班级编号(rngHead)
+
+    rStart = rngHead.Row
+    rend = rngHead.End(xlDown).Row
+    
+    For ro = rStart To rStart - 5 Step -1
+        If Cells(ro, 1).Value = "指导老师" Then
+            teacher = Cells(ro, 2).Value
+        ElseIf Cells(ro, 1).Value = "班级" Then
+            className = Cells(ro, 2).Value
+            classNum = Cells(ro, 3).Value
+        End If
+        If teacher <> Empty And className <> Empty Then
+            Exit For
+        End If
+    Next ro
+        
+    Rows(rStart).Insert
+    rStart = rStart + 1
+    rend = rend + 1
+    titleRow = rStart - 1
+    arTitle = Array("序号", "姓名", "指导老师", "班级", "编号") ', "时间"
+    arValue = Array(" ", " ", teacher, className)
+    For i = 0 To UBound(arTitle)
+        col = i + 1
+        Cells(titleRow, col) = arTitle(i)
+        If i = 2 Or i = 3 Then
+            Range(Cells(rStart, col), Cells(rend, col)).Value = arValue(i)
+        ElseIf i = 4 Then
+            Range(Cells(rStart, col), Cells(rend, col)).Formula = _
+            "=text(" & classNum & ",""000"")&TEXT(ROW(A1),""0000"")"
+'        ElseIf i = 5 Then'日期
+'            Range(Cells(rStart, col), Cells(rEnd, col)).Value = arValue(i)
+        End If
+    Next i
+End Function
+Function 剔除数字(s As String)
+    Dim reg
+    Set reg = CreateObject("vbscript.regexp")
+    reg.Pattern = "\d|\w"
+    reg.Global = True
+    reg.MultiLine = True
+    sd = reg.Replace(s, ".") '整个文本的每行的开头或结尾处替换为@
+    剔除数字 = sd
+End Function
 Sub 综合分表()
 renshu = 0
 For i = 1 To 8
@@ -225,3 +325,68 @@ Cells(rngEndrow, 1) = "总人数"
 Cells(rngEndrow, 2) = renshu
 'Worksheets(9).Select
 End Sub
+Function 连接到总表()
+Set zb = Sheets(1)
+classSize = 70
+For i = 2 To Sheets.Count
+    fbN = Sheets(i).Name
+    classNumber = (i - 1)
+    startRow = [A66666].End(xlUp).Row
+    endRow = startRow + classSize
+    If i = 2 Then
+        zb.Range(Cells(startRow, 1), Cells(endRow, 4)).FormulaR1C1 = _
+        "=" & fbN & "!RC"
+    Else
+        zb.Range(Cells(startRow, 1), Cells(endRow, 4)).FormulaR1C1 = _
+        "=" & fbN & "!R[-" & (startRow - 2) & "]C"
+    End If
+Next i
+End Function
+Function 检查各表名字重复()
+For Each sht In Sheets
+    sht.Select
+    Columns("B:B").Select
+    Selection.FormatConditions.AddUniqueValues
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    Selection.FormatConditions(1).DupeUnique = xlDuplicate
+    With Selection.FormatConditions(1).Font
+        .Color = -16383844
+        .TintAndShade = 0
+    End With
+    With Selection.FormatConditions(1).Interior
+        .PatternColorIndex = xlAutomatic
+        .Color = 13551615
+        .TintAndShade = 0
+    End With
+    Selection.FormatConditions(1).StopIfTrue = False
+Next sht
+End Function
+Function fhxy()
+    Dim rng  As Range
+    For Each sht In Sheets
+        Set d = CreateObject("scripting.dictionary")
+        sht.Activate
+        With ActiveSheet
+            Arr = .Columns(2) '.Range("a1").CurrentRegion
+            For x = 2 To UBound(Arr)
+                If Not d.exists(Arr(x, 1)) Then
+                    d(Arr(x, 1)) = ""
+                Else
+                    If rng Is Nothing Then
+                        Set rng = Cells(x, "a")
+                    Else
+                        Set rng = Union(rng, Cells(x, "a"))
+                   End If
+                End If
+            Next x
+            [a:a].Interior.ColorIndex = 0
+            If Not rng Is Nothing Then
+                rng.Interior.ColorIndex = 3
+                MsgBox ActiveSheet.Name & "有重复内容。"
+            Else
+                Exit Function
+            End If
+        End With
+        Set d = Nothing
+    Next sht
+End Function
