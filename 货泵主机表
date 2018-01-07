@@ -1,0 +1,77 @@
+Dim x
+Dim x1
+Dim zPumpSht
+Dim zEginSht
+Sub 整合货泵主机转速表()
+
+'
+'
+
+'
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+
+x = Application.GetOpenFilename(FileFilter:="Excel文件 (*.xls; *.xlsx),*.xls; *.xlsx,所有文件(*.*),*.*", _
+       Title:="选择货泵表", MultiSelect:=True) '选择要被合并的簿
+If TypeName(x) <> "Variant()" Then
+    Exit Sub
+End If
+'shipNamArr = Array("鼎衡1", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17", "鼎衡18", "鼎衡2", "鼎衡3", "建兴32", "鼎衡5", "鼎衡7", "鼎衡9")
+lujin = Mid(x(1), 1, 24)
+
+Set zsht = ActiveSheet
+
+
+For Each x1 In x
+    Debug.Print Mid(x1, 14, InStr(14, x1, ".") - 14)
+    shipNam = Mid(x1, 14, InStr(14, x1, ".") - 14)
+    shipBk = Workbooks.Open(x1)
+    Call 整合货泵表
+    Call 整合主机表
+
+    
+
+Next x1
+
+
+End Sub
+Function 整合货泵表(pumpSheet)
+For r = 1 To 26
+    If pumpSheet.Cells(r, 10) <> Empty Then
+        'range(cells(r,10),cells(r,33).copy
+    End If
+Next r
+
+End Function
+
+Function 整合主机表()
+
+End Function
+Function 重建表格()
+'货泵转速
+[f4].Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+Range([f2], [f3]).Merge
+[f2].Value = "货泵转速rpm"
+For col = 11 To 33 Step 4
+    Columns(col).Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Cells(3, col).Value = "排量"
+Next col
+
+End Function
+Function 调整宽度()
+    With Columns("k:ag")
+        .HorizontalAlignment = xlCenter
+        .VerticalAlignment = xlCenter
+        .ColumnWidth = 5
+        .Replace What:="kg", Replacement:="", LookAt:=xlPart, SearchOrder _
+        :=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False
+    End With
+'泵数
+    For col = 10 To 33 Step 4
+        With Columns(col)
+            .HorizontalAlignment = xlCenter
+            .VerticalAlignment = xlCenter
+            .ColumnWidth = 2.5
+        End With
+    Next col
+End Function
