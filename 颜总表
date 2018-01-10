@@ -88,14 +88,14 @@ With Range([d2], [f2].End(xlDown))
         .Replace i, arCNNum(i), xlPart
     Next i
 End With
-startNum = 1 ' InputBox("上一批最后一个人的编号", "起始编号")
-
-
-endNum = Format([a2].End(xlDown).Row - 1, "201700000")
-[g2].Value = Format(startNum, "201700000")
-    [g2].DataSeries Rowcol:=xlColumns, _
-        Step:=1, Stop:=endNum
-        
+'startNum = InputBox("上一批最后一个人的编号", "起始编号")
+'
+'
+'endNum = Format([a2].End(xlDown).Row - 1, "201700000")
+'[g2].Value = Format(startNum, "201700000")
+'    [g2].DataSeries Rowcol:=xlColumns, _
+'        Step:=1, Stop:=endNum
+'
 [a1].CurrentRegion.Copy
 
 Application.ScreenUpdating = 1
@@ -104,7 +104,7 @@ End Sub
 Sub 处理颜总的接龙报名()
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
-Set rngHead = Selection
+Set rngHead = selection
 
 If Len(rngHead) > 100 Then '这一串是长城长
     Call 处理单个长名单(rngHead)
@@ -234,7 +234,7 @@ Cells(i, 1).Select
     '插入空行，加入序列号，加入人名
         For cishu = 1 To b - a - 1
             Rows(i + 1).Select
-            Selection.Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
+            selection.Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
             Cells(i + 1, 1).Value = Cells(i, 1).Value + 1
             Cells(i + 1, 2).Value = Cells(crtRow, 3).Value
             Cells(crtRow, 3).Delete Shift:=xlToLeft
@@ -266,6 +266,7 @@ Function 添加班级编号(rngHead)
     titleRow = rStart - 1
     arTitle = Array("序号", "姓名", "指导老师", "班级", "编号") ', "时间"
     arValue = Array(" ", " ", teacher, className)
+    startNum = InputBox("上一批最后一个人的编号", "起始编号", 385) + 1
     For i = 0 To UBound(arTitle)
         col = i + 1
         Cells(titleRow, col) = arTitle(i)
@@ -273,7 +274,8 @@ Function 添加班级编号(rngHead)
             Range(Cells(rStart, col), Cells(rend, col)).Value = arValue(i)
         ElseIf i = 4 Then
             Range(Cells(rStart, col), Cells(rend, col)).Formula = _
-            "=text(" & classNum & ",""000"")&TEXT(ROW(A1),""0000"")"
+            "=text(row(a" & startNum & "),""201800000"")"
+'            "=text(" & classNum & ",""000"")&TEXT(ROW(A1),""0000"")"
 '        ElseIf i = 5 Then'日期
 '            Range(Cells(rStart, col), Cells(rEnd, col)).Value = arValue(i)
         End If
@@ -312,7 +314,7 @@ For i = 1 To 8
     rowzb = Worksheets(9).Range("a99999").End(xlUp).Row
     Worksheets(i).Select
     Range(Cells(rngHeadrow, 1), Cells(rngEndrow, 5)).Select
-    Selection.Copy
+    selection.Copy
     Worksheets(9).Select
     Cells(rowzb + 1, 1).Select
     ActiveSheet.Paste
@@ -346,19 +348,19 @@ Function 检查各表名字重复()
 For Each sht In Sheets
     sht.Select
     Columns("B:B").Select
-    Selection.FormatConditions.AddUniqueValues
-    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
-    Selection.FormatConditions(1).DupeUnique = xlDuplicate
-    With Selection.FormatConditions(1).Font
-        .Color = -16383844
+    selection.FormatConditions.AddUniqueValues
+    selection.FormatConditions(selection.FormatConditions.Count).SetFirstPriority
+    selection.FormatConditions(1).DupeUnique = xlDuplicate
+    With selection.FormatConditions(1).Font
+        .color = -16383844
         .TintAndShade = 0
     End With
-    With Selection.FormatConditions(1).Interior
+    With selection.FormatConditions(1).Interior
         .PatternColorIndex = xlAutomatic
-        .Color = 13551615
+        .color = 13551615
         .TintAndShade = 0
     End With
-    Selection.FormatConditions(1).StopIfTrue = False
+    selection.FormatConditions(1).StopIfTrue = False
 Next sht
 End Function
 Function fhxy()
@@ -367,10 +369,10 @@ Function fhxy()
         Set d = CreateObject("scripting.dictionary")
         sht.Activate
         With ActiveSheet
-            Arr = .Columns(2) '.Range("a1").CurrentRegion
-            For x = 2 To UBound(Arr)
-                If Not d.exists(Arr(x, 1)) Then
-                    d(Arr(x, 1)) = ""
+            arr = .Columns(2) '.Range("a1").CurrentRegion
+            For x = 2 To UBound(arr)
+                If Not d.exists(arr(x, 1)) Then
+                    d(arr(x, 1)) = ""
                 Else
                     If rng Is Nothing Then
                         Set rng = Cells(x, "a")
@@ -390,3 +392,4 @@ Function fhxy()
         Set d = Nothing
     Next sht
 End Function
+
