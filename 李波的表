@@ -1,0 +1,93 @@
+Sub 合并于总表() '将多个工作簿下的工作表依次对应合并到本工作簿下的工作表，即第一张工作表对应合并到第一张，第二张对应合并到第二张……
+On Error Resume Next
+Dim x As Variant, x1 As Variant, fb As Workbook, wsh As Worksheet
+Dim zb As Workbook, ts As Worksheet, i As Integer, l As Integer, h As Long
+Dim rng As Range, rng1 As Range
+Dim color, start, xNum   As Integer
+
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+Set zb = ThisWorkbook
+arSht = Array("回访打分表", "IB打分表", _
+"IM打分表", "BBS打分表", "MAIL打分表", "ONLINE打分表", _
+"审核打分表", "活动组打分表", "重复派单汇总", "Sheet8")
+
+arSht = Array("回访打分表", "IB打分表", _
+"BBS打分表", "MAIL打分表", "IM打分表", "ONLINE", _
+"审核打分表", "活动组打分表", "重复派单汇总")
+
+
+
+
+x = Application.GetOpenFilename(FileFilter:="Excel文件 (*.xls; *.xlsx),*.xls; *.xlsx,所有文件(*.*),*.*", _
+       Title:="Excel选择", MultiSelect:=True)
+
+xNum = 1
+For Each x1 In x
+    
+    If x1 <> False Then
+        Set fb = Workbooks.Open(x1)
+        
+        For Each shtName In arSht
+            Set fSht = fb.Sheets(shtName)
+            Set zSht = zb.Sheets(shtName)
+            zSht.Activate
+            Debug.Print TypeName(zSht)
+            If zSht = Empty Then
+                zb.Sheets.Add After:=zb.Sheets(zb.Sheets.Count)
+                zb.Sheets(zb.Sheets.Count).Name = shtName
+                Set zSht = zb.Sheets(shtName)
+            End If
+            fSht.Activate
+            fSht.AutoFilterMode = False
+            
+            '找表头
+            If xNum = 1 Then
+                For Each fsrng In fSht.Range("a1:a22")
+                    If fsrng.Value = "序号" Then
+                        fShtTitleEnd = fsrng.Offset(1, 0).Row - 1
+                        fSht.Rows("1:" & fShtTitleEnd).Copy
+                        zSht.Activate
+                        zSht.Rows(1).PasteSpecial Paste:=xlPasteValues
+                    
+                        Exit For
+                    End If
+                Next fsrng
+            End If
+            
+            
+            '找李波
+            Set rngLB = fSht.Cells.Find(What:="李波", After:=fSht.[a1], LookIn:=xlValues, LookAt:= _
+            xlWhole, SearchOrder:=xlByRows, SearchDirection:=xlNext, MatchCase:=False _
+            , MatchByte:=False, SearchFormat:=False)
+            If TypeName(rngLB) = "Nothing" Then
+                GoTo nextShtName
+            End If
+            startRow = rngLB.Row
+            startCol = rngLB.Column
+            
+            For ro = startRow To rngLB.End(xlDown).Row
+                If Cells(ro, startCol) <> Cells(ro + 1, startCol) Then
+                    Cells(ro, startCol).Select
+                    destRow = zSht.[f66666].End(xlUp).Offset(1, 0).Row
+                    fSht.Rows(startRow & ":" & ro).Copy
+                    zSht.Cells(destRow, 1).PasteSpecial Paste:=xlPasteValues
+                    
+                    zSht.Activate
+                    Exit For
+                End If
+            Next ro
+nextShtName:
+        Next shtName
+        fb.Close False
+        xNum = 2
+    End If
+Next x1
+End Sub
+
+Function 获得表()
+For Each fSht In Sheets
+sss = sss & """" & fSht.Name & ""","
+Next
+Debug.Print sss
+End Function
