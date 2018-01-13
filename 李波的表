@@ -30,14 +30,21 @@ For Each x1 In x
         
         For Each shtName In arSht
             Set fSht = fb.Sheets(shtName)
-            Set zSht = zb.Sheets(shtName)
+            izSht = 1
+            For Each zSht In zb.Sheets
+                If zSht.Name = shtName Then
+                    Exit For
+                ElseIf izSht = zb.Sheets.Count Then
+                    '转了一圈没找到
+                    zb.Sheets.Add After:=zb.Sheets(zb.Sheets.Count)
+                    zb.Sheets(zb.Sheets.Count).Name = shtName
+                    Set zSht = zb.Sheets(shtName)
+                End If
+                izSht = izSht + 1
+            Next zSht
+            
             zSht.Activate
-            Debug.Print TypeName(zSht)
-            If zSht = Empty Then
-                zb.Sheets.Add After:=zb.Sheets(zb.Sheets.Count)
-                zb.Sheets(zb.Sheets.Count).Name = shtName
-                Set zSht = zb.Sheets(shtName)
-            End If
+            
             fSht.Activate
             fSht.AutoFilterMode = False
             
