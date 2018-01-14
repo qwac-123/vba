@@ -1,3 +1,4 @@
+
 Sub 合并于总表() '将多个工作簿下的工作表依次对应合并到本工作簿下的工作表，即第一张工作表对应合并到第一张，第二张对应合并到第二张……
 On Error Resume Next
 Dim x As Variant, x1 As Variant, fb As Workbook, wsh As Worksheet
@@ -34,15 +35,18 @@ For Each x1 In x
             For Each zSht In zb.Sheets
                 If zSht.Name = shtName Then
                     Exit For
+                    GoTo jixu
                 ElseIf izSht = zb.Sheets.Count Then
                     '转了一圈没找到
                     zb.Sheets.Add After:=zb.Sheets(zb.Sheets.Count)
                     zb.Sheets(zb.Sheets.Count).Name = shtName
                     Set zSht = zb.Sheets(shtName)
+                    Exit For
+                    GoTo jixu
                 End If
                 izSht = izSht + 1
             Next zSht
-            
+jixu:
             zSht.Activate
             
             fSht.Activate
@@ -56,6 +60,8 @@ For Each x1 In x
                         fSht.Rows("1:" & fShtTitleEnd).Copy
                         zSht.Activate
                         zSht.Rows(1).PasteSpecial Paste:=xlPasteValues
+                        fSht.Rows("1:" & fShtTitleEnd).Copy
+                        zSht.Rows(1).PasteSpecial Paste:=xlPasteFormats
                     
                         Exit For
                     End If
@@ -78,7 +84,10 @@ For Each x1 In x
                     Cells(ro, startCol).Select
                     destRow = zSht.[f66666].End(xlUp).Offset(1, 0).Row
                     fSht.Rows(startRow & ":" & ro).Copy
-                    zSht.Cells(destRow, 1).PasteSpecial Paste:=xlPasteValues
+                    zSht.Rows(destRow, 1).PasteSpecial Paste:=xlPasteValues
+                    
+                    fSht.Rows(startRow & ":" & ro).Copy
+                    zSht.Rows(destRow, 1).PasteSpecial Paste:=xlPasteFormats
                     
                     zSht.Activate
                     Exit For
