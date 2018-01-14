@@ -51,6 +51,7 @@ jixu:
             
             fSht.Activate
             fSht.AutoFilterMode = False
+            fSht.Cells.Height = 14
             
             '找表头
             If xNum = 1 Then
@@ -61,7 +62,7 @@ jixu:
                         zSht.Activate
                         zSht.Rows(1).PasteSpecial Paste:=xlPasteValues
                         fSht.Rows("1:" & fShtTitleEnd).Copy
-                        zSht.Rows(1).PasteSpecial Paste:=xlPasteFormats
+                        zSht.Rows("1:" & fShtTitleEnd).PasteSpecial Paste:=xlPasteFormats
                     
                         Exit For
                     End If
@@ -83,11 +84,12 @@ jixu:
                 If Cells(ro, startCol) <> Cells(ro + 1, startCol) Then
                     Cells(ro, startCol).Select
                     destRow = zSht.[f66666].End(xlUp).Offset(1, 0).Row
+                    zSht.Activate
                     fSht.Rows(startRow & ":" & ro).Copy
-                    zSht.Rows(destRow, 1).PasteSpecial Paste:=xlPasteValues
+                    zSht.Rows(destRow).PasteSpecial Paste:=xlPasteValues
                     
                     fSht.Rows(startRow & ":" & ro).Copy
-                    zSht.Rows(destRow, 1).PasteSpecial Paste:=xlPasteFormats
+                    zSht.Rows(destRow & ":" & (destRow + ro - startRow)).PasteSpecial Paste:=xlPasteFormats
                     
                     zSht.Activate
                     Exit For
