@@ -1,0 +1,37 @@
+'F:\工作文档\公路水路交通运输企业一套表统计调查制度(试点)
+'收集货量、货物周转量（货量*总里程转为公里）、航线（区分内贸外贸）、货种（区分成品油和化学品）
+Function 收集咨询()
+Set zb = ActiveWorkbook
+Set glb = ActiveWorkbook
+Set sjb = ActiveWorkbook
+Set gsht = glb.Sheets(1)
+zb.Activate
+gRowEnd = 2
+For Each zsht In zb
+    If zsht.Name <> "dh2" Or zsht.Name <> "jx32" Then
+        zsht.Activate
+        zRowEnd = [b4].End(xlDown).Row
+        gsht.Range(Cells(gRowEnd, 1), Cells(gRowEnd + zRowEnd - 1, 1)).Value = zsht.Name '第一列船名
+        Range([a4], [a4].End(xlDown)).Copy gsht.Cells(gRowEnd, 2) '第二列航次号
+        Range([b4], [b4].End(xlDown)).Copy gsht.Cells(gRowEnd, 3) '第三列海里
+         '第4列km
+        Range([y4], [y4].End(xlDown)).Copy gsht.Cells(gRowEnd, 5) '第5列cargo
+        Range([z4], [z4].End(xlDown)).Copy gsht.Cells(gRowEnd, 6) '第6列qty
+         '第7列kmxqty
+        Range([aa4], [aa4].End(xlDown)).Copy gsht.Cells(gRowEnd, 8) '第8列line
+          '第9列region
+    End If
+    gRowEnd = gRowEnd + zRowEnd
+Next zsht
+For Each sjsht In sjb
+    If sjsht.Name <> "overall" Or sjsht.Name <> "DH2" Then
+        If sjsht.Name <> "JX32" Then
+            Exit For
+        Else
+        
+        End If
+    End If
+Next sjsht
+gsht.Activate
+
+End Function
