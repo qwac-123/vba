@@ -7,31 +7,69 @@ Set sjb = ActiveWorkbook
 Set gsht = glb.Sheets(1)
 zb.Activate
 gRowEnd = 2
-For Each zsht In zb
+For Each zsht In zb.Sheets
     If zsht.Name <> "dh2" Or zsht.Name <> "jx32" Then
         zsht.Activate
         zRowEnd = [b4].End(xlDown).Row
-        gsht.Range(Cells(gRowEnd, 1), Cells(gRowEnd + zRowEnd - 1, 1)).Value = zsht.Name '第一列船名
-        Range([a4], [a4].End(xlDown)).Copy gsht.Cells(gRowEnd, 2) '第二列航次号
-        Range([b4], [b4].End(xlDown)).Copy gsht.Cells(gRowEnd, 3) '第三列海里
+        gsht.Activate
+        Range(Cells(gRowEnd, 1), Cells(gRowEnd + zRowEnd - 4, 1)).Select
+        selection = zsht.Name '第一列船名
+        zsht.Activate
+        Range([a4], [a4].End(xlDown)).Copy
+        gsht.Cells(gRowEnd, 2).PasteSpecial Paste:=xlPasteValues '第二列航次号
+        Range([b4], [b4].End(xlDown)).Copy
+        gsht.Cells(gRowEnd, 3).PasteSpecial Paste:=xlPasteValues  '第三列海里
          '第4列km
-        Range([y4], [y4].End(xlDown)).Copy gsht.Cells(gRowEnd, 5) '第5列cargo
-        Range([z4], [z4].End(xlDown)).Copy gsht.Cells(gRowEnd, 6) '第6列qty
+        Range([y4], [y4].End(xlDown)).Copy
+        gsht.Cells(gRowEnd, 5).PasteSpecial Paste:=xlPasteValues  '第5列cargo
+        Range([z4], [z4].End(xlDown)).Copy
+        gsht.Cells(gRowEnd, 6).PasteSpecial Paste:=xlPasteValues  '第6列qty
          '第7列kmxqty
-        Range([aa4], [aa4].End(xlDown)).Copy gsht.Cells(gRowEnd, 8) '第8列line
+        Range([aa4], [aa4].End(xlDown)).Copy
+        gsht.Cells(gRowEnd, 8).PasteSpecial Paste:=xlPasteValues  '第8列line
           '第9列region
-    End If
-    gRowEnd = gRowEnd + zRowEnd
-Next zsht
-For Each sjsht In sjb
-    If sjsht.Name <> "overall" Or sjsht.Name <> "DH2" Then
-        If sjsht.Name <> "JX32" Then
-            Exit For
-        Else
+        sjb.Sheets(UCase(zsht.Name)).Activate
+        Range([k7], [k7].End(xlDown)).Copy
+        gsht.Cells(gRowEnd, 10).PasteSpecial Paste:=xlPasteValues  '第10列endtime
         
-        End If
     End If
-Next sjsht
-gsht.Activate
+    gRowEnd = gRowEnd + zRowEnd - 3
+Next zsht
 
+gsht.Activate
+Range([d2], [c2].End(xlDown).Offset(0, 1)).Select
+Range([d2], [c2].End(xlDown).Offset(0, 1)).FormulaR1C1 = "=rc[-1]*1.852"     '第4d列km
+Range([g2], [f2].End(xlDown).Offset(0, 1)).FormulaR1C1 = "=rc[-3]*rc[-1]"         '第7g列kmxqty"
+    '第9列region
+    Range([h2], [h2].End(xlDown)).Copy [i2]
+    EPort2CPort (9)
+    转为区域 (9)
+    
+    '第11列neiwaimao
+    arinter = Array("台湾", "韩国", "东南亚")
+    Range([i2], [i2].End(xlDown)).Copy [k2]
+    For Each krng In Range([k2], [k2].End(xlDown))
+        countInter = 0
+        For i = 0 To UBound(arinter)
+            countInter = countInter + InStr(1, krng.Value, arinter(i))
+        Next i
+        If countInter = 0 Then '是内贸
+            krng.Value = "内贸"
+        Else
+            krng.Value = "外贸"
+        End If
+    Next krng
+    
+        
+End Function
+Function 排查错误()
+With selection
+    .Replace What:="M", Replacement:="", lookat:=xlPart
+    .Replace What:="T", Replacement:="", lookat:=xlPart
+    .Replace What:="/", Replacement:="+", lookat:=xlPart
+    .Replace What:="＋", Replacement:="+", lookat:=xlPart
+End With
+For Each grng In selection
+    grng.Value = Application.Evaluate(grng.Value)
+Next grng
 End Function
