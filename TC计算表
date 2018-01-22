@@ -30,7 +30,7 @@ Dim nam As String
 
 Dim dakaibaobiao As Variant ' 在VBA中，对于For Each m In a，若a是数组，m只能声明为variant 变量，这是语法决定的。
 Dim baobiao As Variant '同上
-Sub tc合并全年航次报表()
+Function tc合并全年航次报表()
 'Range("A1").CurrentRegion.Offset(1, 0).ClearContents
 Application.ScreenUpdating = False
 Dim arr(1 To 10000) As String
@@ -102,7 +102,7 @@ Range("b2").Select
 ActiveWindow.FreezePanes = True
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
-End Sub
+End Function
 Sub TC表制作为值表()
 '
 ' TC表制作为值表 Macro
@@ -223,9 +223,57 @@ For r = 3 To rend
 nextr:
 Next r
 MsgBox addVoy
-MsgBox absentVoy
+If absentVoy <> "" Then
+    MsgBox "没有缺的"
+Else
+    MsgBox absentVoy
+End If
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
+End Sub
+Sub tc表下个月()
+Set currentBook = ActiveWorkbook
+Set crtSht = ActiveSheet
+Workbooks.Add
+Set nextBook = ActiveWorkbook
+Set nextSht = ActiveSheet
+startRow = 2
+crtSht.Rows(1).Copy nextSht.Rows(1)
+crtSht.Rows(2).Copy
+nextSht.Rows("2:50").PasteSpecial Paste:=xlPasteFormats
+
+
+nextSht.Activate
+    Range("J2").FormulaR1C1 = _
+        "=IFERROR(IF(RC[-7]=""RMB"",RC[-1]/1.11,RC[-1]*6),0)"
+    Range("R2").FormulaR1C1 = _
+        "=IF(RC[-4]*RC[-3]+RC[-2]*RC[-1]=0,0,RC[-4]*RC[-3]+RC[-2]*RC[-1])"
+    Range("V2").FormulaR1C1 = "=RC[-2]-RC[-3]-RC[-1]"
+    Range("W2").FormulaR1C1 = _
+        "=IFERROR((RC[-13]-RC[-12]-RC[-11]-RC[-10]-RC[-5])/(RC[-1]),0)"
+    Range("X2").FormulaR1C1 = "=IFERROR(RC[-2]*RC[-1],0)"
+    
+
+For ro = 2 To crtSht.[a6666].End(xlUp).Row
+    If crtSht.Cells(ro + 1, 1) <> crtSht.Cells(ro, 1) Then '另一条船了
+        thisShip = crtSht.Cells(ro, 1).Value
+        lastVoy = crtSht.Cells(ro, 2).Value
+        nextSht.Cells(startRow, 1).Value = thisShip
+        nextSht.Cells(startRow, 2).Value = "V" & (CInt(Right(lastVoy, 4)) + 1)
+        startRow = startRow + 1
+    End If
+Next ro
+nextSht.Activate
+Columns(3).Insert
+[c1].Value = "船名+航次"
+[c2].FormulaR1C1 = "=rc[-2]&rc[-1]"
+Range([c2], [y2]).Copy Range([c3], [y12])
+
+
+tcPath = "F:\工作文档\TC表\" & Format(Date, "yyyymm") & "\"
+tcName = Format(Date, "yyyymm小船\T\C表") & ".xlsx"
+    nextBook.SaveAs fileName:=tcPath & tcName, _
+        FileFormat:=xlOpenXMLWorkbook, CreateBackup:=True
 End Sub
 Function 燃润料报表整合(objWBOil, rowZSht, colDO)
 'v2.2 现在能够正确找到表头位置了
@@ -309,8 +357,8 @@ End Sub
 'Debug.Print str
 'End Function
 
-Function 处理运价信息()
-'
+Function 处理收入清单表()
+'v1将收入清单201x年表整理为TC表格式
 
 
 Application.ScreenUpdating = 0
@@ -319,7 +367,7 @@ Application.DisplayAlerts = 0
 If [a1].MergeCells = True Then
     Rows(1).Delete
 End If
-endRow = [A6666].End(xlUp).Row
+endRow = [a6666].End(xlUp).Row
 roBlank = 0
 For ro = 2 To endRow
     rowIsBlank = Cells(ro, 1) = ""
@@ -365,6 +413,10 @@ For i = 0 To UBound(arTitle)
     Next col
 nextaTit:
 Next i
+
+Call EPort2CPort("G")
+Call 转为区域("G")
+Range("A1").AutoFilter
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Function
@@ -426,7 +478,7 @@ Next r
 End Function
 Sub 选中列的港口英转中()
 EPort2CPort (selection.Column)
-
+转为区域 (selection.Column)
 End Sub
 Function EPort2CPort(columnABC)
 '运价表处理.ENPortToCNPort(列号)
@@ -485,11 +537,13 @@ With Columns(columnABC)
     .Replace What:="jingtang", Replacement:="京唐"
     .Replace What:="shijing", Replacement:="石井"
     .Replace What:="taixing", Replacement:="泰兴"
-    .Replace What:="guangdong", Replacement:="三水"
+    .Replace What:="guangdong", Replacement:="广东"
+    .Replace What:="gulei", Replacement:="古雷"
     .Replace What:="RUDONG", Replacement:="如东"
     .Replace What:="RUgao", Replacement:="如皋"
     .Replace What:="wenzhou", Replacement:="温州"
     .Replace What:="laizhou", Replacement:="莱州"
+    .Replace What:="sanshui", Replacement:="三水"
     .Replace What:="shandong", Replacement:="山东"
     .Replace What:="zhoushan", Replacement:="舟山"
     .Replace What:="zhejiang", Replacement:="镇江"
@@ -517,12 +571,18 @@ With Columns(columnABC)
     .Replace What:="zhangjiagang", Replacement:="张家港"
     .Replace What:="lianyungang", Replacement:="连云港"
     .Replace What:="bangkok", Replacement:="曼谷"
+    .Replace What:="inchon", Replacement:="仁川"
     .Replace What:="ulsan", Replacement:="蔚山"
     .Replace What:="onsan", Replacement:="蔚山"
     .Replace What:="PYEONGTAEK", Replacement:="平泽"
+    .Replace What:="PYOUNGTEAK", Replacement:="平泽"
     .Replace What:="pyongtaek", Replacement:="平泽"
     .Replace What:="pyungtaek", Replacement:="平泽"
+    .Replace What:="平仄", Replacement:="平泽" '
     .Replace What:="CJK", Replacement:="长江口"
+    .Replace What:="曹泾", Replacement:="漕泾"
+    .Replace What:="夏门", Replacement:="夏门"
+    .Replace What:="杨浦", Replacement:="洋浦"
     .Replace What:="yeosu", Replacement:="丽水"
     .Replace What:="yosu", Replacement:="丽水"
     .Replace What:="daesan", Replacement:="大山"
@@ -538,24 +598,25 @@ Function 转为区域(col)
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
 arHuaBeiPorts = Array("丹东", "大连", "营口", "锦州", "秦皇岛", "唐山", "京唐", "天津", "黄骅", _
-"鲅鱼圈", "潍坊", "莱州", "东营", "烟台", "威海", "石岛", "张家埠", "青岛", "日照", "岚山")
+"鲅鱼圈", "潍坊", "莱州", "东营", "烟台", "威海", "石岛", "张家埠", "青岛", "日照", "岚山") '仙人岛
 
 arHuaDongPorts = Array("龙口", "连云港", _
-"南通", "如东", "张家港", "镇江", "镇江", "南京", "大丰", "大榭", "江阴", "常熟", "泰兴", _
+"南通", "如东", "张家港", "镇海", "镇江", "南京", "大丰", "大榭", "江阴", "常熟", "泰兴", _
 "上海", "嘉兴", "吴泾", "漕泾", "乍浦", "宁波", "舟山", "石浦", "海门", "温州", "台州", _
-"常州", "仪征", "洋山")
+"常州", "仪征", "洋山", "无为", "洋口", "泰州", "北仑台塑")
 
 arHuaNanPorts = Array("赛岐", "福州", "马尾", "湄州湾", "泉州", "厦门", "东山", _
 "汕头", "西堤", "汕尾", "深圳", "广州", "南沙", "东莞", "惠州", "揭阳", "小虎岛", "中山", _
 "珠海", "江门", "阳江", "水东", "茂名", "湛江", "霞海", "海安", "北海", "防城", "海口", _
-"三亚", "八所", "海南", "洋浦", "马村", "钦州", "新会")
+"三亚", "八所", "海南", "洋浦", "马村", "钦州", "新会", "古雷") '杨浦 小虎山
 
 arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮", "安平") ', "香港", "澳门", "港澳台+港澳台"
 
-arKoreaPorts = Array("丽水", "蔚山", "大山")
+arKoreaPorts = Array("丽水", "蔚山", "大山", "NAMPO", "平泽")
 
 arSEAsia = Array("BATAAN", "BATANGAS", "VAN PHONG", "KERTEH", "RAYONG", _
-"TABANGAO", "KUANTAN", "SRIRACHA", "MAPTAPHUT", "MERAK", "GRESIK")
+"TABANGAO", "KUANTAN", "SRIRACHA", "MAPTAPHUT", "MERAK", "GRESIK", _
+"Pulau Laut")
 
 arMEGulf = Array("ASSALUYEH")
 arPortPart = Array("华北", "华东", "华南", "台湾", "韩国", "东南亚")
