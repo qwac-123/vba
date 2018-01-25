@@ -1,0 +1,29 @@
+Sub 创建各小船17年新表()
+'
+' Macro2 Macro
+'
+
+'
+    Sheets(Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", _
+        "JX32")).Select
+    Sheets("DH1").Activate
+    Cells.Select
+    Range("G21").Activate
+    Selection.ClearContents
+    Range("A1").Select
+    ActiveCell.FormulaR1C1 = "=""V""&ROW(R[1700]C)"
+    Range("A2").Select
+    ActiveWindow.SmallScroll Down:=-3
+    Range("A1").Select
+    Selection.AutoFill Destination:=Range("A1:A52"), Type:=xlFillDefault
+    Range("A1:A52").Select
+    Selection.AutoFill Destination:=Range("A1:A80"), Type:=xlFillDefault
+    Range("A1:A80").Select
+    Range("A1:A80").Copy
+    Range("A1:A80").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    Application.CutCopyMode = False
+    Sheets("DH1").Select
+    Range("C3").Select
+End Sub
