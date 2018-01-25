@@ -1,5 +1,5 @@
-
 Dim arr(1 To 10000) As String
+
 
 Dim hangciDiYiCi As Boolean
 Dim ranrunDiYiCi As Boolean
@@ -28,12 +28,12 @@ Dim str As String '单元格内容
 Dim shipNum As String '从input里得到的，都是string
 Dim shipName As String
 Dim fileDir As String '文件夹位置
-Dim voy As String '记录航次号
+Dim voy
+Dim voyW
 
 Dim dakaibaobiao As Variant ' 在VBA中，对于For Each m In a，若a是数组，m只能声明为variant 变量，这是语法决定的。
 Dim baobiao As Variant '同上
 
-Dim zuoweiuzihoudejieweimeishenmeyisi
 Sub dataloy航次报表统一整合()
 'v2.0 一件整合所有表
 'v1.7 现在可以正确找到航次报表的细节时间了
@@ -203,6 +203,50 @@ For x = iArrStart To iArrEnd '使用前请检查arr(22)是不是第一个2017文
 nextxx:
 Next x
 End Function
+Function 只整合船舶航次报表()
+Dim arVoy(80)
+For i = 1 To 15 Step 2
+    arVoy(i) = Format(i, "V1700")
+Next i
+For i = 6 To 11
+    Set zsh = Sheets(i)
+    shipName = zsh.Name
+    shipNamShort = zsh.Name
+    If Left(shipName, 1) = "D" Or Left(shipName, 1) = "J" Then
+        If shipName = "DH17" Then
+            shipName = "鼎衡17（万年青）"
+        ElseIf shipName = "DH18" Then
+            shipName = "鼎衡18（常春藤）"
+        ElseIf shipName = "JX32" Then
+            shipName = "建兴32"
+        ElseIf shipName = "HX" Then
+            shipName = "恒信HX"
+        Else
+            shipName = Replace(shipName, "DH", "鼎衡")
+        End If
+        For Each voy In arVoy
+            If voy = "" Then
+                GoTo nextVoy
+            End If
+            Debug.Print shipName, voy
+            oilDir = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & "\2017年\" & shipNamShort & "燃*航次报表" & voy & "*.xls?"
+            voyDir = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & "\2017年\" & shipNamShort & "航次报表" & voy & "*.xls?"
+            If Len(Dir(oilDir)) > 0 Then '如果文件存在
+                'oilNam = Dir(oilDir)
+                voyNam = Dir(voyDir)
+                filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & "\2017年"
+                'Set oilW = Workbooks.Open(fileName:=oilDir)
+                Set voyW = Workbooks.Open(fileName:=voyDir)
+                
+                Call dl航次报表整合
+                
+                voyW.Close
+            End If
+nextVoy:
+        Next voy
+    End If
+Next i
+End Function
 Function 燃润料报表整合()
 'v2.2 现在能够正确找到表头位置了
 'v2.1 增加了判断是否打开过油料表
@@ -240,21 +284,18 @@ Dim rowOilEnd As Long
 w.Close
 openedOil = True
 End Function
-Function 航次报表整合()
+Function dl航次报表整合()
+'v3
 'v2.2 现在只选中可见单元格
 'v2.1 增加了判断是否打开过航次表
 'v2.0 从原来的sub改为sub航次报表统一整合()下的一个function
 'v1.171114 最后调整了格子大小
 'v1.0 航次报表整合 Macro
-    shipName = Mid(arr(i), 36, InStr(37, arr(i), "\") - 36)
-    Set zsh = Workbooks("dataloy航次报表.xlsx").Worksheets(shipName)
-    Set w = Workbooks.Open(baobiao)
-    Set wsh = w.Sheets("航次报表")
+    Set wsh = voyW.Sheets("航次报表")
     Set rng0 = wsh.Range("b5,d5") '航次开始结束
     lnDPorts = wsh.[h4].Value & "-" & wsh.[h5].Value
     rowzbEnd = zsh.Cells(66666, 3).End(xlUp).Row + 1
     rowGangKou = wsh.Cells(7, 3).End(xlDown).Row  '靠离泊时间的最后一条位置
-    voy = Mid(w.Name, InStr(6, w.Name, "V") + 1, 4)
     zsh.Cells(rowzbEnd, 1) = voy
     'If rowXiJieHead = 0 Then
     rowXiJieHead = rowZhaoHead() '细节的开头位置，每个表应该都一样的开头
@@ -266,7 +307,7 @@ Function 航次报表整合()
     If hangciDiYiCi Then
         Set rng1 = wsh.Range(Cells(6, 1), Cells(6, 3)) '靠离泊时间区域
         rng1.Copy zsh.Cells(1, 2)
-        zsh.Range("a1") = Mid(w.Name, 1, InStr(3, w.Name, "航") - 1) 'a1格写船名
+
         hangciDiYiCi = False
     End If
     Set rng1 = wsh.Range(Cells(8, 1), Cells(rowGangKou, 3)) '靠离泊时间区域
@@ -274,8 +315,7 @@ Function 航次报表整合()
     Set rng3 = wsh.Range(Cells(rowXiJieHead, 5), Cells(rowXiJieEnd, 12)) '.SpecialCells(xlCellTypeVisible)  '细节区域原因
     Union(rng1, rng2).Copy zsh.Cells(rowzbEnd + 1, 2)
     rng3.Copy zsh.Cells(rowzbEnd + rowGangKou - 6, 5)
-w.Close
-openedVoy = True
+
 End Function
 Function rowZhaoHead()
 Dim strgezi As String
