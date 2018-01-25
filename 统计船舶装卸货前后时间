@@ -1,0 +1,136 @@
+Public zsh
+Public voyW
+Public shipIndex
+Public ro
+Public wsh
+
+
+Function 建立各船表()
+i = 1
+shipNameArr = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "JX32")
+
+For Each shipNam In shipNameArr ' Array("鼎衡1", "鼎衡2", "鼎衡3", "鼎衡5", "鼎衡9", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17（万年青）", "鼎衡18（常春藤）", "建兴32")
+        If i > Sheets.Count Then
+            Sheets.Add After:=Sheets(Sheets.Count) '保证总簿的表数量够
+            Set sht = Sheets(i)
+            sht.Name = shipNam '增加的表名字相同
+        End If
+        Set sht = Sheets(i)
+        sht.Name = shipNam
+        i = i + 1
+Next shipNam
+End Function
+Function 收集装卸货准备时间()
+
+For shipIndex = 5 To 5 ' Sheets.Count
+    Set zsh = Sheets(shipIndex)
+    shipName = zsh.Name
+    shipNamShort = zsh.Name
+    If Left(shipName, 1) = "D" Or Left(shipName, 1) = "J" Then
+        If shipName = "DH17" Then
+            shipName = "鼎衡17（万年青）"
+        ElseIf shipName = "DH18" Then
+            shipName = "鼎衡18（常春藤）"
+        ElseIf shipName = "JX32" Then
+            shipName = "建兴32"
+        ElseIf shipName = "HX" Then
+            shipName = "恒信HX"
+        Else
+            shipName = Replace(shipName, "DH", "鼎衡")
+        End If
+        
+        startRow = 1
+        
+        endRow = zsh.[a6666].End(xlUp).Row
+        For ro = startRow To endRow Step 1
+            
+            voy = zsh.Cells(ro, 1).Text
+            Debug.Print shipName, voy
+            oilDir = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & "\2017年\" & shipNamShort & "燃*航次报表" & voy & "*.xls?"
+            voyDir = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & "\2017年\" & shipNamShort & "航次报表" & voy & "*.xls?"
+            If Len(Dir(oilDir)) > 0 Then '如果文件存在
+                'oilNam = Dir(oilDir)
+                voyNam = Dir(voyDir)
+                filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & "\2017年"
+                'Set oilW = Workbooks.Open(fileName:=oilDir)
+                Set voyW = Workbooks.Open(fileName:=voyDir)
+               ' rotOil = "'" & filePath & "\[" & oilNam & "]燃油报表'!"
+                'rotVoy = "'" & filePath & "\[" & voyNam & "]航次报表'!"
+                Call dl航次报表整合
+                
+                'oilW.Close True
+                voyW.Close True
+            Else '新的航次报表还没来，去下条船
+                Exit For
+            End If
+nextRO:
+        Next ro
+    End If
+nextSht:
+Next shipIndex
+End Function
+Function 航次报表准备时间()
+'v1.0 航次报表整合装卸货准备时间 Macro
+    Set wsh = voyW.Sheets("航次报表")
+    'Set rng0 = wsh.Range("b5,d5") '航次开始结束
+    lnDPorts = wsh.[h4].Value & "-" & wsh.[h5].Value
+    zsh.Cells(ro, 2).Value = lnDPorts
+    rowzbEnd = ro
+'    loadPort = wsh.[h4]
+'    dishPort = wsh.[h5]
+    'rowGangKou = wsh.Cells(7, 3).End(xlDown).Row  '靠离泊时间的最后一条位置
+    'voy = Mid(w.Name, InStr(6, w.Name, "V") + 1, 4)
+    'zsh.Cells(rowzbEnd, 1) = voy
+    'If rowXiJieHead = 0 Then
+    
+    keyWord1 = "办手续"
+    keyWord2 = "商检"
+    keyWord3 = "等待"
+    keyWord4 = "计量"
+    
+    Call findRowDetail(keyWord)
+
+
+    
+'    zsh.Cells(rowzbEnd, 2) = "航次开始结束时间"
+'    rng0.Copy zsh.Cells(rowzbEnd, 3)
+'    zsh.Cells(rowzbEnd, 5).Value = lnDPorts
+'    rowXiJieEnd = rowFindEnd() '细节的最后一条位置
+'    If hangciDiYiCi Then
+'        Set rng1 = wsh.Range(Cells(6, 1), Cells(6, 3)) '靠离泊时间区域
+'        rng1.Copy zsh.Cells(1, 2)
+'        zsh.Range("a1") = Mid(w.Name, 1, InStr(3, w.Name, "航") - 1) 'a1格写船名
+'        hangciDiYiCi = False
+'    End If
+'    Set rng1 = wsh.Range(Cells(8, 1), Cells(rowGangKou, 3)) '靠离泊时间区域
+'    Set rng2 = wsh.Range(Cells(rowXiJieHead, 1), Cells(rowXiJieEnd, 3)) '.SpecialCells(xlCellTypeVisible)  '靠离泊细节区域
+'    Set rng3 = wsh.Range(Cells(rowXiJieHead, 5), Cells(rowXiJieEnd, 12)) '.SpecialCells(xlCellTypeVisible)  '细节区域原因
+'    Union(rng1, rng2).Copy zsh.Cells(rowzbEnd + 1, 2)
+'    rng3.Copy zsh.Cells(rowzbEnd + rowGangKou - 6, 5)
+End Function
+Function findRowDetail(keyWord)
+countDE = 1
+
+arKeyWords = Array("办手续", "商检", "等待", "计量", "接管", "拆管", "一英尺", "装货前", "卸货前")
+For roWsh = 33 To 66
+    strDetail = wsh.Cells(roWsh, 5).Value
+    If strDetail <> "" Then
+        isOk = strDetail Like "*办手续*"
+        For coo = 1 To UBound(arKeyWords)
+            condic = strDetail Like "*" & arKeyWords(coo) & "*"
+            isOk = isOk Or condic
+        Next coo
+        
+        If isOk Then
+            zsh.Rows(ro + countDE).Insert
+            For col = 1 To 5
+                tempDe = wsh.Cells(roWsh, col).Value
+                zsh.Cells(ro + countDE, col).Value = tempDe
+            Next col
+            countDE = countDE + 1
+        End If
+    End If
+Next roWsh
+ro = ro + countDE - 1
+End Function
+
