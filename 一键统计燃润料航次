@@ -3,22 +3,22 @@ Sub 一键统计燃润料航次()
 ' 燃润料航次统计 Macro
 '
 'i = 1
-'For Each shipNam In Array("鼎衡1", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17", "鼎衡18", "鼎衡2", "鼎衡3", "建兴32", "鼎衡5", "鼎衡7", "鼎衡9")
-'    If Left(shipNam, 1) = "鼎" Or Left(shipNam, 1) = "建" Then
-'        If shipNam = "鼎衡17（万年青）" Then
-'            shipNamShort = "dh17"
-'        ElseIf shipNam = "鼎衡18（常春藤）" Then
-'            shipNamShort = "dh18"
-'        ElseIf shipNam = "建兴32" Then
-'            shipNamShort = "jx32"
+'For Each shipName In Array("鼎衡1", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17", "鼎衡18", "鼎衡2", "鼎衡3", "建兴32", "鼎衡5", "鼎衡7", "鼎衡9")
+'    If Left(shipName, 1) = "鼎" Or Left(shipName, 1) = "建" Then
+'        If shipName = "鼎衡17（万年青）" Then
+'            shipNameShort = "dh17"
+'        ElseIf shipName = "鼎衡18（常春藤）" Then
+'            shipNameShort = "dh18"
+'        ElseIf shipName = "建兴32" Then
+'            shipNameShort = "jx32"
 '        Else
-'            shipNamShort = Replace(shipNam, "鼎衡", "dh")
+'            shipNameShort = Replace(shipName, "鼎衡", "dh")
 '        End If
 
 '        If i > Sheets.Count Then
 '            Sheets.Add After:=Sheets(Sheets.Count) '保证总簿的表数量够
 '            Set sht = Sheets(i)
-'            sht.Name = shipNam '增加的表名字相同
+'            sht.Name = shipName '增加的表名字相同
 '            With Sheets(i - 1)
 '            .Range("a1:aa3").Copy sht.Range("a1:aa3")
 '            .Range(.Range("A4"), .Range("A4").End(xlDown)).Copy sht.Range("a4")
@@ -32,20 +32,24 @@ Sub 一键统计燃润料航次()
 'test
 '/test
 '
+
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
+
+wkbookYear = "\" & 获取工作簿年份(ThisWorkbook.Name) & "年"
+
 For Each sht In Sheets()
-    shipNam = sht.Name
-    shipNamShort = sht.Name
-    If Left(shipNam, 1) = "d" Or Left(shipNam, 1) = "j" Then
-        If shipNam = "dh17" Then
-            shipNam = "鼎衡17（万年青）"
-        ElseIf shipNam = "dh18" Then
-            shipNam = "鼎衡18（常春藤）"
-        ElseIf shipNam = "jx32" Then
-            shipNam = "建兴32"
+    shipName = sht.Name
+    shipNameShort = UCase(sht.Name)
+    If Left(shipName, 1) = "d" Or Left(shipName, 1) = "j" Then
+        If shipName = "dh17" Then
+            shipName = "鼎衡17（万年青）"
+        ElseIf shipName = "dh18" Then
+            shipName = "鼎衡18（常春藤）"
+        ElseIf shipName = "jx32" Then
+            shipName = "建兴32"
         Else
-            shipNam = Replace(shipNam, "dh", "鼎衡")
+            shipName = Replace(shipName, "dh", "鼎衡")
         End If
         startRow = sht.Range("b2").End(xlDown).Row + 1
         endRow = sht.Range("a3").End(xlDown).Row
@@ -58,15 +62,28 @@ For Each sht In Sheets()
             'test
         For ro = startRow To endRow
             voy = sht.Cells(ro, 1)
+            voyValue = 获取工作簿年份(voy)
             'test
 '            Cells(ro, 1).Select
             'test
-            oilDir = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\" & shipNamShort & "燃*航次报表" & voy & "*.xls?"
-            voyDir = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\" & shipNamShort & "航次报表" & voy & "*.xls?"
+            rootPath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & wkbookYear & "\" & shipNameShort
+            oilDir = rootPath & "燃*航次报表*" & voyValue & "*.xls?"
+            oilDir2 = rootPath & "*料*航次报表*" & voyValue & "*.xls?"
+            voyDir = rootPath & "航次报表*" & voyValue & "*.xls?"
+            voyDir2 = rootPath & "*船舶航次报表*" & voyValue & "*.xls?"
+            
+            If Len(Dir(oilDir)) = 0 Then
+                oilDir = oilDir2
+            End If
+            If Len(Dir(voyDir)) = 0 Then
+                voyDir = voyDir2
+            End If
+            
             If Len(Dir(oilDir)) > 0 Then '如果文件存在
                 oilNam = Dir(oilDir)
                 voyNam = Dir(voyDir)
-                filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年"
+                
+                filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & wkbookYear & "\"
                 Set voyW = Workbooks.Open(fileName:=voyDir)
                 Set oilW = Workbooks.Open(fileName:=oilDir)
                 For roOilW = 11 To 28 Step 1
@@ -74,8 +91,8 @@ For Each sht In Sheets()
                         oilW.Sheets(1).Cells(roOilW, 5).Value = Empty
                     End If
                 Next roOilW
-                rotOil = "'" & filePath & "\[" & oilNam & "]燃油报表'!"
-                rotVoy = "'" & filePath & "\[" & voyNam & "]航次报表'!"
+                rotOil = "'" & filePath & "[" & oilNam & "]燃油报表'!"
+                rotVoy = "'" & filePath & "[" & voyNam & "]航次报表'!"
                 'test用于批量修改J列 辅机航行期间 公式
                 
 '                If sht.Cells(ro, 10).Formula <> "=" & rotOil & "$E$19+" & rotOil & "$E$21+" & rotOil & "$E$23" Then '辅机航行期间油耗"
@@ -108,7 +125,8 @@ For Each sht In Sheets()
                     sht.Cells(ro, 24).Formula = "=" & rotOil & "$E$25+" & rotOil & "$E$27" '锅炉DO
                     sht.Cells(ro, 25).Formula = "=" & rotVoy & "$D$4" '货品
                     sht.Cells(ro, 26).Formula = "=" & rotOil & "$F$4" '数量Z
-                    sht.Cells(ro, 27).Formula = "=" & rotOil & "$D$4" '航线AA
+                    sht.Cells(ro, 27).Formula = "=" & rotVoy & "$H$4" & "-" & rotVoy & "$H$5" '航线AA
+                    voyLine = voyW.Sheets(1).[h4].Value & "-" & voyW.Sheets(1).[h5].Value
                 Else
                     MsgBox "hi2要修改公式，该表和往常不一样 "
                 End If
@@ -147,8 +165,21 @@ For Each sht In Sheets()
 closeww:
                 rotOil = ""
                 rotVoy = ""
-                oilW.Close True
-                voyW.Close True
+                oldOilW = oilW.FullName
+                newOilW = filePath & shipNameShort & "燃润料航次报表" & voy & voyLine & ".xlsx"
+                oldVoyW = voyW.FullName
+                newVoyWn = filePath & shipNameShort & "船舶航次报表" & voy & voyLine & ".xlsx"
+                If oldOilW <> newOilW Then
+                    oilW.SaveAs newOilW, FileFormat:=xlOpenXMLWorkbook
+                    Kill oldOilW
+                End If
+                If oldVoyW <> newVoyWn Then
+                    voyW.SaveAs newVoyWn, FileFormat:=xlOpenXMLWorkbook
+                    Kill oldVoyW
+                End If
+                
+                oilW.Close
+                voyW.Close
             Else '新的航次报表还没来，去下条船
                 Exit For
             End If
@@ -162,13 +193,13 @@ Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Sub
 Sub 新的一年新的表()
-ThisWorkbook.SaveAs fileName:=ThisWorkbook.Path & "\" & newWorkbookName(ThisWorkbook.Name), _
-        FileFormat:=xlOpenXMLWorkbookMacroEnabled, CreateBackup:=False
-For Each sht In Sheets
-    sht.Activate
-    sht.Range(sht.[b4], sht.[b4].End(xlDown).End(xlToRight)).ClearContents 'b4-aa清除内容
-Next sht
-Call newVoy
+    ThisWorkbook.SaveAs fileName:=ThisWorkbook.Path & "\" & newWorkbookName(ThisWorkbook.Name), _
+            FileFormat:=xlOpenXMLWorkbookMacroEnabled, CreateBackup:=False
+    For Each sht In Sheets
+        sht.Activate
+        sht.Range(sht.[b4], sht.[b4].End(xlDown).End(xlToRight)).ClearContents 'b4-aa清除内容
+        Call newVoy
+    Next sht
 End Sub
 Function newWorkbookName(fileName)
 Dim regxYear
@@ -176,15 +207,24 @@ Set regxYear = CreateObject("vbscript.regexp")
 regxYear.Pattern = "\d\d\d\d" '四位数的年份
 newWorkbookName = regxYear.Replace(fileName, Year(Date))
 End Function
+Function 获取工作簿年份(fileName)
+    Dim regxYear
+    Set regxYear = CreateObject("vbscript.regexp")
+    regxYear.Pattern = "\d\d\d\d" '四位数的年份
+    
+    Set arYear = regxYear.Execute(fileName)
+    For Each sYear In arYear
+        获取工作簿年份 = sYear
+    Next sYear
+    
+End Function
 Function newVoy()
-voy = "=""V""&ROW(R[" & Right(Year(Date), 2) * 100 - 3 & "]C)"
-Sheets.Select
+    voy = "=""V""&ROW(R[" & Right(Year(Date), 2) * 100 - 3 & "]C)"
     Range([a4], [a83]).FormulaR1C1 = voy
     Range([a4], [a83]).Copy
     [a4].PasteSpecial Paste:=xlPasteValues
     Application.CutCopyMode = False
     [a4].Select
-Sheets(1).Select
 End Function
 Function 将航次号转为文本()
 For Each sht In Sheets
@@ -228,5 +268,7 @@ For Each sht In Sheets
 Next sht
 
 End Function
+
+
 
 
