@@ -1,7 +1,11 @@
 Sub 一键统计燃润料航次()
 '
 ' 燃润料航次统计 Macro
-'
+'v1,收集航次报表作为链接
+'能识别 "燃*航次报表*  "*料*航次报表*" "航次报表*" "*船舶航次报表*"
+'改正数字带字母部分
+'最后改名为DH1船舶航次报表V1811装货-卸货.xlsxDH1燃润料航次报表V1811装货-卸货.xlsx
+
 'i = 1
 'For Each shipName In Array("鼎衡1", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17", "鼎衡18", "鼎衡2", "鼎衡3", "建兴32", "鼎衡5", "鼎衡7", "鼎衡9")
 '    If Left(shipName, 1) = "鼎" Or Left(shipName, 1) = "建" Then
@@ -35,8 +39,9 @@ Sub 一键统计燃润料航次()
 
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
-
-wkbookYear = "\" & 获取工作簿年份(ThisWorkbook.Name) & "年"
+whatsNew = ""
+latestVoy = "目前已收集的航次报表为:"
+wkbookYear = "\" & 从字符串中提取连续4位数(ThisWorkbook.Name) & "年"
 
 For Each sht In Sheets()
     shipName = sht.Name
@@ -53,6 +58,7 @@ For Each sht In Sheets()
         End If
         startRow = sht.Range("b2").End(xlDown).Row + 1
         endRow = sht.Range("a3").End(xlDown).Row
+        latestVoy = latestVoy & vbCrLf & shipNameShort & sht.Cells(startRow - 1, 1)
 '        'test用于修改以往的公式，不需要打开表
 '        startRow = 4
 '        endRow = sht.Range("b3").End(xlDown).Row
@@ -62,7 +68,7 @@ For Each sht In Sheets()
             'test
         For ro = startRow To endRow
             voy = sht.Cells(ro, 1)
-            voyValue = 获取工作簿年份(voy)
+            voyValue = 从字符串中提取连续4位数(voy)
             'test
 '            Cells(ro, 1).Select
             'test
@@ -80,6 +86,7 @@ For Each sht In Sheets()
             End If
             
             If Len(Dir(oilDir)) > 0 Then '如果文件存在
+                whatsNew = whatsNew & shipNameShort & voy & vbCrLf
                 oilNam = Dir(oilDir)
                 voyNam = Dir(voyDir)
                 
@@ -189,6 +196,12 @@ nextRO:
     End If
 nextSHT:
 Next sht
+If whatsNew = "" Then
+    MsgBox "没有新航次报表"
+Else
+    MsgBox "添加了:" & vbCrLf & whatsNew
+End If
+MsgBox latestVoy
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Sub
@@ -207,14 +220,14 @@ Set regxYear = CreateObject("vbscript.regexp")
 regxYear.Pattern = "\d\d\d\d" '四位数的年份
 newWorkbookName = regxYear.Replace(fileName, Year(Date))
 End Function
-Function 获取工作簿年份(fileName)
+Function 从字符串中提取连续4位数(strWith4Num)
     Dim regxYear
     Set regxYear = CreateObject("vbscript.regexp")
     regxYear.Pattern = "\d\d\d\d" '四位数的年份
     
-    Set arYear = regxYear.Execute(fileName)
+    Set arYear = regxYear.Execute(strWith4Num)
     For Each sYear In arYear
-        获取工作簿年份 = sYear
+        从字符串中提取连续4位数 = sYear
     Next sYear
     
 End Function
