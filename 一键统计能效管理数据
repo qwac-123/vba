@@ -1,31 +1,3 @@
-Function 能效管理()
-For i = 2 To Sheets.Count - 1
-    
-    If Sheets(i).[c8].Value <> "" Then
-        startRow = Sheets(i).Range("c7").End(xlDown).Row + 1
-    ElseIf Sheets(i).[c7].Value = "" Then
-        startRow = 7
-    Else
-        startRow = 8
-    End If
-    Debug.Print Sheets(i).Name, Cells(startRow, 1), startRow
-Next i
-End Function
-Function 检测公式()
-For col = 3 To 11
-    stdfml = Cells(3, col).FormulaR1C1
-    stdfml = Right(stdfml, 13)
-    For ro = 6 To 48 Step 3
-        fml = Cells(ro, col).FormulaR1C1
-        fml = Right(fml, 13)
-        Debug.Print "ro: " & ro & vbCrLf & Cells(ro - 2, col).Value & ":  " & fml
-        If fml <> stdfml Then
-            Cells(ro, col).Interior.color = 65535
-        End If
-    Next ro
-Next col
-End Function
-
 Sub 一键统计能效管理数据()
 '
 ' 能效管理数据报表 Macro
@@ -33,108 +5,198 @@ Sub 一键统计能效管理数据()
 '
 'SelectFiles = Application.GetOpenFilename("Excel 文件 (*.xl*)," & "*.xl*", , "选择船舶能效管理数据报表", "打开", False)
 'Workbooks.Open fileName:=SelectFiles
-endSht = Sheets.Count
-For i = 2 To endSht
-    Set sht = Sheets(i)
-    shipNam = sht.Name
-    shipNamShort = sht.Name
-    If Left(shipNam, 1) = "D" Or Left(shipNam, 1) = "J" Then
-        If shipNam = "DH17" Then
-            shipNam = "鼎衡17（万年青）"
-        ElseIf shipNam = "DH18" Then
-            shipNam = "鼎衡18（常春藤）"
-        ElseIf shipNam = "JX32" Then
-            shipNam = "建兴32"
-        ElseIf shipNam = "HX" Then
-            shipNam = "恒信HX"
-        Else
-            shipNam = Replace(shipNam, "DH", "鼎衡")
-        End If
-        If sht.[c8].Value <> "" Then
-            startRow = sht.Range("c7").End(xlDown).Row + 1
-        ElseIf sht.[c7].Value = "" Then
-            startRow = 7
-        Else
-            startRow = 8
-        End If
-        endRow = sht.Range("b7").End(xlDown).Row
-        For ro = startRow To endRow
-            voy = sht.Cells(ro, 1).Text
-            Debug.Print shipNam, voy
-            oilDir = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\" & shipNamShort & "燃*航次报表" & voy & "*.xls?"
-            'voyDir = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年\" & shipNamShort & "航次报表" & voy & "*.xls?"
-            If Len(Dir(oilDir)) > 0 Then '如果文件存在
-                oilNam = Dir(oilDir)
-                'voyNam = Dir(voyDir)
-                filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipNam & "\2017年"
-                Set oilW = Workbooks.Open(fileName:=oilDir)
-                'Set voyW = Workbooks.Open(fileName:=voyDir)
-                rotOil = "'" & filePath & "\[" & oilNam & "]燃油报表'!"
-                'rotVoy = "'" & filePath & "\[" & voyNam & "]航次报表'!"
-                
-                '航线，载货里程（海里
-                If Left(oilW.Sheets(1).Cells(5, 5).Text, 3) = "总里程" Then
-                    sht.Cells(ro, 3).Formula = "=" & rotOil & "$D$4" '航线 C7
-                    sht.Cells(ro, 4).Formula = "=" & rotOil & "$F$5" '总航程里数 D7
-                    sht.Cells(ro, 10).Formula = "=" & rotOil & "$B$5" '航次开始时间 J7
-                    sht.Cells(ro, 11).Formula = "=" & rotOil & "$B$6" '航次结束时间 K7
-                Else
-                    MsgBox "需要修改公式，该表和往常不一样"
-                End If
-                
-                
-                'H7，载货量
-                If Not IsNumeric(oilW.Sheets(1).[F4].Value) Then
-                    oilW.Sheets(1).[F4].Value = 提取数字(oilW.Sheets(1).[F4].Value)
-                End If
-                sht.Cells(ro, 8).Formula = "=" & rotOil & "$F$4" '航次载货量
-                '燃油消耗（吨） E7 F7，燃润料重油轻油格子B41或B39，C41 C39
-                If oilW.Sheets(1).Cells(37, 2) = "重油:(mt)" Then
-                    sht.Cells(ro, 5).Formula = "=" & rotOil & "$B$41"
-                    sht.Cells(ro, 6).Formula = "=" & rotOil & "$C$41"
-                ElseIf oilW.Sheets(1).Cells(35, 2) = "重油:(mt)" Then
-                    sht.Cells(ro, 5).Formula = "=" & rotOil & "$B$39"
-                    sht.Cells(ro, 6).Formula = "=" & rotOil & "$C$39"
-                Else
-                    MsgBox "hi3 要修改公式，该表和往常不一样"
-                End If
-                'L3 EEOI
-                sht.Cells(ro, 12).FormulaR1C1 = _
-                "=IF(RC[-8]>0,(((RC[-7])*3.1144)+((RC[-6])*3.206))/(RC[-4]*RC[-8])*1000000,"""")"
-                'M3
-                sht.Cells(ro, 13).FormulaR1C1 = "=IF(RC[-9]>0,0.54*RC[-1],"""")"
-                'O7 CO2 FO
-                sht.Cells(ro, 15).FormulaR1C1 = "=RC[-10]*R2C15"
-                'P7 CO2 DO
-                sht.Cells(ro, 16).FormulaR1C1 = "=RC[-10]*R2C16"
-                'Q7 吨。海里
-                sht.Cells(ro, 17).FormulaR1C1 = "=RC[-9]*RC[-13]"
-                'R7 航次EEOI
-                sht.Cells(ro, 18).FormulaR1C1 = "=IF(RC[-3]>0,1000000*SUM(RC[-3]:RC[-2])/RC[-1],"""")"
-                'S7滚动平均值
-                sht.Cells(ro, 19).FormulaR1C1 = _
-                "=IF(RC[-4]>0,1000000*SUM(R7C15:RC[-3])/SUM(R7C17:RC[-2]),"""")"
-                
-'                'K3 L3，起止时间
-'                sht.Cells(ro, 10).Formula = "=" & rotVoy & "$c$7" '航次开始时间
-'                sht.Cells(ro, 11).Formula = "=" & rotVoy & "$D$5" '航次结束时间
-closeww:
-                oilW.Close True
-                'voyW.Close True
-            Else '新的航次报表还没来，去下条船
-                Exit For
+
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
+whatsNew = ""
+latestVoy = "目前已收集的航次报表为:"
+wkbookYear = "\" & 从字符串中提取连续4位数(ThisWorkbook.Name) & "年"
+
+    endSht = Sheets.Count
+    strAddShipVoy = "" '最后显示是否增加了新航次报表，加了哪些
+    For i = 2 To endSht
+        Set sht = Sheets(i)
+        shipName = sht.Name
+        shipNameShort = sht.Name
+        If Left(shipName, 1) = "D" Or Left(shipName, 1) = "J" Then
+            If shipName = "DH17" Then
+                shipName = "鼎衡17（万年青）"
+            ElseIf shipName = "DH18" Then
+                shipName = "鼎衡18（常春藤）"
+            ElseIf shipName = "JX32" Then
+                shipName = "建兴32"
+            ElseIf shipName = "HX" Then
+                shipName = "恒信HX"
+            Else
+                shipName = Replace(shipName, "DH", "鼎衡")
             End If
+            If sht.[c8].Value <> "" Then
+                startRow = sht.Range("c7").End(xlDown).Row + 1
+            ElseIf sht.[c7].Value = "" Then
+                startRow = 7
+            Else
+                startRow = 8
+            End If
+            endRow = sht.Range("b7").End(xlDown).Row
+            For ro = startRow To endRow
+                voy = sht.Cells(ro, 1).Text
+                voyValue = 从字符串中提取连续4位数(voy)
+                rootPath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & wkbookYear & "\" & shipNameShort
+                oilDir = rootPath & "燃*航次报表*" & voyValue & "*.xls?"
+                oilDir2 = rootPath & "*料*航次报表*" & voyValue & "*.xls?"
+                voyDir = rootPath & "航次报表*" & voyValue & "*.xls?"
+                voyDir2 = rootPath & "*船舶航次报表*" & voyValue & "*.xls?"
+                
+                If Len(Dir(oilDir)) = 0 Then
+                    oilDir = oilDir2
+                End If
+                If Len(Dir(voyDir)) = 0 Then
+                    voyDir = voyDir2
+                End If
+                
+                If Len(Dir(oilDir)) > 0 Then '如果文件存在
+                    strAddShipVoy = strAddShipVoy & shipNameShort & voy & vbCrLf
+                    oilNam = Dir(oilDir)
+                    'voyNam = Dir(voyDir)
+                    filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & wkbookYear
+                    Set oilW = Workbooks.Open(fileName:=oilDir)
+                    'Set voyW = Workbooks.Open(fileName:=voyDir)
+                    rotOil = "'" & filePath & "\[" & oilNam & "]燃油报表'!"
+                    'rotVoy = "'" & filePath & "\[" & voyNam & "]航次报表'!"
+                    
+                    '航线，载货里程（海里
+                    If Left(oilW.Sheets(1).Cells(5, 5).Text, 3) = "总里程" Then
+                        sht.Cells(ro, 3).Formula = "=" & rotOil & "$D$4" '航线 C7
+                        sht.Cells(ro, 4).Formula = "=" & rotOil & "$F$5" '总航程里数 D7
+                        sht.Cells(ro, 10).Formula = "=" & rotOil & "$B$5" '航次开始时间 J7
+                        sht.Cells(ro, 11).Formula = "=" & rotOil & "$B$6" '航次结束时间 K7
+                    Else
+                        MsgBox "需要修改公式，该表和往常不一样"
+                    End If
+                    
+                    
+                    'H7，载货量
+                    If Not IsNumeric(oilW.Sheets(1).[F4].Value) Then
+                        oilW.Sheets(1).[F4].Value = 提取数字(oilW.Sheets(1).[F4].Value)
+                    End If
+                    sht.Cells(ro, 8).Formula = "=" & rotOil & "$F$4" '航次载货量
+                    '燃油消耗（吨） E7 F7，燃润料重油轻油格子B41或B39，C41 C39
+                    If oilW.Sheets(1).Cells(37, 2) = "重油:(mt)" Then
+                        sht.Cells(ro, 5).Formula = "=" & rotOil & "$B$41"
+                        sht.Cells(ro, 6).Formula = "=" & rotOil & "$C$41"
+                    ElseIf oilW.Sheets(1).Cells(35, 2) = "重油:(mt)" Then
+                        sht.Cells(ro, 5).Formula = "=" & rotOil & "$B$39"
+                        sht.Cells(ro, 6).Formula = "=" & rotOil & "$C$39"
+                    Else
+                        MsgBox "hi3 要修改公式，该表和往常不一样"
+                    End If
+                    'L3 EEOI
+                    sht.Cells(ro, 12).FormulaR1C1 = _
+                    "=IF(RC[-8]>0,(((RC[-7])*3.1144)+((RC[-6])*3.206))/(RC[-4]*RC[-8])*1000000,"""")"
+                    'M3
+                    sht.Cells(ro, 13).FormulaR1C1 = "=IF(RC[-9]>0,0.54*RC[-1],"""")"
+                    'O7 CO2 FO
+                    sht.Cells(ro, 15).FormulaR1C1 = "=RC[-10]*R2C15"
+                    'P7 CO2 DO
+                    sht.Cells(ro, 16).FormulaR1C1 = "=RC[-10]*R2C16"
+                    'Q7 吨。海里
+                    sht.Cells(ro, 17).FormulaR1C1 = "=RC[-9]*RC[-13]"
+                    'R7 航次EEOI
+                    sht.Cells(ro, 18).FormulaR1C1 = "=IF(RC[-3]>0,1000000*SUM(RC[-3]:RC[-2])/RC[-1],"""")"
+                    'S7滚动平均值
+                    sht.Cells(ro, 19).FormulaR1C1 = _
+                    "=IF(RC[-4]>0,1000000*SUM(R7C15:RC[-3])/SUM(R7C17:RC[-2]),"""")"
+                    
+    '                'K3 L3，起止时间
+    '                sht.Cells(ro, 10).Formula = "=" & rotVoy & "$c$7" '航次开始时间
+    '                sht.Cells(ro, 11).Formula = "=" & rotVoy & "$D$5" '航次结束时间
+closeww:
+                    oilW.Close True
+                    'voyW.Close True
+                Else '新的航次报表还没来，去下条船
+                    Exit For
+                End If
 nextRO:
-        Next ro
-    End If
+            Next ro
+        End If
 nextSHT:
-Next i
+sht.Activate
+If sht.[c7].Value <> "" Then
+    If sht.[c8].Value <> "" Then
+        latestVoy = latestVoy & vbCrLf & shipNameShort & sht.[c7].End(xlDown).Offset(0, -2)
+    Else 'c8=""
+        latestVoy = latestVoy & vbCrLf & shipNameShort & sht.[a7]
+    End If
+End If
+    Next i
+    If strAddShipVoy <> "" Then
+        MsgBox "增加了:" & vbCrLf & strAddShipVoy
+    Else
+        MsgBox "没有新增加的航次报表"
+    End If
+    MsgBox latestVoy
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
 End Sub
 Function 提取数字(rngValue)
+rngValue = Application.Asc(rngValue)
 Set regNum = CreateObject("vbscript.regexp")
 regNum.Pattern = "\d+.\d+"
-Set mh = regNum.Execute(rngValue) '  Execute方法返回的集合对象mh,有两个属性:
-For Each mhk In mh
-    提取数字 = mhk.Value
-Next
+Set numEx = regNum.Execute(rngValue) '  Execute方法返回的集合对象mh,有两个属性:
+For Each num In numEx
+    提取数字 = num.Value
+Next num
 End Function
+Sub 新的一年新的表()
+ThisWorkbook.SaveAs fileName:=ThisWorkbook.Path & "\" & newWorkbookName(ThisWorkbook.Name), _
+        FileFormat:=xlOpenXMLWorkbookMacroEnabled, CreateBackup:=False
+For Each sht In Sheets
+    sht.Activate
+    If sht.Index = 1 Then
+        sht.[a1].Value = newWorkbookName(sht.[a1].Value)
+    Else
+        '清除旧内容
+        If sht.[c8].Value = "" Then
+            sht.Range(sht.[c7], sht.[k7]).ClearContents 'c7-k7清除内容
+        Else
+            sht.Range(sht.[c7], sht.[k7].End(xlDown)).ClearContents 'c7-kx清除内容
+        End If
+        '更新航次号
+        voy = "=""V""&ROW(R[" & Right(Year(Date), 2) * 100 - 6 & "]C)"
+        With sht.Range(sht.[a7], sht.Cells(voyRowEnd(sht.[a7]), 1))
+            .FormulaR1C1 = voy
+            .Copy
+        End With
+        sht.[a7].PasteSpecial Paste:=xlPasteValues
+        Application.CutCopyMode = False
+        sht.[a7].Select
+    End If
+Next sht
+End Sub
+Function newWorkbookName(fileName)
+Dim regxYear
+Set regxYear = CreateObject("vbscript.regexp")
+regxYear.Pattern = "\d\d\d\d" '四位数的年份
+newWorkbookName = regxYear.Replace(fileName, Year(Date))
+End Function
+Function 从字符串中提取连续4位数(strWith4Num)
+    Dim regxYear
+    Set regxYear = CreateObject("vbscript.regexp")
+    regxYear.Pattern = "\d\d\d\d" '四位数的年份
+    
+    Set arYear = regxYear.Execute(strWith4Num)
+    For Each sYear In arYear
+        从字符串中提取连续4位数 = sYear
+    Next sYear
+    
+End Function
+Function voyRowEnd(rngVoy)
+For r = 1 To 150
+    Debug.Print Left(rngVoy.Offset(r, 0), 5)
+    If Left(rngVoy.Offset(r, 0), 1) <> "V" Then
+        voyRowEnd = 7 + r - 1
+        Exit Function
+    End If
+Next r
+End Function
+
