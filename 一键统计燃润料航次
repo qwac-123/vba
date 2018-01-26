@@ -1,6 +1,7 @@
 Sub 一键统计燃润料航次()
 '
 ' 燃润料航次统计 Macro
+'
 'v1,收集航次报表作为链接
 '能识别 "燃*航次报表*  "*料*航次报表*" "航次报表*" "*船舶航次报表*"
 '改正数字带字母部分
@@ -58,7 +59,6 @@ For Each sht In Sheets()
         End If
         startRow = sht.Range("b2").End(xlDown).Row + 1
         endRow = sht.Range("a3").End(xlDown).Row
-        latestVoy = latestVoy & vbCrLf & shipNameShort & sht.Cells(startRow - 1, 1)
 '        'test用于修改以往的公式，不需要打开表
 '        startRow = 4
 '        endRow = sht.Range("b3").End(xlDown).Row
@@ -193,8 +193,11 @@ closeww:
 nextRO:
         Next ro
 '        i = i + 1
+
     End If
 nextSHT:
+
+latestVoy = latestVoy & vbCrLf & shipNameShort & sht.[b2].End(xlDown).Offset(0, -1)
 Next sht
 If whatsNew = "" Then
     MsgBox "没有新航次报表"
@@ -281,7 +284,3 @@ For Each sht In Sheets
 Next sht
 
 End Function
-
-
-
-
