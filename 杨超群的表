@@ -1,0 +1,104 @@
+Function 码头列表()
+arPier = Array("南京杨子", "南京杨巴", "南京龙翔", "南京金泰", "南京惠洋", "杨州恒基达鑫", "镇江李长荣", "镇江索普", _
+"镇江港龙", "镇江奇美", "常州建滔", "常州新润", "泰州联成", "泰兴新浦", "泰州海企", "靖江双江德桥", _
+"江阴奥德费尔", "江阴澄星（澄利）", "江阴南荣", "江阴华西", "江阴丽天", "江阴长山", _
+"张家港宁兴", "张家港长江国际", "张家港陶氏", "张家港孚宝", "张家港中油泰富", _
+"张家港大新", "张家港中东", "张家港越洋", "南通诚辉", "南通阳鸿", "南通华盛", _
+"南通华洋", "南通千红", "南通中化", "南通汇丰", "常熟华润", "常熟汇海", "常熟长春", _
+"常熟千红", "太仓阳鸿", "海南洋浦", "海南八所", "钦州中石油", "茂名鑫龙", "茂名石化", _
+"江门亨源", "江门谦信", "江门溶剂厂", "中山联成", "珠海恒基达鑫", "珠海华联", "珠海中化格力", _
+"小虎岛粤海", "小虎岛石化", "南沙港发", "东莞百安", "东莞三江", "东莞金明", "东莞东洲", _
+"东莞鸿源", "东莞联兴", "香港", "惠州中石油", "惠州炼化", "惠州欧德", "惠州东联", _
+"揭阳榕泰", "揭阳康达", "汕头三公司", "汕头珠池", "汕头海洋", "潮州华丰", "麦寮", _
+"高雄", "台中", "安平", "古雷海腾", "厦门翔鹭", "厦门鑫海", "泉州振戎", "泉州深沪", _
+"泉州福炼", "泉州泰山", "泉州宝龙", "泉州外走马埭", "泉州中化", "北海铁山港", _
+"泉州斯兰", "石井龙田", "马尾吉安", "舟山和邦", "宁波大榭", "宁波三菱", "宁波中海油", _
+"宁波台塑", "宁波万华", "宁波镇海", "宁波青峙", "乍浦泰地", "乍浦嘉港", "乍浦独港", _
+"乍浦华辰", "上海吴泾", "金山石化", "漕泾华盛", "漕泾孚宝", "连云港", "岚山液化", _
+"岚山孚宝", "青岛丽东", "青岛黄岛", "烟台万华", "莱州", "山东东营", "营口", _
+"天津南港奥德费尔", "天津临港思多而特", "天津临港孚宝", "天津南疆", _
+"天津滚装码头", "大连甘井石油", "大连新港", "大连恒力", "大连石油七场", _
+"大连逸盛", "大丰", "新会", "鲅鱼圈", "丽水YEOSU", "大山DAESAN", "蔚山ULSAN", _
+"昂山ONSAN", "平泽PYONGTAEK", "群山KUNSAN")
+
+For ro = 2 To [a2].End(xlDown).Row
+    strPier = Cells(ro, 1).Value
+    For iPier = 0 To UBound(arPier)
+        If strPier Like "*" & arPier(iPier) & "*" Then
+            Cells(ro, 1).Delete
+            ro = ro - 1
+            GoTo nextRO
+        End If
+    Next iPier
+nextRO:
+Next ro
+End Function
+Function 获取码头列表()
+For isht = 1 To 11
+    Set dhsht = Sheets(isht)
+    
+    Range(dhsht.[b2], dhsht.[b2].End(xlDown)).Copy Sheets("Sheet2").[a6666].End(xlUp).Offset(1, 0)
+    
+    Columns(1).RemoveDuplicates Columns:=1, Header:=xlNo
+Next isht
+End Function
+Function 删除锚地()
+For Each prng In [a1].CurrentRegion
+    strHar = prng.Value
+    isAnchor = strHar Like "*锚*"
+    isPort = Len(strHar) < 4
+    
+    meetCondi = isAnchor Or isPort
+    If meetCondi Then
+        prng.Delete
+    End If
+Next prng
+End Function
+Function 获取杨超群码头列表2()
+strHaa = "array("
+For Each ycqsht In Sheets
+    strHaa = strHaa & """" & ycqsht.Name & ""","
+Next ycqsht
+strHaa = strHaa & """"")"
+Debug.Print strHaa
+End Function
+Function 整合细节时间()
+For isht = 1 To 11
+    Set dhsht = Sheets(isht)
+    
+    Range(dhsht.[e2], dhsht.[e6666].End(xlUp)).Copy
+    Sheets("Sheet2").[a6666].End(xlUp).Offset(1, 0).PasteSpecial Paste:=xlPasteValues, _
+    Operation:=xlNone, SkipBlanks:=True
+    
+    'Columns(1).RemoveDuplicates Columns:=1, Header:=xlNo
+Next isht
+End Function
+Function 判断单元格装卸货时间()
+'可用，需增加锚泊时间判断
+arLoadKey = Array("*装货时间*", "*装货作业*", "装货")
+arDiscKey = Array("*卸货时间*", "*卸货作业*", "卸货")
+arAnchKey = Array("*锚地*")
+For ro = 5 To [b6666].End(xlUp).Row
+    strReason = Cells(ro, 5).Value
+    If strReason = "原因 Reason   " Then
+        GoTo nextRO
+    End If
+    'load
+    For iLoad = 0 To UBound(arLoadKey)
+        If strReason Like arLoadKey(iLoad) Then
+        '1黑，2白，3红,4绿，5蓝
+            Cells(ro, 5).Interior.ColorIndex = 4
+            Cells(ro, 5).Font.ColorIndex = 1 '黑色字
+        End If
+    Next iLoad
+    'disc
+    For iDisc = 0 To UBound(arLoadKey)
+        If strReason Like arDiscKey(iDisc) Then
+            Cells(ro, 5).Interior.ColorIndex = 5
+            Cells(ro, 5).Font.ColorIndex = 2 '白色字
+        End If
+    Next iDisc
+nextRO:
+Next ro
+
+End Function
