@@ -1,4 +1,5 @@
-Option Explicit
+'Option Explicit
+Dim arNextShipVoy
 
 Dim hangciDiYiCi As Boolean
 Dim ranrunDiYiCi As Boolean
@@ -11,8 +12,8 @@ Dim rng1 As Object
 Dim rng2 As Object
 Dim rng3 As Object
 
-Dim w As Object
-Dim wsh As Object
+'Dim w As Object
+'Dim wsh As Object
 Dim zb As Object
 Dim zsh As Object
 
@@ -30,90 +31,47 @@ Dim nam As String
 
 Dim dakaibaobiao As Variant ' 在VBA中，对于For Each m In a，若a是数组，m只能声明为variant 变量，这是语法决定的。
 Dim baobiao As Variant '同上
-Sub tc合并全年航次报表()
-'Range("A1").CurrentRegion.Offset(1, 0).ClearContents
-Application.ScreenUpdating = False
-Dim arr(1 To 10000) As String
-Dim f, cFile, i%, k%, x%
-Dim wb As Workbook
 
-arr(1) = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\"
-i = 1: k = 1
+Sub TC表制作为值表()
+'
+' TC表制作为值表 Macro
+'
 
-Set zb = ActiveWorkbook
-Set zsh = ActiveSheet
-
-'If MsgBox("是否清除当前表的内容", vbYesNo) = vbYes Then
-'    Cells.Delete '删除当前表的内容
-'Else
-''不删表，继续
-'End If
-
-Do While i < UBound(arr)
-    If arr(i) = "" Then Exit Do
-    f = Dir(arr(i), vbDirectory)
-    Do While f <> "" '
-        If InStr(f, ".") = 0 And 1 Then '没有"."说明是文件夹名字 文件夹里面第一个是".", 第二个是"..",往后是看得见的文件夹
-            If Right(f, 1) = "年" And f <> "2017年" Then '非2017年文件夹不要
-                GoTo dirf
-            End If
-            k = k + 1
-            arr(k) = arr(i) & f & "\"
-        End If
-dirf:
-        f = Dir
-    Loop
-    i = i + 1
-Loop
-
-For x = 22 To UBound(arr) '使用前请检查arr(22)是不是第一个2017文件夹
-    If arr(x) = "" Then
-        Exit For
-    End If
-    Debug.Print Right(arr(x), 2)
-    initialName = Left(arr(x), 2)
-    If initialName <> "鼎衡" And initialName <> "建兴" And Right(arr(x), 2) <> "年\" Then
-        GoTo nextxx:
-    End If
-    
-    cFile = Dir(arr(x) & "*.xls?")
-    Do While cFile <> ""
-        baobiao = arr(x) & cFile
-        Set fs = CreateObject("scripting.FileSystemObject")
-        Set f = fs.GetFile(baobiao)
-        'Debug.Print Now 'Month(f.DateLastModified)
-        If Month(f.DateLastModified) < Month(Now) Then '如果是以前的，就不整合了
-            'GoTo nextFile:
-        ElseIf InStr(5, baobiao, "燃") = 0 And InStr(5, baobiao, "然") = 0 Then '这是航次报表
-            Call 航次报表整合
-        Else '这是燃润料报表
-            Call 燃润料报表整合
-        End If
-nextFile:
-        cFile = Dir
-    Loop
-nextxx:
-Next x
-
-zsh.Cells(rowzbEnd, 1).Select
-ActiveWindow.FreezePanes = False
-Range("b2").Select
-ActiveWindow.FreezePanes = True
-Application.ScreenUpdating = 1
-Application.DisplayAlerts = 1
+'
+    Sheets("总表").Select
+    Sheets("总表").Copy
+    Range("A1:S49").Select
+    Range("G1").Activate
+    ActiveWindow.SmallScroll Down:=3
+    Range("A1:S49").Copy
+    Range("A1:S49").Select
+    selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    Application.CutCopyMode = False
+    Range("J43").Select
+    ActiveWindow.SmallScroll Down:=-6
+    ActiveWindow.LargeScroll ToRight:=-1
+    ActiveWindow.SmallScroll Down:=-3
 End Sub
 Sub 批量新建文件夹()
 Dim ar
-ar = Array("鼎衡1", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17（万年青）", "鼎衡18（常春藤）", "鼎衡2", "鼎衡3", "建兴32", "鼎衡5", "鼎衡7", "鼎衡9")
+ar = Array("鼎衡1", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17（万年青）", "鼎衡18（常春藤）", "鼎衡2", "鼎衡3", "建兴32", "鼎衡5", "鼎衡9", "恒信HX", "天使1", "天使2", "天使3", "天使11", "鼎衡A", "鼎衡E")
 For i = 0 To UBound(ar)
-sorFil = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & ar(i) & "\2017年"
-dstFil = "F:\工作文档\航次报表2017年\" & ar(i)
-FileCopy sorFil, dstFil
+Debug.Print "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & ar(i) & "\2018年"
+On Error Resume Next
+'MkDir "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & ar(i)
+'MkDir "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & ar(i) & "\2018年"
+
+Cells(i + 1, 1) = ar(i) '"\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & ar(i) & "\2018年"
+
+'sorFil = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & ar(i) & "\2017年"
+'dstFil = "F:\工作文档\航次报表2017年\" & ar(i)
+'FileCopy sorFil, dstFil
 Next i
-'MkDir "F:\工作文档\航次报表2017年\" & ar(i)
-Next i
+
 End Sub
-Sub tc航次报表统一整合()
+Sub TC统计表()
+'V2 改了表
 'v1.7 现在可以正确找到航次报表的细节时间了
 'v1.6 现在可以正确找到油料表头了
 'v1.5 重做了船名输入选择
@@ -124,139 +82,282 @@ Sub tc航次报表统一整合()
  'v1.0可以整合航次报表和燃润料报表到一张表里
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
-Do
-If shipNum = "     " Then
-    MsgBox "请输入正确的数字"
-End If
-shipNum = InputBox("请输入船名数字，如鼎衡10就输入10", "船名数字", "10")
-Loop While Len(shipNum) > 2
-If shipNum = "" Then
-    Exit Sub
-End If
-Select Case shipNum
-    Case 17
-        shipName = "鼎衡17（万年青）"
-    Case 18
-        shipName = "鼎衡18（常春藤）"
-    Case 32
-        shipName = "建兴32"
-    Case Else
-        shipName = "鼎衡" & shipNum
-End Select
-fileDir = _
-"\\192.168.0.223\航运在线\10、油料管理部\航次报表\" _
-& shipName & "\" & Year(Date) & "年"
-ChDir fileDir
-dakaibaobiao = Application.GetOpenFilename(FileFilter:="Excel文件 (*.xls; *.xlsx),*.xls; *.xlsx,所有文件(*.*),*.*", _
-       title:="Excel选择", MultiSelect:=True) '选择要被合并的簿
-
-If Not IsArray(dakaibaobiao) Then '如果点了取消就结束
-    Exit Sub
-End If
-
-ranrunDiYiCi = True
-hangciDiYiCi = True
-openedOil = False
-openedVoy = False
 Set zb = ActiveWorkbook
 Set zsh = ActiveSheet
 
-If MsgBox("是否清除当前表的内容", vbYesNo) = vbYes Then
-    Cells.Delete '删除当前表的内容
-Else
-'退出
-End If
-
-For Each baobiao In dakaibaobiao
-    If InStr(5, baobiao, "燃") = 0 Or InStr(5, baobiao, "然") = 0 Then '这是航次报表
-        Call 航次报表整合
-    Else '这是燃润料报表
-        Call 燃润料报表整合
+rend = [a1].End(xlDown).Row
+For col = 1 To 24
+    If Left(Cells(1, col).Value, 2) = "轻油" Then
+        colDO = col
+        Exit For
     End If
-Next baobiao
-ActiveWindow.FreezePanes = False
-Range("b2").Select
-ActiveWindow.FreezePanes = True
-'处理航次区域
-If openedVoy Then
-    Columns("A:A").ColumnWidth = 4
-    Columns("B:c").ColumnWidth = 8
-    Columns("e:f").ColumnWidth = 15.4
-    Rows.RowHeight = 15
+Next col
+    
+For r = 2 To rend Step 1
+    shipName = Cells(r, 1).Value
+    shipNameShort = shipName
+    shipNum = Right(shipName, 2)
+    voy = Cells(r, 2).Value
+    voyValue = 提取数字(voy)
+    lastSameShipVoy = Cells(r - 1, 1).Value & Cells(r - 1, 2).Value
+    thisSameShipVoy = Cells(r, 1).Value & Cells(r, 2).Value
+    isSameShipVoy = lastSameShipVoy = thisSameShipVoy
+    
+    isWriten = Cells(r, colDO) <> Empty
+    
+    If isWriten Or isSameShipVoy Then '已经填写了
+        GoTo nextr
+    End If
+    
+    If IsNumeric(shipNum) Then
+    Else
+        shipNum = Right(shipNum, 1)
+    End If
+    Select Case shipNum
+        Case 17
+            shipName = "鼎衡17（万年青）"
+        Case 18
+            shipName = "鼎衡18（常春藤）"
+        Case 32
+            shipName = "建兴32"
+        Case Else
+            shipName = "鼎衡" & shipNum
+    End Select
+    
+    voyYear = "\20" & Mid(voy, 2, 2) & "年\"
+    filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & voyYear & shipNameShort
+    oilDir = filePath & "燃*航次报表*" & voyValue & "*.xls?"
+    oilDir2 = filePath & "*料*航次报表*" & voyValue & "*.xls?"
+    voyDir = filePath & "航次报表*" & voyValue & "*.xls?"
+    voyDir2 = filePath & "*船舶航次报表*" & voyValue & "*.xls?"
+    
+    If Len(Dir(oilDir)) = 0 Then
+        oilDir = oilDir2
+    End If
+    If Len(Dir(voyDir)) = 0 Then
+        voyDir = voyDir2
+    End If
+    
+    If Len(Dir(voyDir)) > 0 Then  '如果文件存在
+        oilNam = Dir(oilDir)
+        voyNam = Dir(voyDir)
+        Set oilW = Workbooks.Open(fileName:=oilDir)
+        Set voyW = Workbooks.Open(fileName:=voyDir)
+        
+        Call TC燃润料报表整合(oilW, r, colDO)
+        Call TC航次报表整合(voyW, r, colDO)
+        
+        voyLine = voyW.Sheets(1).[h4].Value & "-" & voyW.Sheets(1).[h5].Value
+        zsh.Cells(r, colDO - 9).Value = voyLine
+        
+        oldOilW = oilW.FullName
+        newOilW = filePath & "燃润料航次报表" & voy & voyLine & ".xlsx"
+        oldVoyW = voyW.FullName
+        newVoyW = filePath & "船舶航次报表" & voy & voyLine & ".xlsx"
+        If oldOilW <> newOilW Then
+            oilW.SaveAs newOilW, FileFormat:=xlOpenXMLWorkbook
+            Kill oldOilW
+        End If
+        If oldVoyW <> newVoyW Then
+            voyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
+            Kill oldVoyW
+        End If
+        
+        oilW.Close
+        voyW.Close
+        
+        addVoy = addVoy & shipName & voy & vbCrLf
+    Else
+        absentVoy = absentVoy & shipName & voy & vbCrLf
+    End If
+nextr:
+Next r
+If addVoy = "" Then
+    MsgBox "没有新增"
+Else
+    MsgBox "已加入:" & vbCrLf & addVoy
 End If
-zsh.Cells(rowzbEnd, 1).Select
+If absentVoy = "" Then
+    MsgBox "没有缺的"
+Else
+    MsgBox "没有航次报表:" & vbCrLf & absentVoy
+End If
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Sub
-Function 燃润料报表整合()
+Sub TC增加本月航次()
+arNewShipVoy = Array()
+For ro = 2 To [a2].End(xlDown).Row + UBound(arNewShipVoy) + 1
+    
+End Sub
+Sub TC表下个月()
+
+tcPath = "F:\工作文档\TC表\" & Format(Date, "yyyymm") & "\"
+
+If Dir(tcPath, 16) = Empty Then
+    MkDir tcPath
+End If
+Set nextBook = ActiveWorkbook
+Set nextSht = nextBook.Sheets(1)
+
+tcName = Format(Date, "yyyymm小船\T\C表") & ".xlsx"
+nextBook.SaveAs fileName:=tcPath & tcName, _
+        FileFormat:=xlOpenXMLWorkbook, CreateBackup:=True
+
+
+arNextShipVoy = selection.Value
+arNextShipVoy = cIntVoy(arNextShipVoy)
+startRow = 2
+endRow = [a6666].End(xlUp).Row
+For iro = startRow To 111 Step 1
+    ro = iro
+'    ro = startRow
+'    iro = startRow
+    If Cells(ro, 1) = Empty Then
+        Rows(ro).Delete
+        countEpt = countEpt + 1
+        If countEpt > 10 Then
+            Exit For
+        End If
+    Else
+        countEpt = 0
+    End If
+    If Cells(ro + 1, 1) <> Cells(ro, 1) Then  '另一条船了
+        lastRow = ro
+        crtShip = Cells(startRow, 1).Value
+        crtVoyVal = CInt(Right(Cells(ro, 2).Value, 4))
+        crtVoyVal = crtVoyVal + 1
+        crtVoy = "V" & crtVoyVal
+        
+        Rows(startRow & ":" & lastRow).Value = Empty
+        Cells(startRow, 1).Value = crtShip
+        Cells(startRow, 2).Value = crtVoy
+        
+        newVoyVal = findNextVoyVal(crtShip, crtVoyVal)
+        crtVoyYear = crtVoyVal \ 100
+        newVoyYear = newVoyVal \ 100
+        isSameYear = crtVoyYear = newVoyYear
+        If isSameYear Then
+            startVoyVal = crtVoyVal
+        Else
+            startVoyVal = newVoyYear * 100 + 1
+        End If
+        difVoyNum = newVoyVal - startVoyVal + 1
+        For newro = startRow + 1 To startRow + difVoyNum
+            If Cells(newro, 1).Value <> Empty Then
+                Rows(newro).Insert
+                ro = ro + 1
+            End If
+            Cells(newro, 1).Value = crtShip
+            Cells(newro, 2).Value = "V" & (startVoyVal + (newro - startRow - 1))
+        Next newro
+        startRow = ro + 1
+    End If
+Next iro
+
+'Call TC表写公式
+Columns(3).Insert
+[c1].Value = "船名+航次"
+Range([c2], [b2].End(xlDown).Offset(0, 1)).FormulaR1C1 = "=rc[-2]&rc[-1]"
+'Range([c2], [y2]).Copy Range([c3], [y12])
+
+
+End Sub
+Function findNextVoyVal(oldShip, oldVoyVal)
+    arEnd = UBound(arNextShipVoy)
+    For i = 1 To arEnd
+        newShip = arNextShipVoy(i, 1)
+        newVoyVal = arNextShipVoy(i, 2)
+        isSameShip = newShip = oldShip
+        If isSameShip Then
+            findNextVoyVal = newVoyVal
+            
+            temp1 = arNextShipVoy(arEnd, 1)
+            temp2 = arNextShipVoy(arEnd, 2)
+            arNextShipVoy(arEnd, 1) = arNextShipVoy(i, 1)
+            arNextShipVoy(arEnd, 2) = arNextShipVoy(i, 2)
+            arNextShipVoy(i, 1) = temp1
+            arNextShipVoy(i, 2) = temp2
+            
+            Exit Function
+        End If
+    Next i
+End Function
+Function cIntVoy(arNxSpVy)
+For i = 1 To UBound(arNxSpVy)
+    arNxSpVy(i, 2) = 提取数字(arNxSpVy(i, 2))
+Next i
+cIntVoy = arNxSpVy
+End Function
+Function 提取数字(rngValue)
+rngValue = Application.Asc(rngValue)
+Set regNum = CreateObject("vbscript.regexp")
+regNum.Pattern = "\d\d\d\d"
+Set mh = regNum.Execute(rngValue) '  Execute方法返回的集合对象mh,有两个属性:
+For Each mhk In mh
+    提取数字 = CInt(mhk.Value)
+Next
+End Function
+Function TC燃润料报表整合(objWBOil, rowZSht, colDO)
 'v2.2 现在能够正确找到表头位置了
 'v2.1 增加了判断是否打开过油料表
 'v2.0 从原来的sub改为sub航次报表统一整合()下的一个function
 'v1.0 油料报表整合 Macro
+
 Dim rngGezi As Object
 Dim rowOilHead As Long
 Dim rowOilAdd As Long
 Dim rowOilEnd As Long
-Application.ScreenUpdating = 0
-Application.DisplayAlerts = 0
-Set w = Workbooks.Open(baobiao)
-Set wsh = w.Sheets("燃油报表")
-voy = Mid(w.Name, InStr(6, w.Name, "V") + 1, 4)
-nam = Left(w.Name, 4)
-rowzbEnd = zsh.Cells(66666, 2).End(xlUp).Row + 1
-If Left(Range("a39"), 5) = "本航次消耗" Then
-    wsh.Range("c39").Copy
-    zsh.Cells(rowzbEnd, 3).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
-        :=False, Transpose:=False
-    wsh.Range("b39").Copy
-    zsh.Cells(rowzbEnd, 4).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
-        :=False, Transpose:=False
-ElseIf Left(Range("a41"), 5) = "本航次消耗" Then
-    wsh.Range("c41").Copy
-    zsh.Cells(rowzbEnd, 3).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
-            :=False, Transpose:=False
-    wsh.Range("b41").Copy
-    zsh.Cells(rowzbEnd, 4).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
-            :=False, Transpose:=False
-    'zsh.Cells(rowzbEnd, 1) = voy
-Else
-    Debug.Print 1
-End If
-zsh.Cells(rowzbEnd, 1) = nam
-zsh.Cells(rowzbEnd, 2) = voy
-w.Close
-openedOil = True
+    colFO = colDO + 2
+    colStartTime = colDO + 5
+    colEndTime = colDO + 6
+    
+    Application.ScreenUpdating = 0
+    Application.DisplayAlerts = 0
+    Set wsh = objWBOil.Sheets("燃油报表")
+    'voy = Mid(w.Name, InStr(6, w.Name, "V") + 1, 4)
+    'nam = Left(w.Name, 4)
+    'rowzbEnd = zsh.Cells(66666, 2).End(xlUp).Row + 1
+    objWBOil.Activate
+    wsh.Range([b5], [b6]).Replace What:=";", Replacement:=":", LookAt:=xlPart
+    startTime = wsh.[b5].Value
+    endTime = wsh.[b6].Value
+    zsh.Cells(rowZSht, colStartTime).Value = startTime
+    zsh.Cells(rowZSht, colEndTime).Value = endTime
+    
+    If Left(wsh.Range("a39"), 5) = "本航次消耗" Then
+        consumedDO = wsh.Range("c39").Value '轻油
+        consumedFO = wsh.Range("b39").Value '重油
+    ElseIf Left(wsh.Range("a41"), 5) = "本航次消耗" Then
+        consumedDO = wsh.Range("c41").Value '轻油
+        consumedFO = wsh.Range("b41").Value '重油
+    Else
+        MsgBox "轻油消耗在哪里？"
+    End If
+    
+    zsh.Cells(rowZSht, colDO).Value = consumedDO '轻油
+    zsh.Cells(rowZSht, colFO).Value = consumedFO '重油
+
 End Function
-Function 航次报表整合()
+Function TC航次报表整合(objWBVoy, rowZSht, colDO)
 'v2.2 现在只选中可见单元格
 'v2.1 增加了判断是否打开过航次表
 'v2.0 从原来的sub改为sub航次报表统一整合()下的一个function
 'v1.171114 最后调整了格子大小
 'v1.0 航次报表整合 Macro
+colVoyStart = colDO + 5
+colVoyEnd = colDO + 6
+colLine = colDO - 9
+objWBVoy.Activate
+Set wsh = objWBVoy.Sheets("航次报表")
+Range(wsh.[h4], wsh.[h5]).Replace "/", "+", xlPart
+'wsh.[b5].Copy
+'zsh.Cells(rowZSht, colVoyStart).PasteSpecial Paste:=xlPasteValues '航次开始
+'wsh.[d5].Copy
+'zsh.Cells(rowZSht, colVoyEnd).PasteSpecial Paste:=xlPasteValues '航次结束
 
-On Error GoTo errorOpen '手动解决
-Set w = Workbooks.Open(baobiao)
-If 0 Then '文档打不开了，手动打开
-errorOpen:
-MsgBox Right(baobiao, 18)
-Set w = ActiveWorkbook
-End If
-Set wsh = w.Sheets("航次报表")
-Set rng0 = wsh.Range("b5,d5") '航次开始结束
-Application.ScreenUpdating = 0
-Application.DisplayAlerts = 0
-rowzbEnd = zsh.Cells(66666, 5).End(xlUp).Row + 1
-voy = Mid(w.Name, InStr(6, w.Name, "V") + 1, 4)
-nam = Left(w.Name, 4)
-rng0.Copy
-zsh.Cells(rowzbEnd, 7).PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
-        :=False, Transpose:=False
-zsh.Cells(rowzbEnd, 5) = nam
-zsh.Cells(rowzbEnd, 6) = voy
-w.Close
-openedVoy = True
 End Function
-Sub tc计算表拆分到各表()
+Sub TC计算表拆分到各表()
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
 Set zsh = ActiveSheet
@@ -273,8 +374,149 @@ For i = 2 To Cells(66666, 1).End(xlUp).Row
         zsh.Select
     End If
 Next i
-Sheets.Select
+Sheets(1).Select
 Columns.EntireColumn.AutoFit
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
+End Sub
+'Function sds()
+'str = "array("
+'For col = 1 To 9
+'    str = str & """" & Cells(1, col) & """, "
+'Next
+'str = str & ")"
+'Debug.Print str
+'End Function
+Function 处理收入清单表()
+'v1将收入清单201x年表整理为TC表格式
+
+
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
+[b2].Offset(-1, 0).Select
+If selection.MergeCells Then
+    Rows(1).Delete
+End If
+endRow = [a6666].End(xlUp).Row
+roBlank = 0
+For ro = 2 To endRow
+    Set crtRoCell = Cells(ro, 1)
+    crtRoCellVal = crtRoCell.Value
+    rowIsBlank = crtRoCellVal = ""
+    rowIsElse = crtRoCellVal = "其他"
+    rowIsBlue = crtRoCell.Interior.color = 15773696
+    'rowIsRemark = Cells(ro, 16) <> ""
+    If rowIsBlank Or rowIsBlue Or rowIsElse Then
+        Rows(ro).Delete
+        roBlank = roBlank + 1
+        ro = ro - 1
+        If roBlank > 8 Then
+            Exit For
+        End If
+    Else
+        roBlank = 0
+    End If
+Next ro
+arTitle = Array("船 名", "航 次", "船名+航次", "币别", "货量", "航线", "航行区域", "货  名", "公司", "金  额")
+For i = 0 To UBound(arTitle)
+    aTit = arTitle(i)
+    If aTit = "船名+航次" Then '船名+航次
+        Columns("C:C").Insert
+        Range("C1").Value = "船名+航次"
+        Range([c2], [a2].End(xlDown).Offset(0, 2)).FormulaR1C1 = "=RC[-2]&RC[-1]"
+        GoTo nextaTit
+    ElseIf aTit = "航行区域" Then
+        Columns(i).Copy
+        Columns(i + 1).Insert Shift:=xlToRight
+        Call 航线转区域
+        GoTo nextaTit
+    End If
+    
+    For col = i + 1 To 13
+        strTitle = Cells(1, col).Value
+        If strTitle = aTit Then
+            If i + 1 <> col Then
+                Columns(col).Cut
+                Columns(i + 1).Insert Shift:=xlToRight
+            End If
+            Exit For
+        
+        End If
+    Next col
+nextaTit:
+Next i
+
+Range("A1").AutoFilter Field:=1
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
+End Function
+Sub TC表写公式()
+If [d2].End(xlDown) = "" Then
+    a = 1
+End If
+Range([d2], [j2].End(xlDown)).FormulaR1C1 = _
+        "=IFERROR(VLOOKUP(RC3,Sheet1!R2C3:R132C10,COLUMN(R[-1]C[-2]),0),"""")"
+''
+'Columns("A:E").Select
+'selection.NumberFormatLocal = "G/通用格式"
+'Columns("F:F").Select
+'selection.NumberFormatLocal = _
+'    "_ ￥* #,##0.00_ ;_ ￥* -#,##0.00_ ;_ ￥* ""-""??_ ;_ @_ "
+'selection.NumberFormatLocal = _
+'    "_ ￥* #,##0.00_ ;_ ￥* -#,##0.00_ ;_ ￥* ""-""??_ ;_ @_ "
+Columns("J:J").Select
+ActiveWindow.ScrollColumn = 4
+ActiveWindow.ScrollColumn = 5
+Columns("J:J").Select
+    Range("J2").FormulaR1C1 = _
+        "=IFERROR(IF(RC[-7]=""RMB"",RC[-1]/1.11,RC[-1]*6),0)"
+    Range("R2").FormulaR1C1 = _
+        "=IF(RC[-4]*RC[-3]+RC[-2]*RC[-1]=0,0,RC[-4]*RC[-3]+RC[-2]*RC[-1])"
+    Range("V2").FormulaR1C1 = "=RC[-2]-RC[-3]-RC[-1]"
+    Range("W2").FormulaR1C1 = _
+        "=IFERROR((RC[-13]-RC[-12]-RC[-11]-RC[-10]-RC[-5])/(RC[-1]),0)"
+    Range("X2").FormulaR1C1 = "=IFERROR(RC[-2]*RC[-1],0)"
+    
+End Sub
+
+Function 油耗表提取()
+'shipName = 1
+'        If shipName = "DH17" Then
+'            shipName = "鼎衡17（万年青）"
+'        ElseIf shipName = "DH18" Then
+'            shipName = "鼎衡18（常春藤）"
+'        ElseIf shipName = "JX32" Then
+'            shipName = "建兴32"
+'        ElseIf shipName = "HX" Then
+'            shipName = "恒信HX"
+'        Else
+'            shipName = Replace(shipName, "DH", "鼎衡")
+'        End If
+        Columns.Width = 5
+        Rows.Height = 5
+End Function
+Function 航线转区域()
+'Columns("f").Copy Columns("G")
+[g1] = "航行区域"
+Call ENPortToCNPort("G")
+Call replacePorts("G")
+End Function
+Function 移除下月航次()
+For r = 2 To [a1].End(xlDown).Row
+    If Cells(r, 1).Interior.color = 65535 Then
+        Rows(r).Select
+        selection.Cut
+        Sheets("Sheet3").Select
+        [a66666].End(xlUp).Offset(1, 0).Select
+        ActiveSheet.Paste
+        Sheets("总表").Select
+        Rows(r).Select
+        selection.Delete Shift:=xlUp
+    End If
+Next r
+    
+End Function
+Sub 选中列的港口英转中()
+    ENPortToCNPort (selection.Column)
+    replacePorts (selection.Column)
 End Sub
