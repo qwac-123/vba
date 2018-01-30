@@ -1,3 +1,4 @@
+Option Explicit
 Dim voyW
 Dim zb
 Dim zsh
@@ -9,6 +10,31 @@ Function 获得装卸货前后等待时间()
  'v1.0可以整合航次报表和燃润料报表到一张表里
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
+Dim startRow As Integer
+Dim endRow As Integer
+Dim r As Integer
+Dim voyValue As Integer
+
+
+Dim addVoy As String
+Dim absentVoy As String
+Dim shipName As String
+Dim shipNameShort As String
+Dim shipNum As String
+Dim voy As String
+Dim thisSameShipVoy As String
+Dim lastSameShipVoy As String
+Dim voyYear As String
+Dim filePath As String
+Dim oilDir  As String
+Dim oilDir2 As String
+Dim voyDir As String
+Dim voyDir2 As String
+Dim oilName As String
+Dim voyName As String
+
+
+Dim isSameShipVoy
     Set zb = ActiveWorkbook
     Set zsh = ActiveSheet
     startRow = [c6666].End(xlUp).Row + 1
@@ -62,8 +88,8 @@ Application.DisplayAlerts = 0
         End If
         
         If Len(Dir(voyDir)) > 0 Then  '如果文件存在
-            oilNam = Dir(oilDir)
-            voyNam = Dir(voyDir)
+            oilName = Dir(oilDir)
+            voyName = Dir(voyDir)
             'Set oilW = Workbooks.Open(fileName:=oilDir)
             Set voyW = Workbooks.Open(fileName:=voyDir)
             
@@ -114,33 +140,84 @@ Application.DisplayAlerts = 1
 End Function
 Function 业务管理航次报表整合(zshRow)
 'v1.0 业务管理航次报表整合
-Dim arLdPort
-Dim arDsPort
+ 
+Dim arLdPort()
+Dim arStartLdTime()
+Dim arEndLdTime()
+Dim arDsPort()
+Dim arStartDsTime()
+Dim arEndDsTime()
+Dim arSkipKey()
+Dim arLoadKey()
+Dim arDiscKey()
+Dim arSep()
+Dim arJetty()
+
+Dim ldPort As String
+Dim dsPort As String
+
+Dim cargo As String
+Dim quantity As String
+Dim strLdPort As String
+Dim strTempLdLocation As String
+Dim strTempDsLocation As String
+Dim strDsPort As String
+Dim strReason As String
+Dim portName As String
+
+Dim berthLdTime As Date
+Dim leaveLdTime As Date
+Dim berthDsTime As Date
+Dim leaveDsTime As Date
+Dim startLdTime As Date
+Dim endLdTime As Date
+Dim startDsTime As Date
+Dim endDsTime As Date
+
+Dim dateStartVoy As Date
+Dim dateEndVoy As Date
+
+Dim lastVoyDsToThisVoyLd As Double
+Dim avgSpeed As Double
+
+Dim colBefLd As Integer
+Dim colAftLd As Integer
+Dim cofBefDs As Integer
+Dim cofAftDs As Integer
 
 
-Dim berthLdTime
-Dim berthDsTime
+Dim countLdSep As Integer
+Dim countDsSep As Integer
+Dim countLdPort As Integer
+Dim countDsPort As Integer
 
-Dim colBefLd
-Dim colAftLd
-Dim cofBefDs
-Dim cofAftDs
+Dim countEpt As Integer
 
-Dim countLdSep
-Dim countDsSep
-Dim countLdPort
-Dim countDsPort
+Dim countL As Integer
+Dim countD As Integer
 
-Dim countL
-Dim countD
+Dim i As Integer
+Dim iSkip As Integer
+Dim iLoad As Integer
+Dim iDisc As Integer
 
-Dim i
-Dim d
-Dim l
+Dim d As Integer
+Dim l As Integer
 
-Dim strLdPort
-Dim strDsPort
+Dim instrPlus As Integer
 
+Dim roPort As Integer
+Dim roReason As Integer
+
+Dim isbefLdTimeStrange      As Boolean
+Dim isaftLdTimeStrange      As Boolean
+Dim isbefDsTimeStrange      As Boolean
+Dim isaftDsTimeStrange      As Boolean
+
+Dim isTimeStrange      As Boolean
+
+
+Dim wsh As Worksheet
 berthLdTime = 0
 berthDsTime = 0
 
@@ -164,28 +241,39 @@ d = 0
 strLdPort = ""
 strDsPort = ""
 
+
     'voyW.Activate
-    timeIsStrange = False
+    isTimeStrange = False
     Set wsh = voyW.Sheets("航次报表")
     arSep = Array("&")
     For i = 0 To UBound(arSep)
-        Range([h4], [h5]).Replace What:=arSep(i), Replacement:="+", LookAt:=xlPart
+        Range(Cells(4, 8), Cells(5, 8)).Replace What:=arSep(i), Replacement:="+", LookAt:=xlPart
     Next i
+    cargo = [d4].Value
+    quantity = [f4].Value
     strLdPort = [h4].Value
     strDsPort = [h5].Value
+    dateStartVoy = [b5].Value
+    dateEndVoy = [d5].Value
+    
     countLdSep = Len(strLdPort) - Len(Replace(strLdPort, "+", "")) 'InStr(1, strLdPort, "+")
     countDsSep = Len(strDsPort) - Len(Replace(strDsPort, "+", "")) 'InStr(1, strDsPort, "+")
     countLdPort = countLdSep + 1
     countDsPort = countDsSep + 1
     
     ReDim arLdPort(countLdSep)
+    ReDim arStartLdTime(countLdSep)
+ReDim arEndLdTime(countLdSep)
+
     ReDim arDsPort(countDsSep)
-    
+    ReDim arStartDsTime(countDsSep)
+    ReDim arEndDsTime(countDsSep)
+
     If countLdSep > 0 Then
         For l = 0 To countLdSep - 1 Step 1
             instrPlus = InStr(1, strLdPort, "+")
             arLdPort(l) = Mid(strLdPort, 1, instrPlus - 1)
-            strLdPort = Right(strLdPort, Len(strLdPort - instrPlus))
+            strLdPort = Right(strLdPort, Len(strLdPort) - instrPlus)
         Next l
     End If
     arLdPort(l) = strLdPort
@@ -200,7 +288,7 @@ strDsPort = ""
     arDsPort(l) = strDsPort
     
     For roPort = 7 To 15 Step 1
-        portName = Cells(roPort, 1).Value
+        portName = Left(Cells(roPort, 1).Value, 2)
         If portName = "" Then
             Exit For
         End If
@@ -235,43 +323,88 @@ nextRoPort:
     
 
             
-    If berthLdTime = "" Or berthDsTime = "" Then
+    If berthLdTime = 0 Or berthDsTime = 0 Then
         MsgBox "无靠泊时间"
     End If
     
-    arAnchKey = Array("*抛锚*")
+    'arAnchKey = Array("*抛锚*")
+    arSkipKey = Array("原因*", "*商检*", "*办手续*")
     arLoadKey = Array("*装货时间*", "*装货作业*", "装货", "装货*", "*续装*")
     arDiscKey = Array("*卸货时间*", "*卸货作业*", "卸货", "卸货*", "*续卸*")
 
-    For ro = 37 To 66 Step 1
-        strReason = Cells(ro, 5)
-        If strReason = "" Or Left(strReason, 1) = "原" Then
-            GoTo nextRO
+countL = 0
+countD = 0
+    For roReason = 37 To 66 Step 1
+        strReason = Cells(roReason, 5).Value
+        'skip
+        If strReason = "" Then
+            countEpt = countEpt + 1
+            If countEpt > 5 Then
+                Exit For
+            End If
+            GoTo nextRoReason
+        Else
+            countEpt = 0
         End If
+        
+        For iSkip = 0 To UBound(arSkipKey) Step 1
+            If strReason Like arSkipKey(iSkip) Then
+                GoTo nextRoReason
+            End If
+        Next iSkip
+        'anchor
+'        For iAnchor = 0 To UBound(arAnchKey)
+'            If strReason Like arAnchKey(iAnchor) Then
+'                'arrivedTime = Cells(roReason, 2).Value
+'                GoTo nextRoReason
+'            End If
+'        Next iAnchor
         'load
-        For iLoad = 0 To UBound(arLoadKey)
-            If strReason Like arLoadKey(iLoad) Then
-                startLdTime = startLdTime + Cells(ro, 2).Value
-                endLdTime = endLdTime + Cells(ro, 3).Value
-            End If
-        Next iLoad
+        'If countL <= countLdSep Then
+            For iLoad = 0 To UBound(arLoadKey)
+                If strReason Like arLoadKey(iLoad) Then
+                    strLocation = Cells(roReason, 1).Value
+                    tempEndLdTime = Cells(roReason, 3).Value
+                    'test/////////////////////////////////////////////
+                    If strTempLdLocation <> strLocation Then
+                        strTempLdLocation = strLocation
+                        startLdTime = startLdTime + Cells(roReason, 2).Value
+                        endLdTime = endLdTime + Cells(roReason, 3).Value
+                    ElseIf strTempLdLocation = strLocation Then
+                        endLdTime = endLdTime - tempEndLdTime
+                    End If
+                    '/test/////////////////////////////////////////////
+                            '/////////////////////////////////////////////
+                    countL = countL + 1
+                    GoTo nextRoReason
+                End If
+            Next iLoad
+        'End If
         'disc
-        For iDisc = 0 To UBound(arLoadKey)
-            If strReason Like arDiscKey(iDisc) Then
-                startDsTime = startDsTime + Cells(ro, 2).Value
-                endDsTime = endDsTime + Cells(ro, 3).Value
-            End If
-        Next iDisc
-nextRO:
-    Next ro
+        'If countD <= countDsSep Then
+            For iDisc = 0 To UBound(arLoadKey)
+                If strReason Like arDiscKey(iDisc) Then
+                    startDsTime = startDsTime + Cells(roReason, 2).Value
+                    endDsTime = endDsTime + Cells(roReason, 3).Value
+                    countD = countD + 1
+                    GoTo nextRoReason
+                End If
+            Next iDisc
+        'End If
+nextRoReason:
+'        If countL + countD = countLdPort + countDsPort Then
+'            Exit For
+'        End If
+        
+    Next roReason
     
-        If startLdTime = "" Then
+        If startLdTime = 0 Then
             MsgBox "无装货时间"
         End If
-        If startDsTime = "" Then
+        If startDsTime = 0 Then
             MsgBox "无卸货时间"
         End If
-    ro = 0
+    roReason = 0
 '    befLdTime = startLdTime - berthLdTime
 '    aftLdTime = leaveLdTime - endLdTime
 '    befDsTime = startDsTime - berthDsTime
@@ -288,26 +421,27 @@ nextRO:
 '        leaveDsTime = leaveDsTime / countDsPort
 '
     
-    isbefLdTimeStrange = befLdTime > 1.5
-    isaftLdTimeStrange = aftLdTime > 1.5
-    isbefDsTimeStrange = befDsTime > 1.5
-    isaftDsTimeStrange = aftDsTime > 1.5
+    isbefLdTimeStrange = Abs(befLdTime) > 1.5
+    isaftLdTimeStrange = Abs(aftLdTime) > 1.5
+    isbefDsTimeStrange = Abs(befDsTime) > 1.5
+    isaftDsTimeStrange = Abs(aftDsTime) > 1.5
 
-    timeIsStrange = isbefLdTimeStrange Or isaftLdTimeStrange Or isbefDsTimeStrange Or isaftDsTimeStrange
+    isTimeStrange = isbefLdTimeStrange Or isaftLdTimeStrange Or isbefDsTimeStrange Or isaftDsTimeStrange
           
     zsh.Cells(zshRow, 3).Value = befLdTime * 24
     zsh.Cells(zshRow, 4).Value = aftLdTime * 24
     zsh.Cells(zshRow, 5).Value = befDsTime * 24
     zsh.Cells(zshRow, 6).Value = aftDsTime * 24
     'zsh.Activate
-    If timeIsStrange Then
+    If isTimeStrange Then
+        zsh.Activate
         MsgBox "过大"
     End If
-    berthLdTime = ""
-    leaveLdTime = ""
-    startDsTime = ""
-    endDsTime = ""
-    zsh.Activate
+    berthLdTime = 0
+    leaveLdTime = 0
+    startDsTime = 0
+    endDsTime = 0
+    
 End Function
 Function 船名分组()
 Application.ScreenUpdating = 0
