@@ -1,6 +1,7 @@
 Dim dajiating
 Dim dongtaibiao
 Sub 开始今天上午的工作()
+'v3.1增加了大家庭农历显示 
 'v3 删除了DH7
 'V2 增加了ANGEL123,DHE
 'v1.2增加了向上滚屏代码
@@ -59,7 +60,7 @@ Set rngAg = Range("k15:k20") '安吉到最后
 rngDEPorts.Interior.Pattern = xlNone
 
 With rngKOriginInfo '处理复制过来的船舶动态
-    .Replace What:="：", Replacement:=":", lookat:=xlPart
+    .Replace What:="：", Replacement:=":", LookAt:=xlPart
     .Replace What:="鼎衡", Replacement:="DH"
     .Replace What:="建兴", Replacement:="JX"
     .Replace What:="-", Replacement:=""
@@ -92,7 +93,7 @@ rngKOriginInfo.ClearContents
 rngJCopiedInfo.Copy rngKFinalInfo
 rngAShipName.Copy rngJCopiedInfo
 Range("a1") = "上海鼎衡船队动态信息一览表 " & Format(Date, "yyyy年m月d日 aaaa") '更新日期 Range("G1:I1").FormulaR1C1 = "=IF(RC=0,TEXT(NOW(),""yyyy年m月d日 aaaa""),RC)"
-
+Range("a2") = "            Fleet Position List                          " & Lunardate(Date)
 
 Set djt = ActiveWorkbook
 
@@ -126,6 +127,9 @@ End If
     ActiveWorkbook.SaveAs fileName:= _
         Format(Date, "F:\\工作文档\\动态表（鼎衡大家庭）\\yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx"), FileFormat:= _
         xlOpenXMLWorkbook, CreateBackup:=False
+End Function
+Function cece()
+Range("a2") = "            Fleet Position List                         " & Lunardate(Date)
 End Function
 Function getYesterday()
 If Year(Date) = 2019 Then
@@ -187,6 +191,9 @@ If Len(wkjin.Name) > 0 Then
     End If
 End If
 End Function
+Function ffa()
+Windows("20171226lateRe.xlsb").Visible = True
+End Function
 
 Sub bbb动态表ISMSROB()
 'v3 增加了angel 123 ,DH E
@@ -204,36 +211,29 @@ Application.DisplayAlerts = False
 '处理ISMSrob
 
     With Range("o4:o14")
-    .Replace What:="油", Replacement:="", lookat:=xlPart, _
+    .Replace What:="油", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="重", Replacement:="", lookat:=xlPart, _
+    .Replace What:="重", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="轻", Replacement:="", lookat:=xlPart, _
+    .Replace What:="轻", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="滑", Replacement:="", lookat:=xlPart, _
+    .Replace What:="滑", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="淡", Replacement:="", lookat:=xlPart, _
+    .Replace What:="淡", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="水", Replacement:="", lookat:=xlPart, _
+    .Replace What:="水", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="吨", Replacement:="MT", lookat:=xlPart, _
+    .Replace What:="吨", Replacement:="MT", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    '.Replace What:="轻", Replacement:="", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
-    '.Replace What:="滑", Replacement:="", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
-    '.Replace What:="淡", Replacement:="", LookAt:=xlPart, _
-        SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
+    .Replace What:="tons", Replacement:=""
+    .Replace What:="itr", Replacement:=""
     End With
 
 For i = 4 To 22 Step 1
@@ -241,7 +241,7 @@ For i = 4 To 22 Step 1
     If InStr(1, ROB, ":") > 0 Then '是isms的动态
         Cells(i, 15) = Mid(ROB, 9, InStr(11, ROB, "t") - 8) 'fo
         'Debug.Print Mid(rob, 9, InStr(11, rob, "t") - 8)
-        Cells(i, 16) = Mid(ROB, InStr(16, ROB, ":") + 1, InStr(19, ROB, "t") - InStr(16, ROB, ":")) 'do
+        Cells(i, 16) = Mid(ROB, InStr(16, ROB, ":") + 1, InStr(22, ROB, "t") - InStr(16, ROB, ":")) 'do
       'Debug.Print Mid(rob, InStr(16, rob, ":") + 1, InStr(19, rob, "t") - InStr(16, rob, ":")) 'do
 '      Debug.Print ROB
 '      Debug.Print Space(39) & "40" & Space(5) & "46"
@@ -339,69 +339,76 @@ Sub aaa快速下航次()
 'v1.0
 Dim kaishi, jieshu, i As Integer, str, abc As String
 Dim r
-Dim dtb As Workbook
-Set dtb = ActiveWorkbook
-r = ActiveCell.Row
+Dim thisbk As Workbook '当前工作簿，大家庭或是动态表
+
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
+
+Set thisbk = ActiveWorkbook
+r = ActiveCell.Row
+If thisbk.Name Like "*大家庭*" And r > 14 Then
+    r = r + 2
+End If
+Call check_wk船舶动态
+
 '首先统一航次命令格式
 If Cells(r, 19).Value = "" Then
     Exit Sub
 End If
-    Cells(r, 2).Replace What:="v", Replacement:="V", lookat:=xlPart
+    Cells(r, 2).Replace What:="v", Replacement:="V", LookAt:=xlPart
     With Cells(r, 19)
-    .Replace What:="v", Replacement:="V", lookat:=xlPart, _
+    .Replace What:="v", Replacement:="V", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:=Chr(10), Replacement:="", lookat:=xlPart, _
+    .Replace What:=Chr(10), Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="【", Replacement:="(", lookat:=xlPart, _
+    .Replace What:="【", Replacement:="(", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="】", Replacement:=")", lookat:=xlPart, _
+    .Replace What:="】", Replacement:=")", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="—", Replacement:="-", lookat:=xlPart, _
+    .Replace What:="—", Replacement:="-", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="--", Replacement:="-", lookat:=xlPart, _
+    .Replace What:="--", Replacement:="-", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="  ", Replacement:=" ", lookat:=xlPart, _
+    .Replace What:="  ", Replacement:=" ", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="　", Replacement:=" ", lookat:=xlPart, _
+    .Replace What:="　", Replacement:=" ", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="，", Replacement:="", lookat:=xlPart, _
+    .Replace What:="，", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:=",", Replacement:="", lookat:=xlPart, _
+    .Replace What:=",", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
         
     .Replace What:="mt", Replacement:="MT"
 
-    .Replace What:="吨", Replacement:="MT", lookat:=xlPart, _
+    .Replace What:="吨", Replacement:="MT", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="（", Replacement:="(", lookat:=xlPart, _
+    .Replace What:="（", Replacement:="(", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="）", Replacement:=")", lookat:=xlPart, _
+    .Replace What:="）", Replacement:=")", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
   '问号会替换整个格子  '.Replace What:="?", Replacement:=" ", LookAt:=xlPart, _
     '    SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
       '  ReplaceFormat:=False
-    .Replace What:=" ", Replacement:=" ", lookat:=xlPart, _
+    .Replace What:=" ", Replacement:=" ", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="　", Replacement:=" ", lookat:=xlPart, _
+    .Replace What:="　", Replacement:=" ", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="±5%", Replacement:="", lookat:=xlPart, _
+    .Replace What:="±5%", Replacement:="", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     End With
@@ -527,7 +534,7 @@ endsub:
 
 Cells(r, 2).Select
 ddd大家庭下航次 (r)
-dtb.Activate
+thisbk.Activate
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 End Sub
@@ -570,18 +577,10 @@ arPorts = Array("大连", "营口", "秦皇岛", "天津", "烟台", "东营", "
 "石井", "北仑台塑", "福州", "东莞", "嘉兴", "小虎岛", "温州", _
 "平仄", "麥寮N5码头", "麥寮", "大山", "锦州", "韩国", "菲律宾", "揭阳", "仪征", _
 "宁波镇司", "杨浦", "北海铁山港码头", "浙江", "扬州", _
-"曹泾", "小虎山", "东霍山", "大山", "锦石", "金兰湾", "无为", "洋山", "长江口", "古雷")
+"曹泾", "小虎山", "东霍山", "大山", "锦石", "金兰湾", "无为" _
+, "洋山", "长江口", "古雷", "昂山", "山阳", "新加坡")
 
 
-
-arHuaBeiPorts = Array("丹东", "大连", "营口", "锦州", "秦皇岛", "唐山", "京唐", "天津", "黄骅", "鲅鱼圈")
-arHuaDongPorts = Array("龙口", "烟台", "威海", "石岛", "张家埠", "青岛", "日照", "岚山", "连云", _
-"南通", "张家港", "镇江", "南京", "上海", "乍浦", "宁波", "舟山", "石浦", "海门", "温州", "赛岐", _
-"福州", "马尾", "湄州湾", "泉州", "厦门", "东山")
-arHuaNanPorts = Array("汕头", "西堤", "汕尾", "深圳", "广州", "中山", "珠海", "江门", "阳江", _
-"水东", "茂名", "湛江", "霞海", "海安", "北海", "防城", "海口", "三亚", "八所", "海南", "洋浦", "马村")
-
-arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮", "香港", "澳门")
 
 'GoTo testLine
 
@@ -589,7 +588,7 @@ arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮"
 '码头名字
  '"洋浦逸盛",, "天津南港" , "宁波镇海" "宁波台塑",  "宁波北仑", "南京杨巴", "南京仪征",, "宁波大榭"
     With Range("k4:k19") '[a1:a333] 'Range("k4:k19") '处理复制过来的船舶动态
-    .Replace What:="：", Replacement:=";", lookat:=xlPart, _
+    .Replace What:="：", Replacement:=";", LookAt:=xlPart, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:=":", Replacement:=";"
@@ -648,7 +647,7 @@ arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮"
 '    .Replace What:="直靠", Replacement:=""
     
     End With
-Call 运价表处理.ENPortToCNPort("k")
+Call ENPortToCNPort("k")
 testLine:
 For r = 4 To 20
     oriStatus = Cells(r, 6).Value
@@ -715,7 +714,7 @@ For r = 4 To 20
             etaPort = port2
             etaInstr = port2Instr
         Else
-            MsgBox Cells(r, 10) & "开往？" & vbCrLf & "按下ctrl+break调试"
+            MsgBox Cells(r, 10) & "开往？" & vbCrLf & Cells(r, 11) & vbCrLf & "按下ctrl+break调试"
         End If
         Cells(r, 6).Value = "开往" & etaPort
         If Len(etaPort) < 3 Then
@@ -735,7 +734,7 @@ For r = 4 To 20
         ElseIf port2Instr = acrInstr + 2 Or acrInstr = port2Instr + Len(port2) Then '锚泊port1 then
             etbPort = port2
         Else
-            MsgBox Cells(r, 10) & "锚泊？" & vbCrLf & "按下ctrl+break调试"
+            MsgBox Cells(r, 10) & "锚泊？" & vbCrLf & Cells(r, 11) & "按下ctrl+break调试"
         End If
         Cells(r, 6).Value = "锚泊" & etbPort
         If Len(etbPort) < 3 Then
@@ -762,7 +761,7 @@ For r = 4 To 20
         ElseIf port2Instr = bthInstr + 2 Or bthInstr = port2Instr + Len(port2) Then '靠泊port1 then
             bthPort = port2
         Else
-            MsgBox Cells(r, 10) & "靠泊？" & vbCrLf & "按下ctrl+break调试"
+            MsgBox Cells(r, 10) & "靠泊？" & vbCrLf & Cells(r, 11) & "按下ctrl+break调试"
         End If
         Cells(r, 6).Value = "靠泊" & bthPort
         Range(Cells(r, 7), Cells(r, 8)).Value = ""
@@ -774,7 +773,7 @@ For r = 4 To 20
         ElseIf fshInstr = port2Instr + Len(port2) Then 'port2 完货
             fshPort = port2
         Else
-            MsgBox Cells(r, 10) & "完货？" & vbCrLf & "按下ctrl+break调试"
+            MsgBox Cells(r, 10) & "完货？" & vbCrLf & Cells(r, 11) & "按下ctrl+break调试"
         End If
         
         Cells(r, 6).Value = fshPort & "完货"
@@ -822,6 +821,9 @@ For Each sHour In arHour
     Debug.Print sHour
     Debug.Print sHour.firstindex
 Next sHour
+
+
+
 
 End Function
 Function 获取ETB()
@@ -903,3 +905,287 @@ For Each sHour In arHour
     etbTime = etbTime & sHour & "LT"
 Next sHour
 End Function
+
+
+Public Function Lunardate(Optional XX_DATE As Date)
+
+Dim MonthAdd(11), LunardateData(99), TianGan(9), DiZhi(11), ShuXiang(11), DayName(30), MonName(12)
+Dim curTime, curYear, curMonth, curDay
+Dim GongliStr, LunardateStr, LunardateDayStr
+Dim i, m, n, k, isEnd, bit, TheDate
+'获取当前系统时间
+curTime = XX_DATE
+'天干名称
+TianGan(0) = "甲"
+TianGan(1) = "乙"
+TianGan(2) = "丙"
+TianGan(3) = "丁"
+TianGan(4) = "戊"
+TianGan(5) = "己"
+TianGan(6) = "庚"
+TianGan(7) = "辛"
+TianGan(8) = "壬"
+TianGan(9) = "癸"
+'地支名称
+DiZhi(0) = "子"
+DiZhi(1) = "丑"
+DiZhi(2) = "寅"
+DiZhi(3) = "卯"
+DiZhi(4) = "辰"
+DiZhi(5) = "巳"
+DiZhi(6) = "午"
+DiZhi(7) = "未"
+DiZhi(8) = "申"
+DiZhi(9) = "酉"
+DiZhi(10) = "戌"
+DiZhi(11) = "亥"
+'属相名称
+ShuXiang(0) = "鼠"
+ShuXiang(1) = "牛"
+ShuXiang(2) = "虎"
+ShuXiang(3) = "兔"
+ShuXiang(4) = "龙"
+ShuXiang(5) = "蛇"
+ShuXiang(6) = "马"
+ShuXiang(7) = "羊"
+ShuXiang(8) = "猴"
+ShuXiang(9) = "鸡"
+ShuXiang(10) = "狗"
+ShuXiang(11) = "猪"
+'农历日期名
+DayName(0) = "*"
+DayName(1) = "初一"
+DayName(2) = "初二"
+DayName(3) = "初三"
+DayName(4) = "初四"
+DayName(5) = "初五"
+DayName(6) = "初六"
+DayName(7) = "初七"
+DayName(8) = "初八"
+DayName(9) = "初九"
+DayName(10) = "初十"
+DayName(11) = "十一"
+DayName(12) = "十二"
+DayName(13) = "十三"
+DayName(14) = "十四"
+DayName(15) = "十五"
+DayName(16) = "十六"
+DayName(17) = "十七"
+DayName(18) = "十八"
+DayName(19) = "十九"
+DayName(20) = "二十"
+DayName(21) = "廿一"
+DayName(22) = "廿二"
+DayName(23) = "廿三"
+DayName(24) = "廿四"
+DayName(25) = "廿五"
+DayName(26) = "廿六"
+DayName(27) = "廿七"
+DayName(28) = "廿八"
+DayName(29) = "廿九"
+DayName(30) = "三十"
+'农历月份名
+MonName(0) = "*"
+MonName(1) = "正"
+MonName(2) = "二"
+MonName(3) = "三"
+MonName(4) = "四"
+MonName(5) = "五"
+MonName(6) = "六"
+MonName(7) = "七"
+MonName(8) = "八"
+MonName(9) = "九"
+MonName(10) = "十"
+MonName(11) = "十一"
+MonName(12) = "腊"
+'公历每月前面的天数
+MonthAdd(0) = 0
+MonthAdd(1) = 31
+MonthAdd(2) = 59
+MonthAdd(3) = 90
+MonthAdd(4) = 120
+MonthAdd(5) = 151
+MonthAdd(6) = 181
+MonthAdd(7) = 212
+MonthAdd(8) = 243
+MonthAdd(9) = 273
+MonthAdd(10) = 304
+MonthAdd(11) = 334
+'农历数据
+LunardateData(0) = 2635
+LunardateData(1) = 333387
+LunardateData(2) = 1701
+LunardateData(3) = 1748
+LunardateData(4) = 267701
+LunardateData(5) = 694
+LunardateData(6) = 2391
+LunardateData(7) = 133423
+LunardateData(8) = 1175
+LunardateData(9) = 396438
+LunardateData(10) = 3402
+LunardateData(11) = 3749
+LunardateData(12) = 331177
+LunardateData(13) = 1453
+LunardateData(14) = 694
+LunardateData(15) = 201326
+LunardateData(16) = 2350
+LunardateData(17) = 465197
+LunardateData(18) = 3221
+LunardateData(19) = 3402
+LunardateData(20) = 400202
+LunardateData(21) = 2901
+LunardateData(22) = 1386
+LunardateData(23) = 267611
+LunardateData(24) = 605
+LunardateData(25) = 2349
+LunardateData(26) = 137515
+LunardateData(27) = 2709
+LunardateData(28) = 464533
+LunardateData(29) = 1738
+LunardateData(30) = 2901
+LunardateData(31) = 330421
+LunardateData(32) = 1242
+LunardateData(33) = 2651
+LunardateData(34) = 199255
+LunardateData(35) = 1323
+LunardateData(36) = 529706
+LunardateData(37) = 3733
+LunardateData(38) = 1706
+LunardateData(39) = 398762
+LunardateData(40) = 2741
+LunardateData(41) = 1206
+LunardateData(42) = 267438
+LunardateData(43) = 2647
+LunardateData(44) = 1318
+LunardateData(45) = 204070
+LunardateData(46) = 3477
+LunardateData(47) = 461653
+LunardateData(48) = 1386
+LunardateData(49) = 2413
+LunardateData(50) = 330077
+LunardateData(51) = 1197
+LunardateData(52) = 2637
+LunardateData(53) = 268877
+LunardateData(54) = 3365
+LunardateData(55) = 531109
+LunardateData(56) = 2900
+LunardateData(57) = 2922
+LunardateData(58) = 398042
+LunardateData(59) = 2395
+LunardateData(60) = 1179
+LunardateData(61) = 267415
+LunardateData(62) = 2635
+LunardateData(63) = 661067
+LunardateData(64) = 1701
+LunardateData(65) = 1748
+LunardateData(66) = 398772
+LunardateData(67) = 2742
+LunardateData(68) = 2391
+LunardateData(69) = 330031
+LunardateData(70) = 1175
+LunardateData(71) = 1611
+LunardateData(72) = 200010
+LunardateData(73) = 3749
+LunardateData(74) = 527717
+LunardateData(75) = 1452
+LunardateData(76) = 2742
+LunardateData(77) = 332397
+LunardateData(78) = 2350
+LunardateData(79) = 3222
+LunardateData(80) = 268949
+LunardateData(81) = 3402
+LunardateData(82) = 3493
+LunardateData(83) = 133973
+LunardateData(84) = 1386
+LunardateData(85) = 464219
+LunardateData(86) = 605
+LunardateData(87) = 2349
+LunardateData(88) = 334123
+LunardateData(89) = 2709
+LunardateData(90) = 2890
+LunardateData(91) = 267946
+LunardateData(92) = 2773
+LunardateData(93) = 592565
+LunardateData(94) = 1210
+LunardateData(95) = 2651
+LunardateData(96) = 395863
+LunardateData(97) = 1323
+LunardateData(98) = 2707
+LunardateData(99) = 265877
+'生成当前公历年、月、日 ==>GongliStr
+curYear = Year(curTime)
+curMonth = Month(curTime)
+curDay = Day(curTime)
+GongliStr = curYear & "年"
+If (curMonth < 10) Then
+GongliStr = GongliStr & "0" & curMonth & "月"
+Else
+GongliStr = GongliStr & curMonth & "月"
+End If
+If (curDay < 10) Then
+GongliStr = GongliStr & "0" & curDay & "日"
+Else
+GongliStr = GongliStr & curDay & "日"
+End If
+'计算到初始时间1921年2月8日的天数：1921-2-8(正月初一)
+TheDate = (curYear - 1921) * 365 + Int((curYear - 1921) / 4) + curDay + MonthAdd(curMonth - 1) - 38
+If ((curYear Mod 4) = 0 And curMonth > 2) Then
+TheDate = TheDate + 1
+End If
+'计算农历天干、地支、月、日
+isEnd = 0
+m = 0
+Do
+If (LunardateData(m) < 4095) Then
+k = 11
+Else
+k = 12
+End If
+n = k
+Do
+If (n < 0) Then
+Exit Do
+End If
+'获取LunardateData(m)的第n个二进制位的值
+bit = LunardateData(m)
+For i = 1 To n Step 1
+bit = Int(bit / 2)
+Next
+bit = bit Mod 2
+If (TheDate <= 29 + bit) Then
+isEnd = 1
+Exit Do
+End If
+TheDate = TheDate - 29 - bit
+n = n - 1
+Loop
+If (isEnd = 1) Then
+Exit Do
+End If
+m = m + 1
+Loop
+curYear = 1921 + m
+curMonth = k - n + 1
+curDay = TheDate
+If (k = 12) Then
+If (curMonth = (Int(LunardateData(m) / 65536) + 1)) Then
+curMonth = 1 - curMonth
+ElseIf (curMonth > (Int(LunardateData(m) / 65536) + 1)) Then
+curMonth = curMonth - 1
+End If
+End If
+'生成农历天干、地支、属相 ==>LunardateStr
+LunardateStr = "农历" & TianGan(((curYear - 4) Mod 60) Mod 10) & DiZhi(((curYear - 4) Mod 60) Mod 12) & "年"
+LunardateStr = LunardateStr & "(" & ShuXiang(((curYear - 4) Mod 60) Mod 12) & ")"
+'生成农历月、日 ==>LunardateDayStr
+If (curMonth < 1) Then
+LunardateDayStr = "闰" & MonName(-1 * curMonth)
+Else
+LunardateDayStr = MonName(curMonth)
+End If
+LunardateDayStr = LunardateDayStr & "月"
+LunardateDayStr = LunardateDayStr & DayName(curDay)
+Lunardate = LunardateStr & LunardateDayStr
+End Function
+
+
