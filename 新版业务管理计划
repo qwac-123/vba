@@ -5,192 +5,352 @@ Dim befLdTime
 Dim aftLdTime
 Dim befDsTime
 Dim aftDsTime
-
-
 Function 获得装卸货前后等待时间()
  'v1.0可以整合航次报表和燃润料报表到一张表里
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
-Set zb = ActiveWorkbook
-Set zsh = ActiveSheet
-startRow = [c6666].End(xlUp).Row + 1
-rend = [a1].End(xlDown).Row
+    Set zb = ActiveWorkbook
+    Set zsh = ActiveSheet
+    startRow = [c6666].End(xlUp).Row + 1
+    endRow = [a1].End(xlDown).Row
     startRow = 2
-For r = startRow To rend Step 1
-    If Cells(r, 3) <> "" Then
-        GoTo nextr
-    End If
-    shipName = Cells(r, 1).Value
-    shipNameShort = shipName
-    shipNum = Right(shipName, 2)
-    voy = Cells(r, 2).Value
-    voyValue = 提取航次号(voy)
-    lastSameShipVoy = Cells(r - 1, 1).Value & Cells(r - 1, 2).Value
-    thisSameShipVoy = Cells(r, 1).Value & Cells(r, 2).Value
-    isSameShipVoy = lastSameShipVoy = thisSameShipVoy
-    
-'
-'    If isWriten Or isSameShipVoy Then '已经填写了
-'        GoTo nextr
-'    End If
-    
-    If IsNumeric(shipNum) Then
-    Else
-        shipNum = Right(shipNum, 1)
-    End If
-    Select Case shipNum
-        Case 17
-            shipName = "鼎衡17（万年青）"
-        Case 18
-            shipName = "鼎衡18（常春藤）"
-        Case 32
-            shipName = "建兴32"
-        Case Else
-            shipName = "鼎衡" & shipNum
-    End Select
-    
-    voyYear = "\20" & Mid(voy, 2, 2) & "年\"
-    filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & voyYear & shipNameShort
-    oilDir = filePath & "燃*航次报表*" & voyValue & "*.xls?"
-    oilDir2 = filePath & "*料*航次报表*" & voyValue & "*.xls?"
-    voyDir = filePath & "航次报表*" & voyValue & "*.xls?"
-    voyDir2 = filePath & "*船舶航次报表*" & voyValue & "*.xls?"
-    
-    If Len(Dir(oilDir)) = 0 Then
-        oilDir = oilDir2
-    End If
-    If Len(Dir(voyDir)) = 0 Then
-        voyDir = voyDir2
-    End If
-    
-    If Len(Dir(voyDir)) > 0 Then  '如果文件存在
-        oilNam = Dir(oilDir)
-        voyNam = Dir(voyDir)
-        'Set oilW = Workbooks.Open(fileName:=oilDir)
-        Set voyW = Workbooks.Open(fileName:=voyDir)
+    For r = startRow To endRow Step 1
+        If Cells(r, 3) <> "" Then
+            GoTo nextr
+        End If
+        shipName = Cells(r, 1).Value
+        shipNameShort = shipName
+        shipNum = Right(shipName, 2)
+        voy = Cells(r, 2).Value
+        voyValue = 提取航次号(voy)
+        lastSameShipVoy = Cells(r - 1, 1).Value & Cells(r - 1, 2).Value
+        thisSameShipVoy = Cells(r, 1).Value & Cells(r, 2).Value
+        isSameShipVoy = lastSameShipVoy = thisSameShipVoy
         
-        'Call TC燃润料报表整合(oilW, r, colDO)
-        Call 业务管理航次报表整合(r)
+    '
+    '    If isWriten Or isSameShipVoy Then '已经填写了
+    '        GoTo nextr
+    '    End If
         
-        'voyLine = voyW.Sheets(1).[h4].Value & "-" & voyW.Sheets(1).[h5].Value
-        'zsh.Cells(r, colDO - 9).Value = voyLine
+        If IsNumeric(shipNum) Then
+        Else
+            shipNum = Right(shipNum, 1)
+        End If
+        Select Case shipNum
+            Case 17
+                shipName = "鼎衡17（万年青）"
+            Case 18
+                shipName = "鼎衡18（常春藤）"
+            Case 32
+                shipName = "建兴32"
+            Case Else
+                shipName = "鼎衡" & shipNum
+        End Select
         
-'        oldOilW = oilW.FullName
-'        newOilW = filePath & "燃润料航次报表" & voy & voyLine & ".xlsx"
-'        oldVoyW = voyW.FullName
-'        newVoyW = filePath & "船舶航次报表" & voy & voyLine & ".xlsx"
-'        If oldOilW <> newOilW Then
-'            oilW.SaveAs newOilW, FileFormat:=xlOpenXMLWorkbook
-'            Kill oldOilW
-'        End If
-'        If oldVoyW <> newVoyW Then
-'            voyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
-'            Kill oldVoyW
-'        End If
-'
-        'oilW.Close
-        voyW.Close
+        voyYear = "\20" & Mid(voy, 2, 2) & "年\"
+        filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & voyYear & shipNameShort
+        oilDir = filePath & "燃*航次报表*" & voyValue & "*.xls?"
+        oilDir2 = filePath & "*料*航次报表*" & voyValue & "*.xls?"
+        voyDir = filePath & "航次报表*" & voyValue & "*.xls?"
+        voyDir2 = filePath & "*船舶航次报表*" & voyValue & "*.xls?"
         
-        addVoy = addVoy & shipName & voy & vbCrLf
-    Else
-        absentVoy = absentVoy & shipName & voy & vbCrLf
-    End If
+        If Len(Dir(oilDir)) = 0 Then
+            oilDir = oilDir2
+        End If
+        If Len(Dir(voyDir)) = 0 Then
+            voyDir = voyDir2
+        End If
+        
+        If Len(Dir(voyDir)) > 0 Then  '如果文件存在
+            oilNam = Dir(oilDir)
+            voyNam = Dir(voyDir)
+            'Set oilW = Workbooks.Open(fileName:=oilDir)
+            Set voyW = Workbooks.Open(fileName:=voyDir)
+            
+            'Call TC燃润料报表整合(oilW, r, colDO)
+            Call 业务管理航次报表整合(r)
+            
+            'voyLine = voyW.Sheets(1).[h4].Value & "-" & voyW.Sheets(1).[h5].Value
+            'zsh.Cells(r, colDO - 9).Value = voyLine
+            
+    '        oldOilW = oilW.FullName
+    '        newOilW = filePath & "燃润料航次报表" & voy & voyLine & ".xlsx"
+    '        oldVoyW = voyW.FullName
+    '        newVoyW = filePath & "船舶航次报表" & voy & voyLine & ".xlsx"
+    '        If oldOilW <> newOilW Then
+    '            oilW.SaveAs newOilW, FileFormat:=xlOpenXMLWorkbook
+    '            Kill oldOilW
+    '        End If
+    '        If oldVoyW <> newVoyW Then
+    '            voyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
+    '            Kill oldVoyW
+    '        End If
+    '
+            'oilW.Close
+            voyW.Close
+            
+            addVoy = addVoy & shipName & voy & vbCrLf
+        Else
+            absentVoy = absentVoy & shipName & voy & vbCrLf
+        End If
 nextr:
-'If r = 77 Then
-'    a = 1
-'End If
-Next r
-If addVoy = "" Then
-    MsgBox "没有新增"
-Else
-    MsgBox "已加入:" & vbCrLf & addVoy
-End If
-If absentVoy = "" Then
-    MsgBox "没有缺的"
-Else
-    MsgBox "没有航次报表:" & vbCrLf & absentVoy
-End If
+    'If r = 77 Then
+    '    a = 1
+'    'End If
+'    r = r - 1
+    Next r
+    If addVoy = "" Then
+        MsgBox "没有新增"
+    Else
+        MsgBox "已加入:" & vbCrLf & addVoy
+    End If
+    If absentVoy = "" Then
+        MsgBox "没有缺的"
+    Else
+        MsgBox "没有航次报表:" & vbCrLf & absentVoy
+    End If
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Function
 Function 业务管理航次报表整合(zshRow)
 'v1.0 业务管理航次报表整合
+Dim arLdPort
+Dim arDsPort
+
+
+Dim berthLdTime
+Dim berthDsTime
+
+Dim colBefLd
+Dim colAftLd
+Dim cofBefDs
+Dim cofAftDs
+
+Dim countLdSep
+Dim countDsSep
+Dim countLdPort
+Dim countDsPort
+
+Dim countL
+Dim countD
+
+Dim i
+Dim d
+Dim l
+
+Dim strLdPort
+Dim strDsPort
+
+berthLdTime = 0
+berthDsTime = 0
+
 colBefLd = 3
 colAftLd = 4
 cofBefDs = 5
 cofAftDs = 6
+
+countLdSep = 0
+countDsSep = 0
+countLdPort = 0
+countDsPort = 0
+
+countL = 0
+countD = 0
+
+i = 0
+l = 0
+d = 0
+
+strLdPort = ""
+strDsPort = ""
+
     'voyW.Activate
+    timeIsStrange = False
     Set wsh = voyW.Sheets("航次报表")
-    ldPort = [h4].Value
-    dsPort = [h5].Value
+    arSep = Array("&")
+    For i = 0 To UBound(arSep)
+        Range([h4], [h5]).Replace What:=arSep(i), Replacement:="+", LookAt:=xlPart
+    Next i
+    strLdPort = [h4].Value
+    strDsPort = [h5].Value
+    countLdSep = Len(strLdPort) - Len(Replace(strLdPort, "+", "")) 'InStr(1, strLdPort, "+")
+    countDsSep = Len(strDsPort) - Len(Replace(strDsPort, "+", "")) 'InStr(1, strDsPort, "+")
+    countLdPort = countLdSep + 1
+    countDsPort = countDsSep + 1
     
-    If InStr(1, ldPort, "&") > 0 Then
+    ReDim arLdPort(countLdSep)
+    ReDim arDsPort(countDsSep)
+    
+    If countLdSep > 0 Then
+        For l = 0 To countLdSep - 1 Step 1
+            instrPlus = InStr(1, strLdPort, "+")
+            arLdPort(l) = Mid(strLdPort, 1, instrPlus - 1)
+            strLdPort = Right(strLdPort, Len(strLdPort - instrPlus))
+        Next l
+    End If
+    arLdPort(l) = strLdPort
+    
+    If countDsSep > 0 Then
+        For l = 0 To countDsSep - 1 Step 1
+            instrPlus = InStr(1, strDsPort, "+")
+            arDsPort(l) = Mid(strDsPort, 1, instrPlus - 1)
+            strDsPort = Right(strDsPort, Len(strDsPort) - instrPlus)
+        Next l
+    End If
+    arDsPort(l) = strDsPort
+    
+    For roPort = 7 To 15 Step 1
+        portName = Cells(roPort, 1).Value
+        If portName = "" Then
+            Exit For
+        End If
+        If countL <= UBound(arLdPort) Then
+            For l = countL To UBound(arLdPort)
+                ldPort = arLdPort(l)
+                If portName Like "*" & ldPort & "*" Then
+                    If berthLdTime = 0 Then '是第一个靠港
+                        lastVoyDsToThisVoyLd = Cells(roPort, 5).Value
+                        avgSpeed = Cells(roPort, 6).Value
+                    End If
+                    berthLdTime = berthLdTime + Cells(roPort, 2).Value
+                    leaveLdTime = leaveLdTime + Cells(roPort, 3).Value
+                    countL = countL + 1
+                    GoTo nextRoPort
+                End If
+            Next l
+        End If
+        If countD <= UBound(arDsPort) Then
+            For d = countD To UBound(arDsPort)
+                dsPort = arDsPort(d)
+                If portName Like "*" & dsPort & "*" Then
+                    berthDsTime = berthDsTime + Cells(roPort, 2).Value
+                    leaveDsTime = leaveDsTime + Cells(roPort, 3).Value
+                    countD = countD + 1
+                    GoTo nextRoPort
+                End If
+            Next d
+        End If
+nextRoPort:
+    Next roPort
+    
+
+            
+    If berthLdTime = "" Or berthDsTime = "" Then
+        MsgBox "无靠泊时间"
     End If
     
-    
-    For ro = 7 To 15 Step 1
-        portName = Cells(ro, 1).Value
-        If portName Like "*" & ldPort & "*" Then
-            berthLdTime = Cells(ro, 2).Value
-            leaveLdTime = Cells(ro, 3).Value
-        ElseIf portName Like "*" & dsPort & "*" Then
-            berthDsTime = Cells(ro, 2).Value
-            leaveDsTime = Cells(ro, 3).Value
-        End If
-    Next ro
-    
-arLoadKey = Array("*装货时间*", "*装货作业*", "装货", "装货*", "*续装*")
-arDiscKey = Array("*卸货时间*", "*卸货作业*", "卸货", "卸货*", "*续卸*")
+    arAnchKey = Array("*抛锚*")
+    arLoadKey = Array("*装货时间*", "*装货作业*", "装货", "装货*", "*续装*")
+    arDiscKey = Array("*卸货时间*", "*卸货作业*", "卸货", "卸货*", "*续卸*")
 
     For ro = 37 To 66 Step 1
         strReason = Cells(ro, 5)
+        If strReason = "" Or Left(strReason, 1) = "原" Then
+            GoTo nextRO
+        End If
         'load
         For iLoad = 0 To UBound(arLoadKey)
             If strReason Like arLoadKey(iLoad) Then
-                startLdTime = Cells(ro, 2).Value
-                endLdTime = Cells(ro, 3).Value
+                startLdTime = startLdTime + Cells(ro, 2).Value
+                endLdTime = endLdTime + Cells(ro, 3).Value
             End If
         Next iLoad
         'disc
         For iDisc = 0 To UBound(arLoadKey)
             If strReason Like arDiscKey(iDisc) Then
-                startDsTime = Cells(ro, 2).Value
-                endDsTime = Cells(ro, 3).Value
-            
+                startDsTime = startDsTime + Cells(ro, 2).Value
+                endDsTime = endDsTime + Cells(ro, 3).Value
             End If
         Next iDisc
-    
-        
+nextRO:
     Next ro
-    ro = 0
-    befLdTime = startLdTime - berthLdTime
-    aftLdTime = leaveLdTime - endLdTime
-    befDsTime = startDsTime - berthDsTime
-    aftDsTime = leaveDsTime - endDsTime
     
+        If startLdTime = "" Then
+            MsgBox "无装货时间"
+        End If
+        If startDsTime = "" Then
+            MsgBox "无卸货时间"
+        End If
+    ro = 0
+'    befLdTime = startLdTime - berthLdTime
+'    aftLdTime = leaveLdTime - endLdTime
+'    befDsTime = startDsTime - berthDsTime
+'    aftDsTime = leaveDsTime - endDsTime
+    befLdTime = (startLdTime - berthLdTime) / countLdPort
+    aftLdTime = (leaveLdTime - endLdTime) / countLdPort
+    befDsTime = (startDsTime - berthDsTime) / countDsPort
+    aftDsTime = (leaveDsTime - endDsTime) / countDsPort
+
+    
+'        berthLdTime = berthLdTime / countLdPort
+'        leaveLdTime = leaveLdTime / countLdPort
+'        berthDsTime = berthDsTime / countDsPort
+'        leaveDsTime = leaveDsTime / countDsPort
+'
+    
+    isbefLdTimeStrange = befLdTime > 1.5
+    isaftLdTimeStrange = aftLdTime > 1.5
+    isbefDsTimeStrange = befDsTime > 1.5
+    isaftDsTimeStrange = aftDsTime > 1.5
+
+    timeIsStrange = isbefLdTimeStrange Or isaftLdTimeStrange Or isbefDsTimeStrange Or isaftDsTimeStrange
+          
     zsh.Cells(zshRow, 3).Value = befLdTime * 24
     zsh.Cells(zshRow, 4).Value = aftLdTime * 24
     zsh.Cells(zshRow, 5).Value = befDsTime * 24
     zsh.Cells(zshRow, 6).Value = aftDsTime * 24
     'zsh.Activate
+    If timeIsStrange Then
+        MsgBox "过大"
+    End If
     berthLdTime = ""
     leaveLdTime = ""
     startDsTime = ""
     endDsTime = ""
-    
+    zsh.Activate
 End Function
 Function 船名分组()
-arShip = Array("鼎衡15", "鼎衡16", "建兴32", "鼎衡", "鼎衡1", "鼎衡17", "鼎衡3", "鼎衡", "鼎衡2", "鼎衡5", "鼎衡9", "鼎衡10", "鼎衡18")
-i = 0
-For Each sm In arShip
-
-For ro = 2 To [b2].End(xlDown).Row
-    shipName = Cells(ro, 2).Value
-    if shipName =
-
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
+    arShip = Array("鼎衡15", "鼎衡16", "建兴32", "鼎衡", "鼎衡1", "鼎衡17", "鼎衡3", "鼎衡", "鼎衡2", "鼎衡5", "鼎衡9", "鼎衡10", "鼎衡18")
+    arshipName = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "DH7", "JX32", "DHA", "DHE", "AG1", "AG2", "AG3", "AG11")
+    arGp1 = Array("DH15", "DH16", "JX32")
+    arGp2 = Array("DH17", "DH1", "DH3")
+    arGp3 = Array("DH10", "DH18", "DH2", "DH5", "DH9")
     
+    For ro = 2 To [b2].End(xlDown).Row
+        lastShip = Cells(ro - 1, 2).Value
+        shipName = Cells(ro, 2).Value
+        If lastShip = shipName Then
+            Cells(ro, 1).Value = Cells(ro - 1, 1).Value
+            GoTo nextRO
+        End If
+        For i = 0 To UBound(arGp1)
+            If shipName = arGp1(i) Then
+                Cells(ro, 1).Value = 1
+                GoTo nextRO
+            End If
+        Next i
+        For j = 0 To UBound(arGp2)
+            If shipName = arGp2(j) Then
+                Cells(ro, 1).Value = 2
+                GoTo nextRO
+            End If
+        Next j
+        For k = 0 To UBound(arGp3)
+            If shipName = arGp3(k) Then
+                Cells(ro, 1).Value = 3
+                GoTo nextRO
+            End If
+        Next k
+nextRO:
+    Next ro
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
 End Function
 Function 增加航次号()
+Application.ScreenUpdating = 0
+Application.DisplayAlerts = 0
 For i = 2 To 1000
     ro = i
     If Cells(ro, 1) <> Cells(ro + 1, 1) Then
@@ -206,4 +366,7 @@ For i = 2 To 1000
     i = ro
     End If
 Next i
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
 End Function
+
