@@ -47,15 +47,15 @@ wkbookYear = "\" & 从字符串中提取连续4位数(ThisWorkbook.Name) & "年"
 For Each sht In Sheets()
     shipName = sht.Name
     shipNameShort = UCase(sht.Name)
-    If Left(shipName, 1) = "d" Or Left(shipName, 1) = "j" Then
-        If shipName = "dh17" Then
+    If Left(shipName, 1) = "D" Or Left(shipName, 1) = "J" Then
+        If shipName = "DH17" Then
             shipName = "鼎衡17（万年青）"
-        ElseIf shipName = "dh18" Then
+        ElseIf shipName = "DH18" Then
             shipName = "鼎衡18（常春藤）"
-        ElseIf shipName = "jx32" Then
+        ElseIf shipName = "JX32" Then
             shipName = "建兴32"
         Else
-            shipName = Replace(shipName, "dh", "鼎衡")
+            shipName = Replace(shipName, "DH", "鼎衡")
         End If
         startRow = sht.Range("b2").End(xlDown).Row + 1
         endRow = sht.Range("a3").End(xlDown).Row
@@ -69,9 +69,6 @@ For Each sht In Sheets()
         For ro = startRow To endRow
             voy = sht.Cells(ro, 1)
             voyValue = 从字符串中提取连续4位数(voy)
-            'test
-'            Cells(ro, 1).Select
-            'test
             rootPath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & wkbookYear & "\" & shipNameShort
             oilDir = rootPath & "燃*航次报表*" & voyValue & "*.xls?"
             oilDir2 = rootPath & "*料*航次报表*" & voyValue & "*.xls?"
@@ -196,6 +193,7 @@ nextRO:
 
     End If
 nextSHT:
+'放在下张表之前可以正确统计增添后的最后已有航次
 
 latestVoy = latestVoy & vbCrLf & shipNameShort & sht.[b2].End(xlDown).Offset(0, -1)
 Next sht
@@ -284,3 +282,7 @@ For Each sht In Sheets
 Next sht
 
 End Function
+
+
+
+
