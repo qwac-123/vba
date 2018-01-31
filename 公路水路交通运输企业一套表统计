@@ -1,40 +1,63 @@
 'F:\工作文档\公路水路交通运输企业一套表统计调查制度(试点)
 '收集货量、货物周转量（货量*总里程转为公里）、航线（区分内贸外贸）、货种（区分成品油和化学品）
-Function 收集咨询()
+Function 从能效表和收集咨询()
+Dim zb As Workbook
+Dim datasht As Worksheet
+Dim wkbookyear As String
+
+Dim rngMile As Range
+Dim rngCargo As Range
+Dim rngQty As Range
+Dim rngLine As Range
+
+Dim irsht As Integer
+Dim irstart As Integer
+
 Set zb = ActiveWorkbook
-Set glb = ActiveWorkbook
-Set sjb = ActiveWorkbook
-Set gsht = glb.Sheets(1)
-zb.Activate
-gRowEnd = 2
-For Each zsht In zb.Sheets
-    If zsht.Name <> "dh2" Or zsht.Name <> "jx32" Then
-        zsht.Activate
-        zRowEnd = [b4].End(xlDown).Row
-        gsht.Activate
-        Range(Cells(gRowEnd, 1), Cells(gRowEnd + zRowEnd - 4, 1)).Select
-        selection = zsht.Name '第一列船名
-        zsht.Activate
-        Range([a4], [a4].End(xlDown)).Copy
-        gsht.Cells(gRowEnd, 2).PasteSpecial Paste:=xlPasteValues '第二列航次号
-        Range([b4], [b4].End(xlDown)).Copy
-        gsht.Cells(gRowEnd, 3).PasteSpecial Paste:=xlPasteValues  '第三列海里
-         '第4列km
-        Range([y4], [y4].End(xlDown)).Copy
-        gsht.Cells(gRowEnd, 5).PasteSpecial Paste:=xlPasteValues  '第5列cargo
-        Range([z4], [z4].End(xlDown)).Copy
-        gsht.Cells(gRowEnd, 6).PasteSpecial Paste:=xlPasteValues  '第6列qty
-         '第7列kmxqty
-        Range([aa4], [aa4].End(xlDown)).Copy
-        gsht.Cells(gRowEnd, 8).PasteSpecial Paste:=xlPasteValues  '第8列line
-          '第9列region
-        sjb.Sheets(UCase(zsht.Name)).Activate
-        Range([k7], [k7].End(xlDown)).Copy
-        gsht.Cells(gRowEnd, 10).PasteSpecial Paste:=xlPasteValues  '第10列endtime
-        
-    End If
-    gRowEnd = gRowEnd + zRowEnd - 3
-Next zsht
+Set datasht = ActiveSheet
+zrowStart = 2
+zrowEnd = Cells(2, 1).End(xlDown).Row
+
+irstart = 1
+
+wkbookyear = 提取航次号(zb.Name)
+oilPath = "\\192.168.0.223\航运在线\10、油料管理部\" & wkbookyear & "年\油耗记录\"
+strRrl = "*一键统计燃润料航次报表.xlsm"
+'strNx = "*能效管理*"
+dirRrl = Dir(oilPath & strRrl)
+'dirNx = Dir(oilPath & strNx)
+
+Set bkRrl = Workbooks.Open(fileName:=oilPath & dirRrl)
+'Set bkNx = Workbooks.Open(fileName:=oilPath & dirNx)
+'call 船名航次排序
+For zro = zrowStart To zrowEnd
+    shipName = datasht.Cells(zro, 1).Value
+    voy = datasht.Cells(zro, 2).Value
+    Set rngMile = datasht.Cells(zro, 3)
+    Set rngCargo = datasht.Cells(zro, 5)
+    Set rngQty = datasht.Cells(zro, 7)
+    Set rngLine = datasht.Cells(zro, 9)
+    
+    For irsht = irstart To bkRrl.Sheets.Count
+        Set rsht = bkRrl.Sheets(irsht)
+        rsht.Name = UCase(rsht.Name)
+        If rsht.Name = shipName Then
+            irstart = irsht
+            rsht.Activate
+            For rowrrl = 4 To rsht.Cells(80, 2).End(xlUp).Row Step 1
+                If rsht.Cells(rowrrl, 1).Value = voy Then
+                    rngMile.Value = rsht.Cells(rowrrl, 2).Value
+                    rngCargo.Value = rsht.Cells(rowrrl, 25).Value
+                    rngQty.Value = rsht.Cells(rowrrl, 26).Value
+                    rngLine.Value = rsht.Cells(rowrrl, 27).Value
+                    GoTo nextzro
+                End If
+            Next rowrrl
+        End If
+    Next irsht
+nextzro:
+Next zro
+
 
 gsht.Activate
 Range([d2], [c2].End(xlDown).Offset(0, 1)).Select
@@ -42,34 +65,78 @@ Range([d2], [c2].End(xlDown).Offset(0, 1)).FormulaR1C1 = "=rc[-1]*1.852"     '�
 Range([g2], [f2].End(xlDown).Offset(0, 1)).FormulaR1C1 = "=rc[-3]*rc[-1]"         '第7g列kmxqty"
     '第9列region
     Range([h2], [h2].End(xlDown)).Copy [i2]
-    EPort2CPort (9)
-    转为区域 (9)
+    ENPortToCNPort (9)
+    replacePorts (9)
     
     '第11列neiwaimao
     arinter = Array("台湾", "韩国", "东南亚")
     Range([i2], [i2].End(xlDown)).Copy [k2]
+    
     For Each krng In Range([k2], [k2].End(xlDown))
+    
         countInter = 0
+        
         For i = 0 To UBound(arinter)
             countInter = countInter + InStr(1, krng.Value, arinter(i))
         Next i
+        
         If countInter = 0 Then '是内贸
             krng.Value = "内贸"
         Else
             krng.Value = "外贸"
         End If
+        
     Next krng
-    
+
         
 End Function
 Function 排查错误()
 With selection
-    .Replace What:="M", Replacement:="", lookat:=xlPart
-    .Replace What:="T", Replacement:="", lookat:=xlPart
-    .Replace What:="/", Replacement:="+", lookat:=xlPart
-    .Replace What:="＋", Replacement:="+", lookat:=xlPart
+    .Replace What:="M", Replacement:="", LookAt:=xlPart
+    .Replace What:="T", Replacement:="", LookAt:=xlPart
+    .Replace What:="/", Replacement:="+", LookAt:=xlPart
+    .Replace What:="＋", Replacement:="+", LookAt:=xlPart
 End With
 For Each grng In selection
     grng.Value = Application.Evaluate(grng.Value)
 Next grng
 End Function
+Function A列船名B列航次找最后()
+strEndShipVoy = "最后一个航次是:" & vbCrLf
+For ro = 2 To [a2].End(xlDown).Row
+    shipName = Cells(ro, 1).Value
+    nextShipName = Cells(ro + 1, 1).Value
+    If nextShipName <> shipName Then
+        voy = Cells(ro, 2).Value
+        strEndShipVoy = strEndShipVoy & shipName & Space(6 - Len(shipName)) & voy & vbCrLf
+    End If
+Next ro
+MsgBox strEndShipVoy
+Debug.Print strEndShipVoy
+End Function
+Option Explicit
+
+Function 船名航次排序()
+'
+' Macro5 Macro
+'
+
+'
+
+    ActiveWorkbook.Worksheets("数据来源").Sort.SortFields.Clear
+    ActiveWorkbook.Worksheets("数据来源").Sort.SortFields.Add Key:=Range("A2:A36"), _
+        SortOn:=xlSortOnValues, Order:=xlAscending, CustomOrder:= _
+        """DH1"",""DH2"",""DH3"",""DH5"",""DH9"",""DH10"",""DH15"",""DH16"",""DH17"",""DH18"",""JX32""" _
+        , DataOption:=xlSortNormal
+    ActiveWorkbook.Worksheets("数据来源").Sort.SortFields.Add Key:=Range("B2:B36"), _
+        SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+    With ActiveWorkbook.Worksheets("数据来源").Sort
+        .SetRange Range("A2:B36")
+        .Header = xlGuess
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+End Function
+
