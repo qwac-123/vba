@@ -1,0 +1,85 @@
+Option Explicit
+Dim zb As Workbook
+Dim zsht As Worksheet
+Dim i As Integer
+
+Dim arLoadBerth(0 To 2, 0 To 9)
+Dim arDiscBerth(0 To 2, 0 To 9)
+'0   装货码头1      string
+'1   抵达装货码头1  Date
+'2   靠泊装货码头1  Date
+'3   离泊装货码头1  Date
+'4   待泊时间1      Date
+'5   开始装货1      Date
+'6   结束装货1      Date
+'7   装货时间1      Date
+'8   装货速率1      integer
+'9   备注1          string
+
+
+Sub 整合航次报表()
+
+Dim strShipName As String
+Dim strShipNameShort As String
+Dim strVoyLine As String
+Dim strCargo As String
+
+Dim iQuantity As Integer
+Dim iDistance As Integer
+Dim iAveSpeed As Integer
+Dim iCountLoadPort As Integer
+Dim iCountDiscPort As Integer
+Dim iCountLoadBerth As Integer
+Dim iCountDiscBerth As Integer
+Dim col As Integer
+Dim ro As Integer
+Dim zRowStart As Integer
+Dim zRowEnd As Integer
+
+    zRowStart = 2
+    zRowEnd = Cells(2, 1).End(xlDown).Row
+    
+    For ro = zRowStart To zRowEnd Step 1
+        If Cells(ro, 3).Value <> "" Then
+            GoTo nextRO
+        End If
+    
+        
+    
+nextRO:
+    Next ro
+
+    
+
+
+    
+End Sub
+Function 整合航次报表制作表头()
+Dim arTitle()
+Dim col As Integer
+Dim iCountBerth As Integer
+Dim iArr As Integer
+Dim arLoadTitle
+Dim arDiscTitle
+
+Dim isLoad As Boolean
+arTitle = Array("船", "航次", "航", "货", "货", "航次开始时", "航次结束时", "装卸港距", "平均航", "理论可用洗舱时")
+
+'绘制表头
+arLoadTitle = Array("装货码头", "抵达装货码头", "靠泊装货码头", "离泊装货码头", "待泊时间", "开始装货", "结束装货", "装货时间", "装货速率", "备注")
+arDiscTitle = Array("卸货码头", "抵达卸货码头", "靠泊卸货码头", "离泊卸货码头", "待泊时间", "开始卸货", "结束卸货", "卸货时间", "卸货速率", "备注")
+For col = 1 To 11 Step 1
+    Cells(1, col).Value = arTitle(col - 1)
+Next col
+For col = 12 To 71 Step 1
+    Cells(1, col).Select
+    iArr = (col - 2) Mod 10
+    isLoad = (col - 2) \ 10 Mod 2 <> 0
+    iCountBerth = ((col - 12) \ 20) + 1
+    If isLoad Then
+        Cells(1, col).Value = arLoadTitle(iCountLoadBerth) & iCountDiscBerth
+    Else 'If col > 12 And ro = 0 Then
+        Cells(1, col).Value = arDiscTitle(iCountLoadBerth) & iCountDiscBerth
+    End If
+Next col
+End Function
