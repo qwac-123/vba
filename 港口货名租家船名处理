@@ -1,123 +1,129 @@
-Sub 处理选中的货名列()
+Sub 选中列货名转为英文()
+货名统一为英文 (selection.Column)
+End Sub
+Sub 英文港口转中文港口()
+ENPortToCNPort (selection.Column)
+End Sub
+Sub 选中列货物名转为英文()
 货名统一为英文 (selection.Column)
 End Sub
 Function 货名统一为英文(col)
     With Columns(col)
-    .Replace What:="AA", Replacement:="Acetic acid", lookat:= _
+    .Replace What:="AA", Replacement:="Acetic acid", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="冰醋酸", Replacement:="Acetic acid", lookat:= _
+    .Replace What:="冰醋酸", Replacement:="Acetic acid"
+    .Replace What:="冰乙酸", Replacement:="Acetic acid"
+    .Replace What:="醋酸乙烯", Replacement:="VINYL ACETATE", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="醋酸乙烯", Replacement:="VINYL ACETATE", lookat:= _
-        xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
-        ReplaceFormat:=False
-    .Replace What:="二甲基甲酰胺", Replacement:="Dimethylformamide", lookat _
+    .Replace What:="二甲基甲酰胺", Replacement:="Dimethylformamide", LookAt _
         :=xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False _
         , ReplaceFormat:=False
-    .Replace What:="纯苯", Replacement:="BENZENE", lookat:=xlWhole, _
+    .Replace What:="纯苯", Replacement:="BENZENE", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="苯", Replacement:="BENZENE", lookat:=xlWhole, _
+    .Replace What:="苯", Replacement:="BENZENE", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="苯酚", Replacement:="Phenol", lookat:=xlWhole, _
+    .Replace What:="苯酚", Replacement:="Phenol", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="TOL", Replacement:="TOLUENE", lookat:=xlWhole, _
+    .Replace What:="TOL", Replacement:="TOLUENE", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="甲苯", Replacement:="TOLUENE", lookat:=xlWhole, _
+    .Replace What:="甲苯", Replacement:="TOLUENE", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="混二甲苯", Replacement:="MIX XYLENE", lookat:= _
+    .Replace What:="混二甲苯", Replacement:="MIX XYLENE", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="混合二甲苯", Replacement:="MIX XYLENE", lookat:= _
+    .Replace What:="混合二甲苯", Replacement:="MIX XYLENE", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="对二甲苯", Replacement:="PARAXYLENE", lookat:= _
+    .Replace What:="对二甲苯", Replacement:="PARAXYLENE", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="邻二甲苯", Replacement:="O-XYLENE", lookat:= _
+    .Replace What:="邻二甲苯", Replacement:="O-XYLENE", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="OX", Replacement:="O-XYLENE", lookat:= _
+    .Replace What:="OX", Replacement:="O-XYLENE", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="二甲苯", Replacement:="Xylenes", lookat:=xlWhole, _
+    .Replace What:="二甲苯", Replacement:="Xylenes", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="三甲苯", Replacement:="Trimethylbenzene (all isomers)", lookat:=xlWhole, _
+    .Replace What:="三甲苯", Replacement:="Trimethylbenzene (all isomers)", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="碳9", Replacement:="C-9", lookat:=xlWhole, _
+    .Replace What:="碳9", Replacement:="C-9", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="碳九", Replacement:="C-9", lookat:=xlWhole, _
+    .Replace What:="碳九", Replacement:="C-9", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="C9", Replacement:="C-9", lookat:=xlWhole, _
+    .Replace What:="C9", Replacement:="C-9", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="苯乙烯", Replacement:="STYRENE MONOMER", lookat:= _
+    .Replace What:="苯乙烯", Replacement:="STYRENE MONOMER", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="SM", Replacement:="STYRENE MONOMER", lookat:= _
+    .Replace What:="SM", Replacement:="STYRENE MONOMER", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="丙酮", Replacement:="Acetone", lookat:=xlWhole, _
+    .Replace What:="丙酮", Replacement:="Acetone", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="act", Replacement:="Acetone", lookat:=xlWhole, _
+    .Replace What:="ACE", Replacement:="Acetone"
+    .Replace What:="act", Replacement:="Acetone", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="甲醇", Replacement:="Methanol", lookat:=xlWhole, _
+    .Replace What:="甲醇", Replacement:="Methanol", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="乙醇", Replacement:="ethanol", lookat:=xlWhole, _
+    .Replace What:="乙醇", Replacement:="ethanol", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="酒精", Replacement:="alcohol", lookat:=xlWhole, _
+    .Replace What:="酒精", Replacement:="alcohol", LookAt:=xlWhole, _
         SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="辛醇", Replacement:="Octanol (all isomers)", lookat _
+    .Replace What:="辛醇", Replacement:="Octanol (all isomers)", LookAt _
         :=xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False _
         , ReplaceFormat:=False
-    .Replace What:="乙二醇", Replacement:="Ethylene glycol", lookat:= _
+    .Replace What:="乙二醇", Replacement:="Ethylene glycol", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="正丁醇", Replacement:="n-Butyl alcohol", lookat:= _
+    .Replace What:="正丁醇", Replacement:="n-Butyl alcohol", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="异壬醇", Replacement:="ISONONYL ALCOHOL", lookat:= _
+    .Replace What:="异壬醇", Replacement:="ISONONYL ALCOHOL", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="AN", Replacement:="AN(acrylonitrile)", lookat:= _
+    .Replace What:="AN", Replacement:="AN(acrylonitrile)", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="丙烯晴", Replacement:="AN(acrylonitrile)", lookat:= _
+    .Replace What:="丙烯晴", Replacement:="AN(acrylonitrile)", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="丙烯腈", Replacement:="AN(acrylonitrile)", lookat:= _
+    .Replace What:="丙烯腈", Replacement:="AN(acrylonitrile)", LookAt:= _
         xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="甲甲酯", Replacement:="Methyl methacrylate", lookat _
+    .Replace What:="甲甲酯", Replacement:="Methyl methacrylate", LookAt _
         :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="甲基丙烯酸甲酯", Replacement:="Methyl methacrylate", lookat _
+    .Replace What:="甲基丙烯酸甲酯", Replacement:="Methyl methacrylate", LookAt _
         :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="乙酸乙酯", Replacement:="acetic ether", lookat _
+    .Replace What:="乙酸乙酯", Replacement:="acetic ether", LookAt _
         :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="乙酸乙烯酯", Replacement:="VINYL ACETATE", lookat _
+    .Replace What:="乙酸乙烯酯", Replacement:="VINYL ACETATE", LookAt _
         :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="工业用乙酸乙烯酯", Replacement:="VINYL ACETATE", lookat _
+    .Replace What:="工业用乙酸乙烯酯", Replacement:="VINYL ACETATE", LookAt _
         :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
-    .Replace What:="甲基叔丁基醚", Replacement:="Methyl tert butyl ether", lookat _
+    .Replace What:="甲基叔丁基醚", Replacement:="Methyl tert butyl ether", LookAt _
         :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
     .Replace What:="150N+500N", Replacement:="500N+150N"
@@ -131,32 +137,51 @@ Function 货名统一为英文(col)
     .Replace What:="BO", Replacement:="500N+150N"
     .Replace What:="BASE OIL（500N+150N）", Replacement:="500N+150N"
     .Replace What:="BASEOIL500&150", Replacement:="500N+150N"
-    
+    .Replace What:="BO", Replacement:="500N+150N"
+    .Replace What:="基础油500/150", Replacement:="500N+150N"
+    .Replace What:="基础油", Replacement:="500N+150N"
+    .Replace What:="基础油150+500", Replacement:="500N+150N"
     .Replace What:="BO 500N", Replacement:="500N+150N"
     
-    .Replace What:="CYC", Replacement:="Cyclohexane", lookat _
+    .Replace What:="BASEOIL150&500", Replacement:="500N+150N"
+    .Replace What:="BO 500N", Replacement:="500N+150N"
+    .Replace What:="BO 500N", Replacement:="500N+150N"
+    .Replace What:="BO 500N", Replacement:="500N+150N"
+    .Replace What:="BO 500N", Replacement:="500N+150N"
+    
+    
+    
+    
+    .Replace What:="BS60&导热油", Replacement:="500N+150N"
+    
+    .Replace What:="CYC", Replacement:="Cyclohexane", LookAt _
         :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False '环己烷
-    .Replace What:="异辛烷", Replacement:="isooctane", lookat _
+    .Replace What:="异辛烷", Replacement:="isooctane", LookAt _
         :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
         ReplaceFormat:=False
     End With
 End Function
-Function EPort2CPort(columnABC)
+Function ENPortToCNPort(columnABC)
 '运价表处理.ENPortToCNPort(列号)
 
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
 With Columns(columnABC)
-    .Replace What:="/", Replacement:="-", lookat:=xlPart
+    .Replace What:="/", Replacement:="-", LookAt:=xlPart
+    .Replace What:="\", Replacement:="-"
     .Replace What:="－", Replacement:="-"
     .Replace What:="—", Replacement:="-"
     .Replace What:="廖", Replacement:="寮"
+    .Replace What:=" ", Replacement:=""
     
     '48,数字0
     '79,大写字母O
     '111,小写字母o
-    .Replace What:=Chr(48), Replacement:=Chr(79)
+    If MsgBox("是否替换数字0", vbYesNo) = vbYes Then
+        .Replace What:=Chr(48), Replacement:=Chr(79)
+    End If
+    .Replace What:="，", Replacement:="+"
     .Replace What:="anping", Replacement:="安平"
     .Replace What:="beihai", Replacement:="北海"
     .Replace What:="caojing", Replacement:="漕泾"
@@ -180,6 +205,7 @@ With Columns(columnABC)
     .Replace What:="ningbo", Replacement:="宁波"
     .Replace What:="qinzhou", Replacement:="钦州"
     .Replace What:="nanjing", Replacement:="南京"
+    .Replace What:="nanjin", Replacement:="南京"
     .Replace What:="yingkou", Replacement:="营口"
     .Replace What:="zhongshan", Replacement:="中山"
     .Replace What:="jiangyin", Replacement:="江阴"
@@ -244,10 +270,11 @@ With Columns(columnABC)
     .Replace What:="pyongtaek", Replacement:="平泽"
     .Replace What:="pyungtaek", Replacement:="平泽"
     .Replace What:="平仄", Replacement:="平泽" '
-    .Replace What:="夏门", Replacement:="夏门"
+    .Replace What:="夏门", Replacement:="厦门"
     .Replace What:="杨浦", Replacement:="洋浦"
     .Replace What:="yeosu", Replacement:="丽水"
     .Replace What:="yosu", Replacement:="丽水"
+    .Replace What:="shenhu", Replacement:="深沪" '福建晋江下的镇
 End With
 End Function
 Function shipNamToGT()
@@ -255,7 +282,7 @@ arShipNam = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH
 '0-5，3KT ; 6-9,2KT ; 10,1K5
 
 End Function
-Function 转为区域(col)
+Function replacePorts(col)
 
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
@@ -265,12 +292,12 @@ arHuaBeiPorts = Array("丹东", "大连", "营口", "锦州", "秦皇岛", "唐�
 arHuaDongPorts = Array("龙口", "连云港", _
 "南通", "如东", "张家港", "镇海", "镇江", "南京", "大丰", "大榭", "江阴", "常熟", "泰兴", _
 "上海", "嘉兴", "吴泾", "漕泾", "乍浦", "宁波", "舟山", "石浦", "海门", "温州", "台州", _
-"常州", "仪征", "洋山", "无为", "洋口", "泰州", "北仑台塑")
+"常州", "仪征", "洋山", "无为", "洋口", "泰州", "北仑台塑", "宁波大榭", "如皋")
 
 arHuaNanPorts = Array("赛岐", "福州", "马尾", "湄州湾", "泉州", "厦门", "东山", _
 "汕头", "西堤", "汕尾", "深圳", "广州", "南沙", "东莞", "惠州", "揭阳", "小虎岛", "中山", _
 "珠海", "江门", "阳江", "水东", "茂名", "湛江", "霞海", "海安", "北海", "防城", "海口", _
-"三亚", "八所", "海南", "洋浦", "马村", "钦州", "新会", "古雷") '杨浦 小虎山
+"三亚", "八所", "海南", "洋浦", "马村", "钦州", "新会", "古雷", "深沪") '杨浦 小虎山
 
 arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮", "安平") ', "香港", "澳门", "港澳台+港澳台"
 
@@ -278,15 +305,16 @@ arKoreaPorts = Array("丽水", "蔚山", "大山", "NAMPO", "平泽")
 
 arSEAsia = Array("BATAAN", "BATANGAS", "VAN PHONG", "KERTEH", "RAYONG", _
 "TABANGAO", "KUANTAN", "SRIRACHA", "MAPTAPHUT", "MERAK", "GRESIK", _
-"Pulau Laut")
-
-arMEGulf = Array("ASSALUYEH")
-arPortPart = Array("华北", "华东", "华南", "台湾", "韩国", "东南亚")
+"Pulau Laut", "曼谷", "bangkok", "SON DUONG", "Singapore", "新加坡")
+'SON DUONG越南山阳
+arMEGulf = Array("ASSALUYEH", "BIK")
+'Assa伊朗
+arPortPart = Array("华北", "华东", "华南", "台湾", "韩国", "东南亚", "中东")
 
 
 With Columns(col)
     For i = 0 To UBound(arHuaBeiPorts)
-        .Replace What:=arHuaBeiPorts(i), Replacement:="华北", lookat:=xlPart
+        .Replace What:=arHuaBeiPorts(i), Replacement:="华北", LookAt:=xlPart
     Next i
     For j = 0 To UBound(arHuaDongPorts)
         .Replace What:=arHuaDongPorts(j), Replacement:="华东"
@@ -303,6 +331,9 @@ With Columns(col)
     For n = 0 To UBound(arSEAsia)
         .Replace What:=arSEAsia(n), Replacement:="东南亚"
     Next n
+    For O = 0 To UBound(arMEGulf) Step 1
+        .Replace What:=arMEGulf(O), Replacement:="中东"
+    Next O
 End With
 
 For r = 2 To [a1].End(xlDown).Row
@@ -323,10 +354,21 @@ Next r
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 End Function
-Function 船名全称转缩写()
-shipLongNameArr = Array("鼎衡1", "鼎衡2", "鼎衡3", "鼎衡5", "鼎衡9", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17*", "鼎衡18*", "鼎衡7", "建兴32", "鼎衡A", "鼎衡E", "天使1", "天使2", "天使3", "天使11")
-shipNameArr = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "DH7", "JX32", "DHA", "DHE", "AG1", "AG2", "AG3", "AG11")
-With selection
+Sub Sa()
+'For Each daa In selection
+'    Debug.Print daa; ro = daa.Row
+'    ss = daa.Value
+'    Cells(ro, daa.Column) = 船名全称转缩写(ss)
+'Next
+Set sd = selection
+sd.Select
+单元格船名转缩写 (sd)
+'单元格船名转全称 (sd)
+End Sub
+Function 单元格船名转缩写(nameRange)
+
+nameRange.Select
+With nameRange
     .Replace " ", "", xlPart
     .Replace " ", "", xlPart
     .Replace "鼎衡", "DH", xlPart
@@ -339,5 +381,138 @@ With selection
     .Replace "轮*", ""
 End With
 End Function
+Function 单元格船名转全称(nameRange)
+nameRange.Select
+With nameRange
+    .Replace " ", "", xlPart
+    .Replace " ", "", xlPart
+    .Replace "DH", "鼎衡", xlPart
+    .Replace "JX", "建兴", xlPart
+    .Replace "HX", "恒信", xlPart
+    .Replace "AG", "AngelNo.", xlPart
+    .Replace "E", "Epoch"
+    .Replace "G", "Golden"
+    .Replace "轮*", ""
+End With
+End Function
+Function 船名全称转缩写(shipName)
+shipLongNameArr = Array("鼎衡1", "鼎衡2", "鼎衡3", "鼎衡5", "鼎衡9", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17*", "鼎衡18*", "鼎衡7", "建兴32", "鼎衡A", "鼎衡E", "天使1", "天使2", "天使3", "天使11")
+shipNameArr = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "DH7", "JX32", "DHA", "DHE", "AG1", "AG2", "AG3", "AG11")
 
+'
+    If Left(shipName, 1) = "鼎" Or Left(shipName, 1) = "建" Then
+        If shipName Like "鼎衡17*" Then
+            shipName = "DH17"
+        ElseIf shipName = "鼎衡18*" Then
+            shipName = "DH18"
+        ElseIf shipName = "建兴32" Then
+            shipName = "JX32"
+        ElseIf shipName = "恒信HX" Then
+            shipName = "HX"
+        Else
+            shipName = Replace(shipName, "鼎衡", "DH")
+        End If
+    End If
+    船名全称转缩写 = shipName
+End Function
+Function 船名缩写转全称(shipName)
+    If Left(shipName, 1) = "D" Or Left(shipName, 1) = "J" Then
+        If shipName = "DH17" Then
+            shipName = "鼎衡17（万年青）"
+        ElseIf shipName = "DH18" Then
+            shipName = "鼎衡18（常春藤）"
+        ElseIf shipName = "JX32" Then
+            shipName = "建兴32"
+        ElseIf shipName = "HX" Then
+            shipName = "恒信HX"
+        Else
+            shipName = Replace(shipName, "DH", "鼎衡")
+        End If
+    End If
+    船名缩写转全称 = shipName
+End Function
+Function 去除非数字(strA As String)
+'\w表示[a-z],[A-Z],[0-9],_
+    Dim reg, k, mh, regPlus
+    Set reg = CreateObject("vbscript.regexp")
+    Set regPlus = CreateObject("vbscript.regexp")
+    regPlus.Pattern = "[$\/&]"
+    reg.Pattern = "[^0-9+.]"
+    reg.Global = True
+    strA = regPlus.Replace(strA, "+")
+    去除非数字 = reg.Replace(strA, "") '对于匹配到的字符，$1表示这段字符中第一个匹配到的
+End Function
+Function 去除非中文(strA As String)
+Dim objRegExp As Object
+Set objRegExp = CreateObject("Vbscript.RegExp")
+With objRegExp
+    .Pattern = "[^+\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF$-]"
+    .Global = True
+    strA = .Replace(strA, "")
+End With
+去除非中文 = strA
+End Function
+Function 处理货量()
+For ro = 2 To 379
+    Cells(ro, 8).Value = Application.Evaluate(去除非数字(Cells(ro, 7).Value))
+Next ro
+End Function
+Function 处理航线()
+For ro = 2 To 379
+    Cells(ro, 12).Value = 去除非中文(Cells(ro, 11).Value)
+Next ro
+End Function
+Function 处理船舶吨位()
+rst = 2
+red = Cells(1, 1).End(xlDown).Row
+For ro = rst To red
+    shipName = Cells(ro, 1).Value
+    shipNum = Right(shipName, 2)
+    If IsNumeric(shipNum) Then
+    Else
+        shipNum = Right(shipNum, 1)
+    End If
+    Select Case shipNum
+        Case 1 To 5
+            dwt = 3500
+        Case 7
+            dwt = 1500
+        Case 9 To 10
+            dwt = 3500
+        Case 15 To 16
+            dwt = 2000
+        Case 17 To 18
+            dwt = 3000
+        Case 32
+            dwt = 2000
+    End Select
+    Cells(ro, 3).Value = dwt
+    
+Next ro
+End Function
+Function 处理船舶类型()
+rst = 2
+red = Cells(1, 1).End(xlDown).Row
+For ro = rst To red
+    shipName = Cells(ro, 1).Value
+    shipNum = Right(shipName, 2)
+    If IsNumeric(shipNum) Then
+    Else
+        shipNum = Right(shipNum, 1)
+    End If
+    Select Case shipNum
+        Case 5
+            dwt = "油化两用船"
+        Case 9 To 10
+            dwt = "油化两用船"
+        Case Else
+            dwt = "化学品船"
+    End Select
+    Cells(ro, 2).Value = dwt
+    
+Next ro
+End Function
 
+Function 码头列表()
+arrBerthName = Array("欧德", "炼化", "华盛")
+End Function
