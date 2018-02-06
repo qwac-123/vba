@@ -75,3 +75,94 @@ Function 调整宽度()
         End With
     Next col
 End Function
+
+Option Explicit
+Dim indexColor As Integer
+
+Dim arBiPumpShip
+
+Dim col As Integer
+Dim startCol As Integer
+Dim endCol As Integer
+Dim ro As Integer
+Dim startRo As Integer
+Dim endRo As Integer
+
+Dim singlePumpNum As Integer
+Dim singlePumpVol As Integer
+Dim doublePumpVol As Integer
+Dim pumpRpm As Integer
+Dim pumpPrs As Integer
+
+Dim actualPumpNum As Integer
+Dim actualPumpVol As Integer
+Dim actualPumpRpm As Integer
+Dim actualPumpPrs As Integer
+
+Dim shipName As String
+Dim biPumpShip As String
+
+'Dim isBiPumpShip As Boolean
+Dim isUsingDoublePump As Boolean
+Dim isPumpPrsOk As Boolean
+Dim isPumpVolOk As Boolean
+Dim isPumpRpmOk As Boolean
+Dim isPumpOk As Boolean
+
+Dim isEngineOk As Boolean
+Dim countOkEngine As Integer
+Sub 检查哪些航次货泵不达标()
+
+arBiPumpShip = Array("DH16", "HX", "AG1", "AG3", "AG11", "DHE")
+
+startCol = 10 'J
+endCol = 33 'AG
+startRo = 4 'DH1
+endRo = 20 'DHE
+
+For ro = 4 To 20
+    shipName = Cells(ro, 1).Value
+    singlePumpVol = Cells(ro, 4).Value 'd
+    doublePumpVol = Cells(ro, 5).Value 'e
+    pumpRpm = Cells(ro, 6).Value 'f
+    pumpPrs = Cells(ro, 7).Value 'g
+    For col = startCol To endCol Step 4
+        actualPumpNum = Cells(ro, col).Value 'J
+        actualPumpVol = Cells(ro, col + 1).Value
+        actualPumpRpm = Cells(ro, col + 2).Value
+        actualPumpPrs = Cells(ro, col + 3).Value
+        
+        
+        singlePumpNum = 1
+        For Each biPumpShip In arBiPumpShip()
+            If shipName = biPumpShip Then '是多泵的船
+                singlePumpNum = 2
+                Exit For
+            End If
+        Next biPumpShip
+        
+        '是否启用多泵
+        isUsingDoublePump = actualPumpNum >= singlePumpNum
+        
+        If isUsingDoublePump Then '启用多泵
+            isPumpVolOk = actualPumpVol >= doublePumpVol
+        Else
+            isPumpVolOk = actualPumpVol >= singlePumpVol
+        End If
+        
+        isPumpRpmOk = actualPumpRpm >= pumpRpm
+        
+        isPumpPrsOk = actualPumpPrs >= pumpPrs
+        
+        If isPumpPrsOk Then
+            isPumpOk = True
+        ElseIf isPumpVolOk Then
+            isPumpOk = True
+        End If
+        
+    Next col
+Next ro
+End Sub
+Function TE()
+Debug.Print Selection.Interior.ColorIndex
+End Function
