@@ -1,7 +1,7 @@
 Dim dajiating
 Dim dongtaibiao
 Sub 开始今天上午的工作()
-'v3.1增加了大家庭农历显示 
+'v3.1大家庭表放到了航运在线  "\\192.168.0.223\\航运在线\\3.2、操作部\\4.2 船舶动态表（鼎衡大家庭）
 'v3 删除了DH7
 'V2 增加了ANGEL123,DHE
 'v1.2增加了向上滚屏代码
@@ -13,12 +13,13 @@ Sub 开始今天上午的工作()
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
 yesterday = getYesterday()
-    Set dajiating = Workbooks.Open(fileName:=Format(yesterday, "F:\\工作文档\\动态表（鼎衡大家庭）\\yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx"))
+    Set dajiating = Workbooks.Open(fileName:= _
+    "\\192.168.0.223\\航运在线\\3.2、操作部\\4.2 船舶动态表（鼎衡大家庭）\\" & Format(yesterday, "yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx")) 'Format(yesterday, "F:\\工作文档\\动态表（鼎衡大家庭）\\yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx"))
 
     Set dongtaibiao = Workbooks.Open(fileName:= _
-        "\\192.168.0.223\\航运在线\\3.2、操作部\\4 船舶动态表\\" & Format(yesterday, "yyyy\\m月\\船舶动态（yyyy-mm-dd）.xl\sx"))
+        "\\192.168.0.223\\航运在线\\3.2、操作部\\4.1 船舶动态表\\" & Format(yesterday, "yyyy\\m月\\船舶动态（yyyy-mm-dd）.xl\sx"))
 Sheets(1).Activate
-ActiveWindow.SmallScroll Up:=20
+ActiveWindow.SmallScroll up:=20
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 Workbooks(Format(yesterday, "船舶动态（yyyy-mm-dd）.xl\sx")).Activate
@@ -127,37 +128,71 @@ End If
     ActiveWorkbook.SaveAs fileName:= _
         Format(Date, "F:\\工作文档\\动态表（鼎衡大家庭）\\yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx"), FileFormat:= _
         xlOpenXMLWorkbook, CreateBackup:=False
+        
+savetoHangYunZaiXian:
+djtfullName = "\\192.168.0.223\\航运在线\\3.2、操作部\\4.2 船舶动态表（鼎衡大家庭）\\" & Format(Date, "yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx")
+djtDir = "\\192.168.0.223\\航运在线\\3.2、操作部\\4.2 船舶动态表（鼎衡大家庭）\\" & Year(Date) & "年"
+If Dir(djtDir, 16) = Empty Then '年
+    MkDir djtDir
+End If
+
+djtDir = djtDir & "\\" & Month(Date) & "月"
+If Dir(djtDir, 16) = Empty Then
+    MkDir djtDir
+End If
+
+    ActiveWorkbook.SaveAs fileName:= _
+        djtfullName, FileFormat:= _
+        xlOpenXMLWorkbook, CreateBackup:=False
+        
 End Function
 Function cece()
 Range("a2") = "            Fleet Position List                         " & Lunardate(Date)
 End Function
 Function getYesterday()
+Dim zuotian As Integer
+Dim today As Integer
 If Year(Date) = 2019 Then
     MsgBox "新的一年，请编辑新的调休安排"
 End If
+If Weekday(Date, vbMonday) = 1 Then '如果今天是周一，就打开周五的；否则就打开昨天的
+    zuotian = 3
+Else
+    zuotian = 1
+End If
+today = Day(Date)
 Select Case Month(Date)
     Case 1 '一月
         If Day(Date) = 2 Then '元旦
         End If
     Case 2 '二月春节
         If Day(Date) = 11 Then
+            zuotian = 2 '周日上班，周六休息，周五上班
         End If
     Case 3
     Case 4
+        If today = 8 Then
+            zuotian = 4 '周日上班，周六休息，周三上班
+        End If
     Case 5
+        If today = 2 Then
+            zuotian = 4 '周三上班，上周六上班
+        End If
     Case 6
+        If today = 19 Then
+            zuotian = 4 '周二上班，上周五上班
+        End If
     Case 7
     Case 8
     Case 9
     Case 10
+        If today = 8 Then '十一后上班第一天
+            zuotian = 8 '周一上班，上周日上班
+        End If
     Case 11
     Case 12
 End Select
-If Weekday(Date, vbMonday) = 1 Then '如果今天是周一，就打开周五的；否则就打开昨天的
-    zuotian = 3
-Else
-    zuotian = 1
-End If
+
 getYstday:
 getYesterday = Date - zuotian
 End Function
@@ -192,7 +227,7 @@ If Len(wkjin.Name) > 0 Then
 End If
 End Function
 Function ffa()
-Windows("20171226lateRe.xlsb").Visible = True
+Windows("PERSONAL.xlsb").Visible = True
 End Function
 
 Sub bbb动态表ISMSROB()
@@ -303,15 +338,15 @@ Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 '保存今天
 fileDirNAME = _
-"\\192.168.0.223\\航运在线\\3.2、操作部\\4 船舶动态表\\" & Format(Date, "yyyy\\m月\\船舶动态（yyyy-mm-dd）.xl\sx")
+"\\192.168.0.223\\航运在线\\3.2、操作部\\4.1 船舶动态表\\" & Format(Date, "yyyy\\m月\\船舶动态（yyyy-mm-dd）.xl\sx")
 Debug.Print fileDirNAME
 
 'If Dir("\\192.168.0.223\\航运在线\\3.2、操作部\\4 船舶动态表\\" & Year(Date)) = Empty Then
 '    MkDir "\\192.168.0.223\\航运在线\\3.2、操作部\\4 船舶动态表\\" & Year(Date)
 'End If
 
-If Dir("\\192.168.0.223\\航运在线\\3.2、操作部\\4 船舶动态表\\" & Format(Date, "yyyy\\m月"), 16) = Empty Then
-    MkDir "\\192.168.0.223\\航运在线\\3.2、操作部\\4 船舶动态表\\" & Format(Date, "yyyy\\m月")
+If Dir("\\192.168.0.223\\航运在线\\3.2、操作部\\4.1 船舶动态表\\" & Format(Date, "yyyy\\m月"), 16) = Empty Then
+    MkDir "\\192.168.0.223\\航运在线\\3.2、操作部\\4.1 船舶动态表\\" & Format(Date, "yyyy\\m月")
 End If
 
     dongtaibiao.SaveAs fileName:= _
@@ -329,6 +364,9 @@ If r >= 17 Then
     r = r - 2
 End If
 NextV = Cells(r, 9).Value
+If NextV = "" Then
+    MsgBox "大家庭动态表没有下航次信息"
+End If
 Cells(r, 4) = Left(NextV, InStr(3, NextV, "-") - 1)
 Cells(r, 5) = Right(NextV, Len(NextV) - InStr(3, NextV, "-"))
 Cells(r, 9).Value = ""
@@ -353,6 +391,8 @@ Call check_wk船舶动态
 
 '首先统一航次命令格式
 If Cells(r, 19).Value = "" Then
+    Cells(r, 19).Select
+    MsgBox "船舶动态表无下航次信息"
     Exit Sub
 End If
     Cells(r, 2).Replace What:="v", Replacement:="V", LookAt:=xlPart
@@ -666,8 +706,10 @@ For r = 4 To 20
     enginStart = InStr(1, voyStatus, "【")
     If enginStart > 0 Then
         enginEnd = InStr(enginStart, voyStatus, "】")
-        lenEngin = enginEnd - enginStart + 1
-        voyStatus = Replace(voyStatus, Mid(voyStatus, enginStart, lenEngin), "") '剔除【】内容
+        If enginEnd > 0 Then
+            lenEngin = enginEnd - enginStart + 1
+            voyStatus = Replace(voyStatus, Mid(voyStatus, enginStart, lenEngin), "") '剔除【】内容
+        End If
     End If
     'Cells(r, 11).Value = voyStatus
     port1 = ""
@@ -905,8 +947,6 @@ For Each sHour In arHour
     etbTime = etbTime & sHour & "LT"
 Next sHour
 End Function
-
-
 Public Function Lunardate(Optional XX_DATE As Date)
 
 Dim MonthAdd(11), LunardateData(99), TianGan(9), DiZhi(11), ShuXiang(11), DayName(30), MonName(12)
