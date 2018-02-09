@@ -303,11 +303,14 @@ arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮"
 
 arKoreaPorts = Array("丽水", "蔚山", "大山", "NAMPO", "平泽")
 
-arSEAsia = Array("BATAAN", "BATANGAS", "VAN PHONG", "KERTEH", "RAYONG", _
+arSEAsia = Array("BATAAN", "BATANGAS", "VAN PHONG", "VANPHONG", "KERTEH", "RAYONG", _
 "TABANGAO", "KUANTAN", "SRIRACHA", "MAPTAPHUT", "MERAK", "GRESIK", _
-"Pulau Laut", "曼谷", "bangkok", "SON DUONG", "Singapore", "新加坡")
-'SON DUONG越南山阳
-arMEGulf = Array("ASSALUYEH", "BIK")
+"Pulau Laut", "曼谷", "bangkok", "SON DUONG", "Singapore", "新加坡", _
+"KUNAK")
+'SON DUONG越南山阳,KUNAK马来,VANPHONG越南(空格被处理掉了）
+arIndia = Array("KANDLA")
+
+arMEGulf = Array("ASSALUYEH", "ASSALIYEH", "BIK")
 'Assa伊朗
 arPortPart = Array("华北", "华东", "华南", "台湾", "韩国", "东南亚", "中东")
 
@@ -395,41 +398,46 @@ With nameRange
     .Replace "轮*", ""
 End With
 End Function
-Function 船名全称转缩写(shipName)
+Function 船名全称转缩写(funcShipName)
 shipLongNameArr = Array("鼎衡1", "鼎衡2", "鼎衡3", "鼎衡5", "鼎衡9", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17*", "鼎衡18*", "鼎衡7", "建兴32", "鼎衡A", "鼎衡E", "天使1", "天使2", "天使3", "天使11")
-shipNameArr = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "DH7", "JX32", "DHA", "DHE", "AG1", "AG2", "AG3", "AG11")
+funcShipNameArr = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "DH7", "JX32", "DHA", "DHE", "AG1", "AG2", "AG3", "AG11")
 
 '
-    If Left(shipName, 1) = "鼎" Or Left(shipName, 1) = "建" Then
-        If shipName Like "鼎衡17*" Then
-            shipName = "DH17"
-        ElseIf shipName = "鼎衡18*" Then
-            shipName = "DH18"
-        ElseIf shipName = "建兴32" Then
-            shipName = "JX32"
-        ElseIf shipName = "恒信HX" Then
-            shipName = "HX"
+    If Left(funcShipName, 1) = "鼎" Or Left(funcShipName, 1) = "建" Then
+        If funcShipName Like "鼎衡17*" Then
+            funcShipName = "DH17"
+        ElseIf funcShipName = "鼎衡18*" Then
+            funcShipName = "DH18"
+        ElseIf funcShipName = "建兴32" Then
+            funcShipName = "JX32"
+        ElseIf funcShipName = "恒信HX" Then
+            funcShipName = "HX"
         Else
-            shipName = Replace(shipName, "鼎衡", "DH")
+            funcShipName = Replace(funcShipName, "鼎衡", "DH")
         End If
     End If
-    船名全称转缩写 = shipName
+    船名全称转缩写 = funcShipName
 End Function
-Function 船名缩写转全称(shipName)
-    If Left(shipName, 1) = "D" Or Left(shipName, 1) = "J" Then
-        If shipName = "DH17" Then
-            shipName = "鼎衡17（万年青）"
-        ElseIf shipName = "DH18" Then
-            shipName = "鼎衡18（常春藤）"
-        ElseIf shipName = "JX32" Then
-            shipName = "建兴32"
-        ElseIf shipName = "HX" Then
-            shipName = "恒信HX"
+Function 船名缩写转全称(funcShipName As String)
+    Dim initialName As String
+    funcShipName = UCase(funcShipName)
+    initialName = UCase(Left(funcShipName, 1))
+    If initialName = "D" Then
+        If funcShipName = "DH17" Then
+            funcShipName = "鼎衡17（万年青）"
+        ElseIf funcShipName = "DH18" Then
+            funcShipName = "鼎衡18（常春藤）"
         Else
-            shipName = Replace(shipName, "DH", "鼎衡")
+            funcShipName = Replace(funcShipName, "DH", "鼎衡")
         End If
+    ElseIf initialName = "A" Then
+        funcShipName = Replace(funcShipName, "AG", "天使")
+    ElseIf initialName = "H" Then
+        funcShipName = "恒信HX"
+    ElseIf initialName = "J" Then
+        funcShipName = "建兴32"
     End If
-    船名缩写转全称 = shipName
+    船名缩写转全称 = funcShipName
 End Function
 Function 去除非数字(strA As String)
 '\w表示[a-z],[A-Z],[0-9],_
