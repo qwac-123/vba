@@ -524,3 +524,39 @@ End Function
 Function 码头列表()
 arrBerthName = Array("欧德", "炼化", "华盛")
 End Function
+
+Function 获得船舶航次报表dir(localFilePath As String, localShipNameShort As String, localVoyValue As Integer)
+
+    Dim arVoy As Variant
+    Dim iVoy As Integer
+    Dim voyDir As String
+    arVoy = Array("航次报表*" & localVoyValue, "*" & localVoyValue & "航次报表*", _
+    localShipNameShort & "航次报表*" & localVoyValue, _
+    "*船舶航次报表*" & localVoyValue, "*" & localVoyValue & "*船舶航次报表*")
+    
+    For iVoy = 0 To UBound(arVoy) Step 1
+        voyDir = localFilePath & arVoy(iVoy) & "*.xls?"
+        If Len(Dir(voyDir)) > 0 Then
+            获得船舶航次报表dir = voyDir
+            Exit Function
+        End If
+    Next iVoy
+'
+        
+        
+End Function
+Function 获得燃润料航次报表dir(localFilePath As String, localShipNameShort As String, localVoyValue As Integer)
+
+Dim arOil As Variant
+Dim iOil As Integer
+Dim oilDir As String
+
+    arOil = Array("燃*" & voyValue, "*料*" & voyValue, "*" & voyValue & "燃*", "*" & voyValue & "*料*")
+    For iOil = 0 To UBound(arOil) Step 1
+        oilDir = filePath & arOil(iOil) & "*.xls?"
+        If Len(Dir(oilDir)) > 0 Then
+            Exit For
+        End If
+    Next iOil
+
+End Function
