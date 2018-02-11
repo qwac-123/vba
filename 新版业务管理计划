@@ -10,131 +10,108 @@ Function 获得装卸货前后等待时间()
  'v1.0可以整合航次报表和燃润料报表到一张表里
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
+
 Dim startRow As Integer
 Dim endRow As Integer
 Dim r As Integer
 Dim voyValue As Integer
 
 
-Dim addVoy As String
-Dim absentVoy As String
+
+
 Dim shipName As String
 Dim shipNameShort As String
-Dim shipNum As String
 Dim voy As String
-Dim thisSameShipVoy As String
 Dim lastSameShipVoy As String
+Dim thisSameShipVoy As String
 Dim voyYear As String
 Dim filePath As String
-Dim oilDir  As String
-Dim oilDir2 As String
 Dim voyDir As String
-Dim voyDir2 As String
-Dim oilName As String
-Dim voyName As String
+Dim oldVoyW As String
+Dim newVoyW As String
+Dim voyLine As String
+Dim addVoy As String
+Dim absentVoy As String
 
 
-Dim isSameShipVoy
-    Set zb = ActiveWorkbook
-    Set zsh = ActiveSheet
-    startRow = [c6666].End(xlUp).Row + 1
-    endRow = [a1].End(xlDown).Row
-    startRow = 2
-    For r = startRow To endRow Step 1
-        If Cells(r, 3) <> "" Then
-            GoTo nextr
-        End If
-        shipName = Cells(r, 1).Value
-        shipNameShort = shipName
-        shipNum = Right(shipName, 2)
-        voy = Cells(r, 2).Value
-        voyValue = 提取航次号(voy)
-        lastSameShipVoy = Cells(r - 1, 1).Value & Cells(r - 1, 2).Value
-        thisSameShipVoy = Cells(r, 1).Value & Cells(r, 2).Value
-        isSameShipVoy = lastSameShipVoy = thisSameShipVoy
+
+Dim isSameShipVoy As Boolean
+
+
+
+Set zb = ActiveWorkbook
+Set zsh = ActiveSheet
+startRow = [c6666].End(xlUp).Row + 1
+endRow = [a1].End(xlDown).Row
+startRow = 2
+For r = startRow To endRow Step 1
+    If Cells(r, 3) <> "" Then
+        GoTo nextr
+    End If
+    shipName = Cells(r, 1).Value
+    shipNameShort = shipName
+    shipName = 船名缩写转全称(shipName)
+    voy = Cells(r, 2).Value
+    voyValue = 提取航次号(voy)
+    lastSameShipVoy = Cells(r - 1, 1).Value & Cells(r - 1, 2).Value
+    thisSameShipVoy = Cells(r, 1).Value & Cells(r, 2).Value
+    isSameShipVoy = lastSameShipVoy = thisSameShipVoy
+    
+    
+    voyYear = "\20" & Left(voyValue, 2) & "年\"
+    filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & voyYear
+    
+    'oilDir = 获得燃润料航次报表dir(filePath, shipNameShort, voyValue)
+    voyDir = 获得船舶航次报表dir(filePath, shipNameShort, voyValue)
+    
+    If Len(Dir(voyDir)) > 0 Then  '如果文件存在
+        'oilNam = Dir(oilDir)
+        'voyName = Dir(voyDir)
+        'Set oilW = Workbooks.Open(fileName:=oilDir)
+        Set voyW = Workbooks.Open(fileName:=voyDir)
         
-    '
-    '    If isWriten Or isSameShipVoy Then '已经填写了
-    '        GoTo nextr
-    '    End If
+        'Call TC燃润料报表整合(oilW, r, colDO)
+        Call 业务管理航次报表整合(r)
         
-        If IsNumeric(shipNum) Then
-        Else
-            shipNum = Right(shipNum, 1)
-        End If
-        Select Case shipNum
-            Case 17
-                shipName = "鼎衡17（万年青）"
-            Case 18
-                shipName = "鼎衡18（常春藤）"
-            Case 32
-                shipName = "建兴32"
-            Case Else
-                shipName = "鼎衡" & shipNum
-        End Select
         
-        voyYear = "\20" & Mid(voy, 2, 2) & "年\"
-        filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & voyYear & shipNameShort
-        oilDir = filePath & "燃*航次报表*" & voyValue & "*.xls?"
-        oilDir2 = filePath & "*料*航次报表*" & voyValue & "*.xls?"
-        voyDir = filePath & "航次报表*" & voyValue & "*.xls?"
-        voyDir2 = filePath & "*船舶航次报表*" & voyValue & "*.xls?"
+        'voyLine = voyW.Sheets(1).[h4].Value & "-" & voyW.Sheets(1).[h5].Value
+        'zsh.Cells(r, colDO - 9).Value = voyLine
         
-        If Len(Dir(oilDir)) = 0 Then
-            oilDir = oilDir2
+'        oldOilW = oilW.FullName
+'        newOilW = filePath & "燃润料航次报表" & voy & voyLine & ".xlsx"
+        oldVoyW = voyW.FullName
+        newVoyW = filePath & shipNameShort & "船舶航次报表" & voy & voyLine & ".xlsx"
+'        If oldOilW <> newOilW Then
+'            oilW.SaveAs newOilW, FileFormat:=xlOpenXMLWorkbook
+'            Kill oldOilW
+'        End If
+        If oldVoyW <> newVoyW Then
+            voyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
+            Kill oldVoyW
         End If
-        If Len(Dir(voyDir)) = 0 Then
-            voyDir = voyDir2
-        End If
+'
+        'oilW.Close
+        voyW.Close
         
-        If Len(Dir(voyDir)) > 0 Then  '如果文件存在
-            oilName = Dir(oilDir)
-            voyName = Dir(voyDir)
-            'Set oilW = Workbooks.Open(fileName:=oilDir)
-            Set voyW = Workbooks.Open(fileName:=voyDir)
-            
-            'Call TC燃润料报表整合(oilW, r, colDO)
-            Call 业务管理航次报表整合(r)
-            
-            'voyLine = voyW.Sheets(1).[h4].Value & "-" & voyW.Sheets(1).[h5].Value
-            'zsh.Cells(r, colDO - 9).Value = voyLine
-            
-    '        oldOilW = oilW.FullName
-    '        newOilW = filePath & "燃润料航次报表" & voy & voyLine & ".xlsx"
-    '        oldVoyW = voyW.FullName
-    '        newVoyW = filePath & "船舶航次报表" & voy & voyLine & ".xlsx"
-    '        If oldOilW <> newOilW Then
-    '            oilW.SaveAs newOilW, FileFormat:=xlOpenXMLWorkbook
-    '            Kill oldOilW
-    '        End If
-    '        If oldVoyW <> newVoyW Then
-    '            voyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
-    '            Kill oldVoyW
-    '        End If
-    '
-            'oilW.Close
-            voyW.Close
-            
-            addVoy = addVoy & shipName & voy & vbCrLf
-        Else
-            absentVoy = absentVoy & shipName & voy & vbCrLf
-        End If
+        addVoy = addVoy & shipName & voy & vbCrLf
+    Else
+        absentVoy = absentVoy & shipName & voy & vbCrLf
+    End If
 nextr:
-    'If r = 77 Then
-    '    a = 1
-'    'End If
-'    r = r - 1
-    Next r
-    If addVoy = "" Then
-        MsgBox "没有新增"
-    Else
-        MsgBox "已加入:" & vbCrLf & addVoy
-    End If
-    If absentVoy = "" Then
-        MsgBox "没有缺的"
-    Else
-        MsgBox "没有航次报表:" & vbCrLf & absentVoy
-    End If
+'If r = 77 Then
+'    a = 1
+'End If
+Next r
+If addVoy = "" Then
+    MsgBox "没有新增"
+Else
+    MsgBox "已加入:" & vbCrLf & addVoy
+End If
+If absentVoy = "" Then
+    MsgBox "没有缺的"
+Else
+    MsgBox "没有航次报表:" & vbCrLf & absentVoy
+End If
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Function
