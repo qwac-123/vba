@@ -2,8 +2,8 @@ Option Explicit
 Dim zb As Workbook
 Dim zsh As Worksheet
 Dim wsh As Worksheet
-Dim arLdPort(0 To 2, 0 To 8) '装货港三个，0-2
-Dim arDsPort(0 To 2, 0 To 8) '卸货港三个，0-2
+Dim arLdPort(0 To 2, 0 To 9) '装货港三个，0-2
+Dim arDsPort(0 To 2, 0 To 9) '卸货港三个，0-2
 'arLdPort,arDsPort
 '装卸货港三个，0-2，0-8个细节信息
 '将有关港口的信息做到一个数组里
@@ -16,8 +16,9 @@ Dim arDsPort(0 To 2, 0 To 8) '卸货港三个，0-2
 '6结束装货时间
 '7装货时间
 '8装货速率（吨/小时）
+'9备注（空值）
 
-Function 新版业务管理航次报表整合()
+Sub 新版业务管理航次报表整合()
  'v1.0可以整合航次报表和燃润料报表到一张表里
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
@@ -71,7 +72,15 @@ For r = startRow To endRow Step 1
     If Len(Dir(voyDir)) > 0 Then  '如果文件存在
         Set voyW = Workbooks.Open(fileName:=voyDir)
         Set wsh = voyW.Sheets(1)
-        Call 业务管理获得靠离泊时间(r)
+        'Call 业务管理获得靠离泊时间(r)
+        
+        Call 获取航次报表表头信息(r) 'dh1v1701testOk
+        
+        Call 获取航次报表上半部分信息(r) 'dh1v1701testOk
+        
+        Call 获取航次报表下半部分信息(r)
+        
+        Call 将码头信息填入总表(r)
         
         Call 航次报表更名保存(voyW, shipNameShort, voy, voyLine)
         
@@ -99,117 +108,114 @@ Set zsh = Nothing
 Set wsh = Nothing
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
-End Function
-Function 业务管理获得靠离泊时间(zshRow As Integer)
-
-'v0.1 业务管理获得靠离泊时间
- 
-Dim arAnchKey() '锚泊关键词
-Dim arSkipKey() '跳过的关键词
-Dim arLoadKey() '装货关键词
-Dim arDiscKey() '卸货关键词
-
-Dim colBefLd As Integer
-Dim colAftLd As Integer
-Dim cofBefDs As Integer
-Dim cofAftDs As Integer
-
-Dim countLdSep As Integer
-Dim countDsSep As Integer
-Dim countLdPort As Integer
-Dim countDsPort As Integer
-Dim countL As Integer
-Dim countD As Integer
-
-Dim i As Integer
-Dim iSkip As Integer
-Dim iAnchor As Integer
-Dim iLoad As Integer
-Dim iDisc As Integer
-
-Dim d As Integer
-Dim l As Integer
-Dim roPort As Integer
-'Set wsh = voyW.Sheets(1)
-
-Dim berthLdTime As Date
-Dim isbefLdTimeStrange      As Boolean
-Dim isaftLdTimeStrange      As Boolean
-Dim isbefDsTimeStrange      As Boolean
-Dim isaftDsTimeStrange      As Boolean
-
-Dim isTimeStrange      As Boolean
-
-Dim strTempLdLocation As String
-Dim strTempDsLocation As String
-Dim strReason As String
-Dim strLocation As String
-
-Dim dateStartVoy As Date
-Dim dateEndVoy As Date
-
+End Sub
+'Function 业务管理获得靠离泊时间(zshRow As Integer)
 '
-'berthLdTime = 0
-'berthDsTime = 0
-
-colBefLd = 3
-colAftLd = 4
-cofBefDs = 5
-cofAftDs = 6
-
-countLdSep = 0
-countDsSep = 0
-countLdPort = 0
-countDsPort = 0
-
-countL = 0
-countD = 0
-
-i = 0
-l = 0
-d = 0
-
-'Dim arLdPort(0 To 2, 0 To 8) '装货港三个，0-2
-'Dim arDsPort(0 To 2, 0 To 8) '卸货港三个，0-2
-''将有关港口的信息做到一个数组里
-''0装货码头名字
-''1抵达装货码头时间
-''2靠泊装货码头时间
-''3离泊装货码头时间
-''4待泊时间
-''5开始装货时间
-''6结束装货时间
-''7装货时间
-''8装货速率（吨/小时）
-
-    'voyW.Activate
-    isTimeStrange = False
-    
-    Call 获取航次报表表头信息(zshRow) 'dh1v1701testOk
-    
-    Call 获取航次报表上半部分信息(zshRow) 'dh1v1701testOk
-    
-    Call 获取航次报表下半部分信息(zshRow)
-
-        If arLdPort(0, 5) = 0 Then 'If startLdTime = 0 Then
-            MsgBox "无装货时间"
-        End If
-        If arDsPort(0, 5) = 0 Then 'If startDsTime = 0 Then
-            MsgBox "无卸货时间"
-        End If
-    isTimeStrange = isbefLdTimeStrange Or isaftLdTimeStrange Or isbefDsTimeStrange Or isaftDsTimeStrange
-
-    'zsh.Activate
-    If isTimeStrange Then
-        zsh.Activate
-        MsgBox "过大"
-    End If
-'    berthLdTime = 0
-'    leaveLdTime = 0
-'    startDsTime = 0
-'    endDsTime = 0
-    
-End Function
+''v0.1 业务管理获得靠离泊时间
+'
+'Dim arAnchKey() '锚泊关键词
+'Dim arSkipKey() '跳过的关键词
+'Dim arLoadKey() '装货关键词
+'Dim arDiscKey() '卸货关键词
+'
+'Dim colBefLd As Integer
+'Dim colAftLd As Integer
+'Dim cofBefDs As Integer
+'Dim cofAftDs As Integer
+'
+'Dim countLdSep As Integer
+'Dim countDsSep As Integer
+'Dim countLdPort As Integer
+'Dim countDsPort As Integer
+'Dim countL As Integer
+'Dim countD As Integer
+'
+'Dim i As Integer
+'Dim iSkip As Integer
+'Dim iAnchor As Integer
+'Dim iLoad As Integer
+'Dim iDisc As Integer
+'
+'Dim d As Integer
+'Dim l As Integer
+'Dim roPort As Integer
+''Set wsh = voyW.Sheets(1)
+'
+'Dim berthLdTime As Date
+'Dim isbefLdTimeStrange      As Boolean
+'Dim isaftLdTimeStrange      As Boolean
+'Dim isbefDsTimeStrange      As Boolean
+'Dim isaftDsTimeStrange      As Boolean
+'
+'Dim isTimeStrange      As Boolean
+'
+'Dim strTempLdLocation As String
+'Dim strTempDsLocation As String
+'Dim strReason As String
+'Dim strLocation As String
+'
+'Dim dateStartVoy As Date
+'Dim dateEndVoy As Date
+'
+''
+''berthLdTime = 0
+''berthDsTime = 0
+'
+'colBefLd = 3
+'colAftLd = 4
+'cofBefDs = 5
+'cofAftDs = 6
+'
+'countLdSep = 0
+'countDsSep = 0
+'countLdPort = 0
+'countDsPort = 0
+'
+'countL = 0
+'countD = 0
+'
+'i = 0
+'l = 0
+'d = 0
+'
+''Dim arLdPort(0 To 2, 0 To 8) '装货港三个，0-2
+''Dim arDsPort(0 To 2, 0 To 8) '卸货港三个，0-2
+'''将有关港口的信息做到一个数组里
+'''0装货码头名字
+'''1抵达装货码头时间
+'''2靠泊装货码头时间
+'''3离泊装货码头时间
+'''4待泊时间
+'''5开始装货时间
+'''6结束装货时间
+'''7装货时间
+'''8装货速率（吨/小时）
+'
+'    'voyW.Activate
+'    isTimeStrange = False
+'
+'
+'
+'
+'        If arLdPort(0, 5) = 0 Then 'If startLdTime = 0 Then
+'            MsgBox "无装货时间"
+'        End If
+'        If arDsPort(0, 5) = 0 Then 'If startDsTime = 0 Then
+'            MsgBox "无卸货时间"
+'        End If
+'    'isTimeStrange = isbefLdTimeStrange Or isaftLdTimeStrange Or isbefDsTimeStrange Or isaftDsTimeStrange
+'
+'    'zsh.Activate
+'    If isTimeStrange Then
+'        zsh.Activate
+'        MsgBox "过大"
+'    End If
+''    berthLdTime = 0
+''    leaveLdTime = 0
+''    startDsTime = 0
+''    endDsTime = 0
+'
+'End Function
 Function 获取航次报表表头信息(zshRow)
 Dim cargo As String
 Dim quantity As String
@@ -223,8 +229,8 @@ Dim dateEndVoy As Date
 
 Dim countLdSep As Integer
 Dim countDsSep As Integer
-Dim countLdPort As Integer
-Dim countDsPort As Integer
+'Dim countLdPort As Integer
+'Dim countDsPort As Integer
 
 Dim arSepaKey() '分隔符关键词
 
@@ -247,16 +253,16 @@ strDsPort = ""
     dateStartVoy = [b5].Value '航次开始时间
     dateEndVoy = [d5].Value '航次结束时间
 '
-zsh.Cells(zshRow, 3).Value = strVoyLine '航线
-zsh.Cells(zshRow, 4).Value = cargo '货名
-zsh.Cells(zshRow, 5).Value = quantity '货量
-zsh.Cells(zshRow, 6).Value = dateStartVoy '航次开始时间
-zsh.Cells(zshRow, 7).Value = dateEndVoy '航次结束时间
+    zsh.Cells(zshRow, 3).Value = strVoyLine '航线
+    zsh.Cells(zshRow, 4).Value = cargo '货名
+    zsh.Cells(zshRow, 5).Value = quantity '货量
+    zsh.Cells(zshRow, 6).Value = dateStartVoy '航次开始时间
+    zsh.Cells(zshRow, 7).Value = dateEndVoy '航次结束时间
 
     countLdSep = Len(strLdPort) - Len(Replace(strLdPort, "+", "")) 'InStr(1, strLdPort, "+")
     countDsSep = Len(strDsPort) - Len(Replace(strDsPort, "+", "")) 'InStr(1, strDsPort, "+")
-    countLdPort = countLdSep + 1 '几个装货港
-    countDsPort = countDsSep + 1 '几个卸货港
+'    countLdPort = countLdSep + 1 '几个装货港
+'    countDsPort = countDsSep + 1 '几个卸货港
 '
     Call 获取装货港名字(countLdSep, strLdPort)
     Call 获取卸货港名字(countDsSep, strDsPort)
@@ -404,9 +410,30 @@ Function 获取航次报表下半部分信息(zshRow)
 '7装货时间
 '8装货速率（吨/小时）
 
-'dim waitingHour as double
+Dim waitingHour As Double
 Dim l As Integer
 Dim d As Integer
+Dim countEpt As Integer
+Dim iSkip As Integer
+Dim iAnchor As Integer
+Dim iLoad As Integer
+Dim iDisc As Integer
+Dim roReason As Integer
+
+Dim arrivedTime As Date
+Dim gotoBthTime As Date
+Dim startLdTime As Date
+Dim endLdTime As Date
+Dim startDsTime As Date
+Dim endDsTime As Date
+
+Dim strReason As String
+Dim strLocation As String
+
+Dim arAnchKey() '锚泊关键词
+Dim arSkipKey() '跳过的关键词
+Dim arLoadKey() '装货关键词
+Dim arDiscKey() '卸货关键词
 
     If arLdPort(0, 2) = 0 Or arDsPort(0, 2) = 0 Then 'If arLdPort(0,2) = 0 Or berthDsTime = 0 Then
         MsgBox "无靠泊时间"
@@ -417,11 +444,12 @@ Dim d As Integer
     arLoadKey = Array("*装货时间*", "*装货作业*", "装货", "装货*", "*续装*")
     arDiscKey = Array("*卸货时间*", "*卸货作业*", "卸货", "卸货*", "*续卸*")
 
-countL = 0
-countD = 0
+'countL = 0
+'countD = 0
     For roReason = 37 To 66 Step 1
         strReason = Cells(roReason, 5).Value
         'skip
+        
         If strReason = "" Then
             countEpt = countEpt + 1
             If countEpt > 5 Then
@@ -438,6 +466,7 @@ countD = 0
             End If
         Next iSkip
         'anchor
+        '判断待泊时间
         For iAnchor = 0 To UBound(arAnchKey)
             If strReason Like arAnchKey(iAnchor) Then
                 arrivedTime = Cells(roReason, 2).Value
@@ -445,10 +474,11 @@ countD = 0
                 
                 For l = 0 To UBound(arLdPort) Step 1 '判断是否为装货前的待泊时间
                     waitingHour = (arLdPort(l, 2) - gotoBthTime) * 24 '待泊小时
-                    If waitingHour < 0 Then
-                        '是卸货港的
-                        Exit For
-                    ElseIf waitingHour > 0 And waitingHour < 62 Then
+'                    If waitingHour < 0 Then
+'                        '不是这个港口的待泊时间
+'
+'                    Else
+                    If waitingHour > 0 And waitingHour < 62 Then
                         arLdPort(l, 1) = arrivedTime
                         arLdPort(l, 4) = (arLdPort(l, 2) - arrivedTime) * 24
                         GoTo nextRoReason
@@ -472,8 +502,9 @@ countD = 0
         Next iAnchor
         'load
         'If countL <= countLdSep Then
+        '判断装货开始结束时间和码头名字
             For iLoad = 0 To UBound(arLoadKey)
-                If strReason Like arLoadKey(iLoad) Then
+                If strReason Like arLoadKey(iLoad) Then '可能是装货时间
                     strLocation = Cells(roReason, 1).Value
                     startLdTime = Cells(roReason, 2).Value
                     endLdTime = Cells(roReason, 3).Value
@@ -484,30 +515,31 @@ countD = 0
                             arLdPort(l, 5) = startLdTime
                             arLdPort(l, 6) = endLdTime
                             arLdPort(l, 7) = (endLdTime - arLdPort(l, 5)) * 24 '装货小时
-                            
                             Exit For
                         End If
                     Next l
-                    'test/////////////////////////////////////////////
-'                    If strTempLdLocation <> strLocation Then
-'                        strTempLdLocation = strLocation
-'                    ElseIf strTempLdLocation = strLocation Then
-'                        endLdTime = endLdTime - tempEndLdTime
-'                    End If
-'                    '/test/////////////////////////////////////////////
-'                            '/////////////////////////////////////////////
-'                    countL = countL + 1
                     GoTo nextRoReason
                 End If
             Next iLoad
         'End If
         'disc
         'If countD <= countDsSep Then
+        '判断卸货开始结束时间和码头名字
             For iDisc = 0 To UBound(arLoadKey)
                 If strReason Like arDiscKey(iDisc) Then
-                    startDsTime = startDsTime + Cells(roReason, 2).Value
-                    endDsTime = endDsTime + Cells(roReason, 3).Value
-                    countD = countD + 1
+                    strLocation = Cells(roReason, 1).Value
+                    startDsTime = Cells(roReason, 2).Value
+                    endDsTime = Cells(roReason, 3).Value
+                    
+                    For d = 0 To UBound(arDsPort) Step 1
+                        If arDsPort(d, 1) <= startDsTime And startDsTime <= arDsPort(d, 3) Then '这个装货港ar
+                            arDsPort(d, 0) = strLocation
+                            arDsPort(d, 5) = startDsTime
+                            arDsPort(d, 6) = endDsTime
+                            arDsPort(d, 7) = (endDsTime - arDsPort(d, 5)) * 24 '装货小时
+                            Exit For
+                        End If
+                    Next d
                     GoTo nextRoReason
                 End If
             Next iDisc
@@ -518,6 +550,50 @@ nextRoReason:
 '        End If
         
     Next roReason
+    
+End Function
+Function 将码头信息填入总表(zshRow As Integer)
+Dim col As Integer
+'Dim startCol As Integer
+'Dim endCol As Integer
+Dim i As Integer
+Dim l As Integer
+Dim d As Integer
+    '找装货码头1
+    For col = 8 To 15
+        If zsh.Cells(zshRow, col).Value = "装货码头1" Then
+            'startCol = col
+            'endCol = col + 2 * 3 * 10 - 1 '装+卸，各三个港，10个信息
+            Exit For
+        End If
+    Next col
+'arLdPort,arDsPort
+'装卸货港三个，0-2，0-8个细节信息
+'将有关港口的信息做到一个数组里
+'0装货码头名字
+'1抵达装货码头时间
+'2靠泊装货码头时间
+'3离泊装货码头时间
+'4待泊时间
+'5开始装货时间
+'6结束装货时间
+'7装货时间
+'8装货速率（吨/小时）
+'9是备注，一般是空的
+
+        For l = 0 To UBound(arLdPort)
+            For i = 0 To 9
+                zsh.Cells(zshRow, col).Value = arLdPort(l, i)
+                col = col + 1
+            Next i
+        Next l
+        
+        For l = 0 To UBound(arLdPort)
+            For i = 0 To 9
+                zsh.Cells(zshRow, col).Value = arLdPort(l, i)
+                col = col + 1
+            Next i
+        Next l
     
 End Function
 Function 航次报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, fcvoyLine As String)
