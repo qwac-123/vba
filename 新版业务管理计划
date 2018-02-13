@@ -4,6 +4,8 @@ Dim zsh As Worksheet
 Dim wsh As Worksheet
 Dim arLdPort(0 To 2, 0 To 8) '装货港三个，0-2
 Dim arDsPort(0 To 2, 0 To 8) '卸货港三个，0-2
+'arLdPort,arDsPort
+'装卸货港三个，0-2，0-8个细节信息
 '将有关港口的信息做到一个数组里
 '0装货码头名字
 '1抵达装货码头时间
@@ -107,10 +109,6 @@ Dim arSkipKey() '跳过的关键词
 Dim arLoadKey() '装货关键词
 Dim arDiscKey() '卸货关键词
 
-
-
-
-
 Dim colBefLd As Integer
 Dim colAftLd As Integer
 Dim cofBefDs As Integer
@@ -192,46 +190,14 @@ d = 0
     Call 获取航次报表上半部分信息(zshRow) 'dh1v1701testOk
     
     Call 获取航次报表下半部分信息(zshRow)
-    
-    
+
         If arLdPort(0, 5) = 0 Then 'If startLdTime = 0 Then
             MsgBox "无装货时间"
         End If
         If arDsPort(0, 5) = 0 Then 'If startDsTime = 0 Then
             MsgBox "无卸货时间"
         End If
-    'roReason = 0
-'    befLdTime = startLdTime - berthLdTime
-'    aftLdTime = leaveLdTime - endLdTime
-'    befDsTime = startDsTime - berthDsTime
-'    aftDsTime = leaveDsTime - endDsTime
-'    befLdTime = (startLdTime - berthLdTime) / countLdPort
-'    aftLdTime = (leaveLdTime - endLdTime) / countLdPort
-'    befDsTime = (startDsTime - berthDsTime) / countDsPort
-'    aftDsTime = (leaveDsTime - endDsTime) / countDsPort
-
-    
-'        berthLdTime = berthLdTime / countLdPort
-'        leaveLdTime = leaveLdTime / countLdPort
-'        berthDsTime = berthDsTime / countDsPort
-'        leaveDsTime = leaveDsTime / countDsPort
-'
-'
-'    isbefLdTimeStrange = Abs(befLdTime) > 1.5
-'    isaftLdTimeStrange = Abs(aftLdTime) > 1.5
-'    isbefDsTimeStrange = Abs(befDsTime) > 1.5
-'    isaftDsTimeStrange = Abs(aftDsTime) > 1.5
-
     isTimeStrange = isbefLdTimeStrange Or isaftLdTimeStrange Or isbefDsTimeStrange Or isaftDsTimeStrange
-          
-'    zsh.Cells(zshRow, 3).Value = befLdTime * 24
-'    zsh.Cells(zshRow, 4).Value = aftLdTime * 24
-'    zsh.Cells(zshRow, 5).Value = befDsTime * 24
-'    zsh.Cells(zshRow, 6).Value = aftDsTime * 24
-
-
-
-
 
     'zsh.Activate
     If isTimeStrange Then
@@ -425,9 +391,23 @@ nextRoPort:
     
 End Function
 Function 获取航次报表下半部分信息(zshRow)
-    
+'arLdPort,arDsPort
+'装卸货港三个，0-2，0-8个细节信息
+'将有关港口的信息做到一个数组里
+'0装货码头名字
+'1抵达装货码头时间
+'2靠泊装货码头时间
+'3离泊装货码头时间
+'4待泊时间
+'5开始装货时间
+'6结束装货时间
+'7装货时间
+'8装货速率（吨/小时）
 
-            
+'dim waitingHour as double
+Dim l As Integer
+Dim d As Integer
+
     If arLdPort(0, 2) = 0 Or arDsPort(0, 2) = 0 Then 'If arLdPort(0,2) = 0 Or berthDsTime = 0 Then
         MsgBox "无靠泊时间"
     End If
@@ -462,6 +442,31 @@ countD = 0
             If strReason Like arAnchKey(iAnchor) Then
                 arrivedTime = Cells(roReason, 2).Value
                 gotoBthTime = Cells(roReason, 3).Value
+                
+                For l = 0 To UBound(arLdPort) Step 1 '判断是否为装货前的待泊时间
+                    waitingHour = (arLdPort(l, 2) - gotoBthTime) * 24 '待泊小时
+                    If waitingHour < 0 Then
+                        '是卸货港的
+                        Exit For
+                    ElseIf waitingHour > 0 And waitingHour < 62 Then
+                        arLdPort(l, 1) = arrivedTime
+                        arLdPort(l, 4) = (arLdPort(l, 2) - arrivedTime) * 24
+                        GoTo nextRoReason
+                    ElseIf waitingHour > 62 Then
+                        MsgBox "待泊超过62小时"
+                    End If
+                Next l
+                d = 0
+                For d = 0 To UBound(arDsPort) Step 1 '判断是否为卸货前的待泊时间
+                    waitingHour = (arDsPort(d, 2) - gotoBthTime) * 24 '待泊小时
+                    If waitingHour > 0 And waitingHour < 62 Then
+                        arDsPort(d, 1) = arrivedTime
+                        arDsPort(d, 4) = (arDsPort(d, 2) - arrivedTime) * 24
+                        Exit For
+                    ElseIf waitingHour > 62 Then
+                        MsgBox "待泊超过62小时"
+                    End If
+                Next d
                 GoTo nextRoReason
             End If
         Next iAnchor
@@ -470,18 +475,28 @@ countD = 0
             For iLoad = 0 To UBound(arLoadKey)
                 If strReason Like arLoadKey(iLoad) Then
                     strLocation = Cells(roReason, 1).Value
-                    tempEndLdTime = Cells(roReason, 3).Value
+                    startLdTime = Cells(roReason, 2).Value
+                    endLdTime = Cells(roReason, 3).Value
+                    
+                    For l = 0 To UBound(arLdPort) Step 1
+                        If arLdPort(l, 1) <= startLdTime And startLdTime <= arLdPort(l, 3) Then '这个装货港ar
+                            arLdPort(l, 0) = strLocation
+                            arLdPort(l, 5) = startLdTime
+                            arLdPort(l, 6) = endLdTime
+                            arLdPort(l, 7) = (endLdTime - arLdPort(l, 5)) * 24 '装货小时
+                            
+                            Exit For
+                        End If
+                    Next l
                     'test/////////////////////////////////////////////
-                    If strTempLdLocation <> strLocation Then
-                        strTempLdLocation = strLocation
-                        startLdTime = startLdTime + Cells(roReason, 2).Value
-                        endLdTime = endLdTime + Cells(roReason, 3).Value
-                    ElseIf strTempLdLocation = strLocation Then
-                        endLdTime = endLdTime - tempEndLdTime
-                    End If
-                    '/test/////////////////////////////////////////////
-                            '/////////////////////////////////////////////
-                    countL = countL + 1
+'                    If strTempLdLocation <> strLocation Then
+'                        strTempLdLocation = strLocation
+'                    ElseIf strTempLdLocation = strLocation Then
+'                        endLdTime = endLdTime - tempEndLdTime
+'                    End If
+'                    '/test/////////////////////////////////////////////
+'                            '/////////////////////////////////////////////
+'                    countL = countL + 1
                     GoTo nextRoReason
                 End If
             Next iLoad
