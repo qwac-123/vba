@@ -82,6 +82,7 @@ For r = startRow To endRow Step 1
         
         Call 将码头信息填入总表(r)
         
+        'voyW.Close
         Call 航次报表更名保存(voyW, shipNameShort, voy, voyLine)
         
         addVoy = addVoy & shipName & voy & vbCrLf
@@ -89,9 +90,6 @@ For r = startRow To endRow Step 1
         absentVoy = absentVoy & shipName & voy & vbCrLf
     End If
 nextr:
-'If r = 77 Then
-'    a = 1
-'End If
 Next r
 If addVoy = "" Then
     MsgBox "没有新增"
@@ -109,113 +107,6 @@ Set wsh = Nothing
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Sub
-'Function 业务管理获得靠离泊时间(zshRow As Integer)
-'
-''v0.1 业务管理获得靠离泊时间
-'
-'Dim arAnchKey() '锚泊关键词
-'Dim arSkipKey() '跳过的关键词
-'Dim arLoadKey() '装货关键词
-'Dim arDiscKey() '卸货关键词
-'
-'Dim colBefLd As Integer
-'Dim colAftLd As Integer
-'Dim cofBefDs As Integer
-'Dim cofAftDs As Integer
-'
-'Dim countLdSep As Integer
-'Dim countDsSep As Integer
-'Dim countLdPort As Integer
-'Dim countDsPort As Integer
-'Dim countL As Integer
-'Dim countD As Integer
-'
-'Dim i As Integer
-'Dim iSkip As Integer
-'Dim iAnchor As Integer
-'Dim iLoad As Integer
-'Dim iDisc As Integer
-'
-'Dim d As Integer
-'Dim l As Integer
-'Dim roPort As Integer
-''Set wsh = voyW.Sheets(1)
-'
-'Dim berthLdTime As Date
-'Dim isbefLdTimeStrange      As Boolean
-'Dim isaftLdTimeStrange      As Boolean
-'Dim isbefDsTimeStrange      As Boolean
-'Dim isaftDsTimeStrange      As Boolean
-'
-'Dim isTimeStrange      As Boolean
-'
-'Dim strTempLdLocation As String
-'Dim strTempDsLocation As String
-'Dim strReason As String
-'Dim strLocation As String
-'
-'Dim dateStartVoy As Date
-'Dim dateEndVoy As Date
-'
-''
-''berthLdTime = 0
-''berthDsTime = 0
-'
-'colBefLd = 3
-'colAftLd = 4
-'cofBefDs = 5
-'cofAftDs = 6
-'
-'countLdSep = 0
-'countDsSep = 0
-'countLdPort = 0
-'countDsPort = 0
-'
-'countL = 0
-'countD = 0
-'
-'i = 0
-'l = 0
-'d = 0
-'
-''Dim arLdPort(0 To 2, 0 To 8) '装货港三个，0-2
-''Dim arDsPort(0 To 2, 0 To 8) '卸货港三个，0-2
-'''将有关港口的信息做到一个数组里
-'''0装货码头名字
-'''1抵达装货码头时间
-'''2靠泊装货码头时间
-'''3离泊装货码头时间
-'''4待泊时间
-'''5开始装货时间
-'''6结束装货时间
-'''7装货时间
-'''8装货速率（吨/小时）
-'
-'    'voyW.Activate
-'    isTimeStrange = False
-'
-'
-'
-'
-'        If arLdPort(0, 5) = 0 Then 'If startLdTime = 0 Then
-'            MsgBox "无装货时间"
-'        End If
-'        If arDsPort(0, 5) = 0 Then 'If startDsTime = 0 Then
-'            MsgBox "无卸货时间"
-'        End If
-'    'isTimeStrange = isbefLdTimeStrange Or isaftLdTimeStrange Or isbefDsTimeStrange Or isaftDsTimeStrange
-'
-'    'zsh.Activate
-'    If isTimeStrange Then
-'        zsh.Activate
-'        MsgBox "过大"
-'    End If
-''    berthLdTime = 0
-''    leaveLdTime = 0
-''    startDsTime = 0
-''    endDsTime = 0
-'
-'End Function
 Function 获取航次报表表头信息(zshRow)
 Dim cargo As String
 Dim quantity As String
@@ -561,7 +452,7 @@ Dim l As Integer
 Dim d As Integer
     '找装货码头1
     For col = 8 To 15
-        If zsh.Cells(zshRow, col).Value = "装货码头1" Then
+        If zsh.Cells(1, col).Value = "装货码头1" Then
             'startCol = col
             'endCol = col + 2 * 3 * 10 - 1 '装+卸，各三个港，10个信息
             Exit For
@@ -602,14 +493,17 @@ Dim oldVoyW As String
 Dim newVoyW As String
 Dim fcfilePath As String
 
-
-    oldVoyW = fcvoyW.FullName
-    fcfilePath = fcvoyW.Path & "\"
-    newVoyW = fcfilePath & fcshipNameShort & "船舶航次报表" & fcvoy & fcvoyLine & ".xlsx"
+    If CInt(Mid(fcvoy, 2, 2)) >= 18 Then
     
-    If oldVoyW <> newVoyW Then
-        voyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
-        Kill oldVoyW
+    
+        oldVoyW = fcvoyW.FullName
+        fcfilePath = fcvoyW.Path & "\"
+        newVoyW = fcfilePath & fcshipNameShort & "船舶航次报表" & fcvoy & fcvoyLine & ".xlsx"
+        
+        If oldVoyW <> newVoyW Then
+            fcvoyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
+            Kill oldVoyW
+        End If
     End If
 '
     'oilW.Close
