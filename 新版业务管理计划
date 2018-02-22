@@ -19,8 +19,7 @@ Dim arDsPort(0 To 2, 0 To 9) '卸货港三个，0-2
 '9备注（空值）
 
 Sub 新版业务管理航次报表整合()
- 'v0.2只整合航次报表
- 'v0.1可以整合航次报表和燃润料报表到一张表里
+ 'v1.0可以整合航次报表和燃润料报表到一张表里
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
 
@@ -131,18 +130,14 @@ Dim countDsSep As Integer
 'Dim countLdPort As Integer
 'Dim countDsPort As Integer
 
-Dim arSepaKey() '分隔符关键词
+'Dim arSepaKey() '分隔符关键词
 
 Dim i As Integer
 
 strLdPort = ""
 strDsPort = ""
-    arSepaKey = Array("&")
-    '替换掉除+以外的分隔符
-    
-    For i = 0 To UBound(arSepaKey)
-        Range(Cells(4, 8), Cells(5, 8)).Replace What:=arSepaKey(i), Replacement:="+", LookAt:=xlPart
-    Next i
+
+    Call ENPortToCNPort(8, True)
     
     cargo = [d4].Value '货物名称STR
     quantity = [f4].Value '货量数值INT
@@ -242,7 +237,6 @@ i = 0
 l = 0
 d = 0
 
-    Call ENPortToCNPort(8)
     For roPort = 7 To 25 Step 1
         portName = Left(Cells(roPort, 1).Value, 2)
         If portName = "" Then
@@ -499,7 +493,9 @@ Dim d As Integer
                 col = col + 1
             Next i
         Next d
-    
+        
+        Erase arLdPort
+        Erase arDsPort
 End Function
 Function 航次报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, fcvoyLine As String)
 
