@@ -19,7 +19,8 @@ Dim arDsPort(0 To 2, 0 To 9) '卸货港三个，0-2
 '9备注（空值）
 
 Sub 新版业务管理航次报表整合()
- 'v1.0可以整合航次报表和燃润料报表到一张表里
+ 'v0.2只整合航次报表
+ 'v0.1可以整合航次报表和燃润料报表到一张表里
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
 
@@ -30,6 +31,7 @@ Dim voyValue As Integer
 
 Dim shipName As String
 Dim shipNameShort As String
+Dim lastShipNameShort As String
 Dim voy As String
 Dim lastSameShipVoy As String
 Dim thisSameShipVoy As String
@@ -50,16 +52,19 @@ Set zsh = ActiveSheet
 startRow = [c6666].End(xlUp).Row + 1
 endRow = [a1].End(xlDown).Row
 startRow = 2
+lastShipNameShort = ""
 For r = startRow To endRow Step 1
     If Cells(r, 3) <> "" Then
         GoTo nextr
     End If
-    shipName = Cells(r, 1).Value
-    shipNameShort = shipName
-    shipName = 船名缩写转全称(shipName)
+    shipNameShort = Cells(r, 1).Value
+    If lastShipNameShort <> shipNameShort Then
+        shipName = shipNameShort
+        shipName = 船名缩写转全称(shipName)
+    End If
     voy = Cells(r, 2).Value
     voyValue = 提取航次号(voy)
-    lastSameShipVoy = Cells(r - 1, 1).Value & Cells(r - 1, 2).Value
+    'lastSameShipVoy = Cells(r - 1, 1).Value & Cells(r - 1, 2).Value
     thisSameShipVoy = Cells(r, 1).Value & Cells(r, 2).Value
     isSameShipVoy = lastSameShipVoy = thisSameShipVoy
     
@@ -83,6 +88,7 @@ For r = startRow To endRow Step 1
         Call 将码头信息填入总表(r)
         
         'voyW.Close
+        voyLine = zsh.Cells(r, 3).Value
         Call 航次报表更名保存(voyW, shipNameShort, voy, voyLine)
         
         addVoy = addVoy & shipName & voy & vbCrLf
@@ -90,6 +96,8 @@ For r = startRow To endRow Step 1
         absentVoy = absentVoy & shipName & voy & vbCrLf
     End If
 nextr:
+lastSameShipVoy = thisSameShipVoy
+lastShipNameShort = shipNameShort
 Next r
 If addVoy = "" Then
     MsgBox "没有新增"
@@ -233,6 +241,8 @@ countD = 0
 i = 0
 l = 0
 d = 0
+
+    Call ENPortToCNPort(8)
     For roPort = 7 To 25 Step 1
         portName = Left(Cells(roPort, 1).Value, 2)
         If portName = "" Then
@@ -285,6 +295,12 @@ d = 0
         End If
 nextRoPort:
     Next roPort
+
+    If arLdPort(0, 2) = 0 Or arDsPort(0, 2) = 0 Or arLdPort(0, 3) = 0 Or arDsPort(0, 3) = 0 Then 'If arLdPort(0,2) = 0 Or berthDsTime = 0 Then
+        MsgBox "无靠离泊时间,请停下来调试"
+        Debug.Print 1
+    End If
+    
     
 End Function
 Function 获取航次报表下半部分信息(zshRow)
@@ -326,9 +342,6 @@ Dim arSkipKey() '跳过的关键词
 Dim arLoadKey() '装货关键词
 Dim arDiscKey() '卸货关键词
 
-    If arLdPort(0, 2) = 0 Or arDsPort(0, 2) = 0 Then 'If arLdPort(0,2) = 0 Or berthDsTime = 0 Then
-        MsgBox "无靠泊时间"
-    End If
     
     arAnchKey = Array("*抛锚*")
     arSkipKey = Array("原因*", "*商检*", "*办手续*")
@@ -374,7 +387,8 @@ Dim arDiscKey() '卸货关键词
                         arLdPort(l, 4) = (arLdPort(l, 2) - arrivedTime) * 24
                         GoTo nextRoReason
                     ElseIf waitingHour > 62 Then
-                        MsgBox "待泊超过62小时"
+                        MsgBox "待泊超过62小时,请确认"
+                        Debug.Print 1
                     End If
                 Next l
                 d = 0
@@ -479,12 +493,12 @@ Dim d As Integer
             Next i
         Next l
         
-        For l = 0 To UBound(arLdPort)
+        For d = 0 To UBound(arDsPort)
             For i = 0 To 9
-                zsh.Cells(zshRow, col).Value = arLdPort(l, i)
+                zsh.Cells(zshRow, col).Value = arDsPort(d, i)
                 col = col + 1
             Next i
-        Next l
+        Next d
     
 End Function
 Function 航次报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, fcvoyLine As String)
