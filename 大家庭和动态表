@@ -1,7 +1,6 @@
 Dim dajiating
 Dim dongtaibiao
 Sub 开始今天上午的工作()
-'v3.1大家庭表放到了航运在线  "\\192.168.0.223\\航运在线\\3.2、操作部\\4.2 船舶动态表（鼎衡大家庭）
 'v3 删除了DH7
 'V2 增加了ANGEL123,DHE
 'v1.2增加了向上滚屏代码
@@ -166,8 +165,12 @@ Select Case Month(Date)
         If Day(Date) = 2 Then '元旦
         End If
     Case 2 '二月春节
-        If Day(Date) = 11 Then
-            zuotian = 2 '周日上班，周六休息，周五上班
+        If Day(Date) = 11 Then '春节调休
+            zuotian = 2 '周日上班，周六休息，周一上班
+        ElseIf today = 12 Then '虽然是周一，但是周日上班了
+            zuotian = 1
+        ElseIf today = 22 Then
+            zuotian = 9
         End If
     Case 3
     Case 4
@@ -618,7 +621,8 @@ arPorts = Array("大连", "营口", "秦皇岛", "天津", "烟台", "东营", "
 "平仄", "麥寮N5码头", "麥寮", "大山", "锦州", "韩国", "菲律宾", "揭阳", "仪征", _
 "宁波镇司", "杨浦", "北海铁山港码头", "浙江", "扬州", _
 "曹泾", "小虎山", "东霍山", "大山", "锦石", "金兰湾", "无为" _
-, "洋山", "长江口", "古雷", "昂山", "山阳", "新加坡")
+, "洋山", "长江口", "古雷", "昂山", "山阳", "新加坡", "蔚山", "Maptaphut", _
+"")
 
 
 
@@ -687,7 +691,7 @@ arPorts = Array("大连", "营口", "秦皇岛", "天津", "烟台", "东营", "
 '    .Replace What:="直靠", Replacement:=""
     
     End With
-Call ENPortToCNPort("k")
+Call ENPortToCNPort("k", False)
 testLine:
 For r = 4 To 20
     oriStatus = Cells(r, 6).Value
