@@ -162,23 +162,20 @@ Function 货名统一为英文(col)
         ReplaceFormat:=False
     End With
 End Function
-Function ENPortToCNPort(columnABC)
+Function ENPortToCNPort(columnABC, Optional ifReplace0 As Boolean = True)
 '运价表处理.ENPortToCNPort(列号)
-
-Application.ScreenUpdating = False
-Application.DisplayAlerts = False
-With Columns(columnABC)
+With Columns(columnABC) ' Cells(4, 8)
     .Replace What:="/", Replacement:="-", LookAt:=xlPart
+    .Replace What:="&", Replacement:="+"
     .Replace What:="\", Replacement:="-"
     .Replace What:="－", Replacement:="-"
     .Replace What:="—", Replacement:="-"
     .Replace What:="廖", Replacement:="寮"
     .Replace What:=" ", Replacement:=""
-    
     '48,数字0
     '79,大写字母O
     '111,小写字母o
-    If MsgBox("是否替换数字0", vbYesNo) = vbYes Then
+    If ifReplace0 Then
         .Replace What:=Chr(48), Replacement:=Chr(79)
     End If
     .Replace What:="，", Replacement:="+"
@@ -524,12 +521,22 @@ End Function
 Function 码头列表()
 arrBerthName = Array("欧德", "炼化", "华盛")
 End Function
-
 Function 获得船舶航次报表dir(localFilePath As String, localShipNameShort As String, localVoyValue As Integer)
 
     Dim arVoy As Variant
     Dim iVoy As Integer
     Dim voyDir As String
+    '后缀*.xls?
+    '航次报表*1701*
+    '*1701航次报表*
+    'DH1航次报表*1701
+    '*船舶航次报表*1701*
+    '*1701*船舶航次报表*
+    '
+    '
+    '
+    '
+    '
     arVoy = Array("航次报表*" & localVoyValue, "*" & localVoyValue & "航次报表*", _
     localShipNameShort & "航次报表*" & localVoyValue, _
     "*船舶航次报表*" & localVoyValue, "*" & localVoyValue & "*船舶航次报表*")
