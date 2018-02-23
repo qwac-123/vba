@@ -88,7 +88,7 @@ For r = startRow To endRow Step 1
         
         'voyW.Close
         voyLine = zsh.Cells(r, 3).Value
-        Call 航次报表更名保存(voyW, shipNameShort, voy, voyLine)
+        Call 船舶航次报表更名保存(voyW, shipNameShort, voy, voyLine)
         
         addVoy = addVoy & shipName & voy & vbCrLf
     Else
@@ -139,13 +139,13 @@ strDsPort = ""
 
     Call ENPortToCNPort(8, True)
     
-    cargo = [d4].Value '货物名称STR
-    quantity = [f4].Value '货量数值INT
-    strLdPort = [h4].Value '装货港str
-    strDsPort = [h5].Value '卸货港名
+    cargo = wsh.[d4].Value '货物名称STR
+    quantity = wsh.[f4].Value '货量数值INT
+    strLdPort = wsh.[h4].Value '装货港str
+    strDsPort = wsh.[h5].Value '卸货港名
     strVoyLine = strLdPort & "-" & strDsPort '航线
-    dateStartVoy = [b5].Value '航次开始时间
-    dateEndVoy = [d5].Value '航次结束时间
+    dateStartVoy = wsh.[b5].Value '航次开始时间
+    dateEndVoy = wsh.[d5].Value '航次结束时间
 '
     zsh.Cells(zshRow, 3).Value = strVoyLine '航线
     zsh.Cells(zshRow, 4).Value = cargo '货名
@@ -238,7 +238,7 @@ l = 0
 d = 0
 
     For roPort = 7 To 25 Step 1
-        portName = Left(Cells(roPort, 1).Value, 2)
+        portName = Left(wsh.Cells(roPort, 1).Value, 2)
         If portName = "" Then
             GoTo nextRoPort
         End If
@@ -250,17 +250,18 @@ d = 0
                 End If
                 If portName Like "*" & ldPort & "*" Then
                     If berthLdTime = 0 Then '是第一个靠港
-                        lastVoyDsToThisVoyLd = Cells(roPort, 7).Value '装卸港距离
-                        avgSpeed = Cells(roPort, 8).Value '平均航速
+                        lastVoyDsToThisVoyLd = wsh.Cells(roPort, 7).Value '装卸港距离
+                        avgSpeed = wsh.Cells(roPort, 8).Value '平均航速
                         
                         zsh.Cells(zshRow, 8).Value = lastVoyDsToThisVoyLd '装卸港距离
                         zsh.Cells(zshRow, 9).Value = avgSpeed '平均航速
                         zsh.Cells(zshRow, 10).FormulaR1C1 = "=RC[-2]/RC[-1]" '理论可用洗舱时间
                     End If
-                    berthLdTime = Cells(roPort, 2).Value
-                    leaveLdTime = Cells(roPort, 3).Value
-                    arLdPort(countL, 2) = berthLdTime
-                    arLdPort(countL, 3) = leaveLdTime
+                    berthLdTime = wsh.Cells(roPort, 2).Value
+                    leaveLdTime = wsh.Cells(roPort, 3).Value
+                    arLdPort(countL, 1) = berthLdTime '默认抵达装港时间
+                    arLdPort(countL, 2) = berthLdTime '靠泊装港时间
+                    arLdPort(countL, 3) = leaveLdTime '离泊装港时间
                     countL = countL + 1
                     GoTo nextRoPort
                 End If
@@ -273,17 +274,18 @@ d = 0
                     Exit For
                 End If
                 If portName Like "*" & dsPort & "*" Then
-                    berthDsTime = Cells(roPort, 2).Value
-                    leaveDsTime = Cells(roPort, 3).Value
-                    arDsPort(countD, 2) = berthDsTime
-                    arDsPort(countD, 3) = leaveDsTime
+                    berthDsTime = wsh.Cells(roPort, 2).Value
+                    leaveDsTime = wsh.Cells(roPort, 3).Value
+                    arDsPort(countD, 1) = berthDsTime '默认抵达卸港时间
+                    arDsPort(countD, 2) = berthDsTime '靠泊卸港时间
+                    arDsPort(countD, 3) = leaveDsTime '离泊卸港时间
                     countD = countD + 1
                     GoTo nextRoPort
                 End If
             Next d
         End If
         If portName = "洗舱" Then
-            actualWashingTime = Cells(roPort, 6).Value '洗舱消耗时间
+            actualWashingTime = wsh.Cells(roPort, 6).Value '洗舱消耗时间
             zsh.Cells(zshRow, 11).Value = actualWashingTime '洗舱消耗时间
             Exit For
         End If
@@ -337,15 +339,15 @@ Dim arLoadKey() '装货关键词
 Dim arDiscKey() '卸货关键词
 
     
-    arAnchKey = Array("*抛锚*")
-    arSkipKey = Array("原因*", "*商检*", "*办手续*")
+    arSkipKey = Array("原因*", "*商检*", "*离泊*", "*验舱，接管*", "*计量*") ', "*办手续*")
+    arAnchKey = Array("*抛锚*", "*待泊*", "*外贸转内贸办手续*")
     arLoadKey = Array("*装货时间*", "*装货作业*", "装货", "装货*", "*续装*")
     arDiscKey = Array("*卸货时间*", "*卸货作业*", "卸货", "卸货*", "*续卸*")
 
 'countL = 0
 'countD = 0
     For roReason = 37 To 66 Step 1
-        strReason = Cells(roReason, 5).Value
+        strReason = wsh.Cells(roReason, 5).Value
         'skip
         
         If strReason = "" Then
@@ -367,18 +369,15 @@ Dim arDiscKey() '卸货关键词
         '判断待泊时间
         For iAnchor = 0 To UBound(arAnchKey)
             If strReason Like arAnchKey(iAnchor) Then
-                arrivedTime = Cells(roReason, 2).Value
-                gotoBthTime = Cells(roReason, 3).Value
+                arrivedTime = wsh.Cells(roReason, 2).Value
+                gotoBthTime = wsh.Cells(roReason, 3).Value
                 
                 For l = 0 To UBound(arLdPort) Step 1 '判断是否为装货前的待泊时间
                     waitingHour = (arLdPort(l, 2) - gotoBthTime) * 24 '待泊小时
-'                    If waitingHour < 0 Then
-'                        '不是这个港口的待泊时间
-'
-'                    Else
+                    '不对<0退出循环是因为可能还有别的装货港
                     If waitingHour > 0 And waitingHour < 62 Then
-                        arLdPort(l, 1) = arrivedTime
-                        arLdPort(l, 4) = (arLdPort(l, 2) - arrivedTime) * 24
+                        arLdPort(l, 1) = arrivedTime '抵达装港时间
+                        arLdPort(l, 4) = (arLdPort(l, 2) - arrivedTime) * 24 '待泊小时
                         GoTo nextRoReason
                     ElseIf waitingHour > 62 Then
                         MsgBox "待泊超过62小时,请确认"
@@ -389,8 +388,8 @@ Dim arDiscKey() '卸货关键词
                 For d = 0 To UBound(arDsPort) Step 1 '判断是否为卸货前的待泊时间
                     waitingHour = (arDsPort(d, 2) - gotoBthTime) * 24 '待泊小时
                     If waitingHour > 0 And waitingHour < 62 Then
-                        arDsPort(d, 1) = arrivedTime
-                        arDsPort(d, 4) = (arDsPort(d, 2) - arrivedTime) * 24
+                        arDsPort(d, 1) = arrivedTime '抵达卸港时间
+                        arDsPort(d, 4) = (arDsPort(d, 2) - arrivedTime) * 24 '待泊小时
                         Exit For
                     ElseIf waitingHour > 62 Then
                         MsgBox "待泊超过62小时"
@@ -404,16 +403,17 @@ Dim arDiscKey() '卸货关键词
         '判断装货开始结束时间和码头名字
             For iLoad = 0 To UBound(arLoadKey)
                 If strReason Like arLoadKey(iLoad) Then '可能是装货时间
-                    strLocation = Cells(roReason, 1).Value
-                    startLdTime = Cells(roReason, 2).Value
-                    endLdTime = Cells(roReason, 3).Value
+                    strLocation = wsh.Cells(roReason, 1).Value
+                    startLdTime = wsh.Cells(roReason, 2).Value
+                    endLdTime = wsh.Cells(roReason, 3).Value
                     
                     For l = 0 To UBound(arLdPort) Step 1
                         If arLdPort(l, 1) <= startLdTime And startLdTime <= arLdPort(l, 3) Then '这个装货港ar
-                            arLdPort(l, 0) = strLocation
-                            arLdPort(l, 5) = startLdTime
-                            arLdPort(l, 6) = endLdTime
+                            arLdPort(l, 0) = strLocation '靠港码头名字
+                            arLdPort(l, 5) = startLdTime '开始装货时间
+                            arLdPort(l, 6) = endLdTime '开始卸货时间
                             arLdPort(l, 7) = (endLdTime - arLdPort(l, 5)) * 24 '装货小时
+                            arLdPort(l, 8) = zsh.Cells(zshRow, 5).Value / arLdPort(l, 7) '装货速率
                             Exit For
                         End If
                     Next l
@@ -426,16 +426,17 @@ Dim arDiscKey() '卸货关键词
         '判断卸货开始结束时间和码头名字
             For iDisc = 0 To UBound(arLoadKey)
                 If strReason Like arDiscKey(iDisc) Then
-                    strLocation = Cells(roReason, 1).Value
-                    startDsTime = Cells(roReason, 2).Value
-                    endDsTime = Cells(roReason, 3).Value
+                    strLocation = wsh.Cells(roReason, 1).Value
+                    startDsTime = wsh.Cells(roReason, 2).Value
+                    endDsTime = wsh.Cells(roReason, 3).Value
                     
                     For d = 0 To UBound(arDsPort) Step 1
-                        If arDsPort(d, 1) <= startDsTime And startDsTime <= arDsPort(d, 3) Then '这个装货港ar
+                        If arDsPort(d, 1) <= startDsTime And startDsTime <= arDsPort(d, 3) Then '这个卸货港ar
                             arDsPort(d, 0) = strLocation
                             arDsPort(d, 5) = startDsTime
                             arDsPort(d, 6) = endDsTime
-                            arDsPort(d, 7) = (endDsTime - arDsPort(d, 5)) * 24 '装货小时
+                            arDsPort(d, 7) = (endDsTime - arDsPort(d, 5)) * 24 '卸货小时
+                            arDsPort(d, 8) = zsh.Cells(zshRow, 5).Value / arDsPort(d, 7) '卸货速率
                             Exit For
                         End If
                     Next d
@@ -497,7 +498,7 @@ Dim d As Integer
         Erase arLdPort
         Erase arDsPort
 End Function
-Function 航次报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, fcvoyLine As String)
+Function 船舶航次报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, fcvoyLine As String)
 
 Dim oldVoyW As String
 Dim newVoyW As String
@@ -509,6 +510,30 @@ Dim fcfilePath As String
         oldVoyW = fcvoyW.FullName
         fcfilePath = fcvoyW.Path & "\"
         newVoyW = fcfilePath & fcshipNameShort & "船舶航次报表" & fcvoy & fcvoyLine & ".xlsx"
+        
+        If oldVoyW <> newVoyW Then
+            fcvoyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
+            Kill oldVoyW
+        End If
+    End If
+'
+    'oilW.Close
+    fcvoyW.Close
+    Set fcvoyW = Nothing
+    
+End Function
+Function 燃润料报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, fcvoyLine As String)
+
+Dim oldVoyW As String
+Dim newVoyW As String
+Dim fcfilePath As String
+
+    If CInt(Mid(fcvoy, 2, 2)) >= 18 Then
+    
+    
+        oldVoyW = fcvoyW.FullName
+        fcfilePath = fcvoyW.Path & "\"
+        newVoyW = fcfilePath & fcshipNameShort & "燃润料航次报表" & fcvoy & fcvoyLine & ".xlsx"
         
         If oldVoyW <> newVoyW Then
             fcvoyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
