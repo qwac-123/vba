@@ -380,8 +380,8 @@ Dim arDiscKey() '卸货关键词
                         arLdPort(l, 4) = (arLdPort(l, 2) - arrivedTime) * 24 '待泊小时
                         GoTo nextRoReason
                     ElseIf waitingHour > 62 Then
-                        MsgBox "待泊超过62小时,请确认"
-                        Debug.Print 1
+                        MsgBox "待泊超过62小时" & vbCrLf & "当前装港为:" & arLdPort(l, 0) & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason
+                        Debug.Print "当前装港为:" & arLdPort(l, 0) & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason
                     End If
                 Next l
                 d = 0
@@ -392,7 +392,8 @@ Dim arDiscKey() '卸货关键词
                         arDsPort(d, 4) = (arDsPort(d, 2) - arrivedTime) * 24 '待泊小时
                         Exit For
                     ElseIf waitingHour > 62 Then
-                        MsgBox "待泊超过62小时"
+                        MsgBox "待泊超过62小时" & vbCrLf & "当前卸港为:" & arDsPort(d, 0) & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason
+                        Debug.Print "当前卸港为:" & arDsPort(d, 0) & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason
                     End If
                 Next d
                 GoTo nextRoReason
