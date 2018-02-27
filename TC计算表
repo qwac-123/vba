@@ -71,7 +71,7 @@ Next i
 
 End Sub
 Sub TC统计表()
-'v2.1 修改增加了定义变量
+'v2.1 修改增加了变量
 'V2 改了表
 'v1.7 现在可以正确找到航次报表的细节时间了
 'v1.6 现在可以正确找到油料表头了
@@ -94,6 +94,7 @@ Dim addVoy As String
 Dim filePath As String
 Dim shipName As String
 Dim shipNameShort As String
+Dim lastShipNameShort As String
 Dim thisShipVoy As String
 Dim lastShipVoy As String
 Dim voy As String
@@ -102,8 +103,10 @@ Dim voyYear As String
 Dim voyDir As String
 Dim oilDir As String
 
+Dim isAbsent As Boolean
 Dim isWriten As Boolean
 Dim isSameShipVoy As Boolean
+Dim isSameShip As Boolean
 
 Dim oilW As Workbook
 Dim voyW As Workbook
@@ -122,18 +125,32 @@ Next col
     
 For r = 2 To rend Step 1
     'r = 5
-    shipName = Cells(r, 1).Value
-    shipNameShort = shipName
-    shipName = 船名缩写转全称(shipName)
+    shipNameShort = Cells(r, 1).Value
+    'test
+    If shipNameShort = "DH2" Then
+        Debug.Print 1
+    End If
+    '/test
+    isSameShip = lastShipNameShort = shipNameShort
+    If Not (isSameShip) Then
+        shipName = shipNameShort
+        shipName = 船名缩写转全称(shipName)
+        isAbsent = False
+    End If
     'shipNum = Right(shipName, 2)
     voy = Cells(r, 2).Value
     voyValue = 提取航次号(voy)
     thisShipVoy = Cells(r, 1).Value & Cells(r, 2).Value
+    'test
+    If thisShipVoy = "DH2V1803" Then
+        Debug.Print 1
+    End If
+    '/test
     isSameShipVoy = thisShipVoy = lastShipVoy
     
     isWriten = Cells(r, colDO) <> Empty
     
-    If isWriten Or isSameShipVoy Then '已经填写了
+    If isWriten Or isSameShipVoy Or (isAbsent And isSameShip) Then '已经填写了或者相同船名航次或者这条船后面没有航次报表了
         GoTo nextr
     End If
     
@@ -145,6 +162,7 @@ For r = 2 To rend Step 1
     If Len(Dir(voyDir)) > 0 Then  '如果文件存在
 '        oilNam = Dir(oilDir)
 '        voyNam = Dir(voyDir)
+        isAbsent = False
         Set oilW = Workbooks.Open(fileName:=oilDir)
         Set voyW = Workbooks.Open(fileName:=voyDir)
         
@@ -160,8 +178,10 @@ For r = 2 To rend Step 1
         addVoy = addVoy & shipName & voy & vbCrLf
     Else
         absentVoy = absentVoy & shipName & voy & vbCrLf
+        isAbsent = True
     End If
 nextr:
+lastShipNameShort = shipNameShort
 lastShipVoy = thisShipVoy
 Next r
 If addVoy = "" Then
@@ -282,6 +302,10 @@ Next i
 cIntVoy = arNxSpVy
 End Function
 Function 提取航次号(rngValue)
+Dim regNum
+Dim mh
+Dim mhk
+
 rngValue = Application.Asc(rngValue)
 Set regNum = CreateObject("vbscript.regexp")
 regNum.Pattern = "\d\d\d\d"
@@ -295,11 +319,33 @@ Function TC燃润料报表整合(objWBOil, rowZSht, colDO)
 'v2.1 增加了判断是否打开过油料表
 'v2.0 从原来的sub改为sub航次报表统一整合()下的一个function
 'v1.0 油料报表整合 Macro
+Dim colFO As Integer
+Dim colStartTime As Integer
+Dim colEndTime As Integer
+Dim localr As Integer
+Dim instrSpace As Integer
+Dim instrColon As Integer
+Dim t As Integer
+Dim countErr As Integer
+
+Dim startTime As Date
+Dim endTime As Date
+
+Dim consumedDO As Double
+Dim consumedFO As Double
 
 Dim rngGezi As Object
 Dim rowOilHead As Long
 Dim rowOilAdd As Long
 Dim rowOilEnd As Long
+
+Dim tempTime As String
+Dim tempTime1 As String
+Dim tempTime2 As String
+
+
+Dim wsh As Worksheet
+
     colFO = colDO + 2
     colStartTime = colDO + 5
     colEndTime = colDO + 6
@@ -307,14 +353,16 @@ Dim rowOilEnd As Long
     Application.ScreenUpdating = 0
     Application.DisplayAlerts = 0
     Set wsh = objWBOil.Sheets("燃油报表")
-    'voy = Mid(w.Name, InStr(6, w.Name, "V") + 1, 4)
-    'nam = Left(w.Name, 4)
-    'rowzbEnd = zsh.Cells(66666, 2).End(xlUp).Row + 1
-    objWBOil.Activate
-    wsh.Range([b5], [b6]).Replace What:=";", Replacement:=":", LookAt:=xlPart
-    wsh.Range([b5], [b6]).Replace What:=".", Replacement:="-", LookAt:=xlPart
-    startTime = wsh.[b5].Value
-    endTime = wsh.[b6].Value
+    'objWBOil.Activate
+    '把时间中的;转换为:，.转为-
+    With Range(wsh.Cells(5, 2), wsh.Cells(6, 2))
+        .Replace What:=";", Replacement:=":", LookAt:=xlPart
+        .Replace What:=".", Replacement:="-", LookAt:=xlPart
+    End With
+    On Error GoTo err_handler
+resumeErr:
+    startTime = wsh.Cells(5, 2).Value
+    endTime = wsh.Cells(6, 2).Value
     zsh.Cells(rowZSht, colStartTime).Value = startTime
     zsh.Cells(rowZSht, colEndTime).Value = endTime
     
@@ -337,7 +385,21 @@ Dim rowOilEnd As Long
     
     zsh.Cells(rowZSht, colDO).Value = consumedDO '轻油
     zsh.Cells(rowZSht, colFO).Value = consumedFO '重油
-
+Exit Function
+err_handler:
+For t = 5 To 6 Step 1
+    tempTime = wsh.Cells(t, 2).Value
+    instrSpace = InStr(1, tempTime, " ")
+    instrColon = InStr(1, tempTime, ":")
+    If instrSpace = 0 And instrColon > 0 Then
+        wsh.Cells(t, 2).Value = Left(tempTime, instrColon - 3) & " " & Right(tempTime, Len(tempTime) - instrColon + 3)
+    End If
+Next t
+countErr = countErr + 1
+If countErr > 2 Then
+    MsgBox "搞不定，要停下来修"
+End If
+GoTo resumeErr
 End Function
 Function TC航次报表整合(objWBVoy, rowZSht, colDO)
 'v2.2 现在只选中可见单元格
@@ -345,12 +407,18 @@ Function TC航次报表整合(objWBVoy, rowZSht, colDO)
 'v2.0 从原来的sub改为sub航次报表统一整合()下的一个function
 'v1.171114 最后调整了格子大小
 'v1.0 航次报表整合 Macro
+Dim colVoyStart As Integer
+Dim colVoyEnd As Integer
+Dim colLine As Integer
+
+Dim wsh As Worksheet
+
 colVoyStart = colDO + 5
 colVoyEnd = colDO + 6
 colLine = colDO - 9
-objWBVoy.Activate
+'objWBVoy.Activate
 Set wsh = objWBVoy.Sheets("航次报表")
-Range(wsh.[h4], wsh.[h5]).Replace "/", "+", xlPart
+Call ENPortToCNPort(Range(wsh.Cells(4, 8), wsh.Cells(5, 8)))
 'wsh.[b5].Copy
 'zsh.Cells(rowZSht, colVoyStart).PasteSpecial Paste:=xlPasteValues '航次开始
 'wsh.[d5].Copy
