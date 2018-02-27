@@ -137,7 +137,7 @@ Dim i As Integer
 strLdPort = ""
 strDsPort = ""
 
-    Call ENPortToCNPort(8, True)
+    Call ENPortToCNPort(Range(wsh.[h4], wsh.[5]))
     
     cargo = wsh.[d4].Value '货物名称STR
     quantity = wsh.[f4].Value '货量数值INT
@@ -498,54 +498,6 @@ Dim d As Integer
         
         Erase arLdPort
         Erase arDsPort
-End Function
-Function 船舶航次报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, fcvoyLine As String)
-
-Dim oldVoyW As String
-Dim newVoyW As String
-Dim fcfilePath As String
-
-    If CInt(Mid(fcvoy, 2, 2)) >= 18 Then
-    
-    
-        oldVoyW = fcvoyW.FullName
-        fcfilePath = fcvoyW.Path & "\"
-        newVoyW = fcfilePath & fcshipNameShort & "船舶航次报表" & fcvoy & fcvoyLine & ".xlsx"
-        
-        If oldVoyW <> newVoyW Then
-            fcvoyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
-            Kill oldVoyW
-        End If
-    End If
-'
-    'oilW.Close
-    fcvoyW.Close
-    Set fcvoyW = Nothing
-    
-End Function
-Function 燃润料报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, fcvoyLine As String)
-
-Dim oldVoyW As String
-Dim newVoyW As String
-Dim fcfilePath As String
-
-    If CInt(Mid(fcvoy, 2, 2)) >= 18 Then
-    
-    
-        oldVoyW = fcvoyW.FullName
-        fcfilePath = fcvoyW.Path & "\"
-        newVoyW = fcfilePath & fcshipNameShort & "燃润料航次报表" & fcvoy & fcvoyLine & ".xlsx"
-        
-        If oldVoyW <> newVoyW Then
-            fcvoyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
-            Kill oldVoyW
-        End If
-    End If
-'
-    'oilW.Close
-    fcvoyW.Close
-    Set fcvoyW = Nothing
-    
 End Function
 Function 船名分组()
 Application.ScreenUpdating = 0
