@@ -162,9 +162,21 @@ Function 货名统一为英文(col)
         ReplaceFormat:=False
     End With
 End Function
-Function ENPortToCNPort(columnABC, Optional ifReplace0 As Boolean = True)
-'运价表处理.ENPortToCNPort(列号)
-With Columns(columnABC) ' Cells(4, 8)
+Function ENPortToCNPort(portRange As Variant, Optional ifReplace0 As Boolean = True)
+'运价表处理.ENPortToCNPort(列号或range)
+'Dim portRange As Range
+Dim typePara As String
+
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+typePara = TypeName(portRange)
+
+If typePara = "Integer" Or typePara = "String" Then
+    Set portRange = Columns(portRange)
+End If
+
+
+With portRange ' Cells(4, 8)
     .Replace What:="/", Replacement:="-", LookAt:=xlPart
     .Replace What:="&", Replacement:="+"
     .Replace What:="\", Replacement:="-"
@@ -273,6 +285,8 @@ With Columns(columnABC) ' Cells(4, 8)
     .Replace What:="yosu", Replacement:="丽水"
     .Replace What:="shenhu", Replacement:="深沪" '福建晋江下的镇
 End With
+Application.ScreenUpdating = 1
+Application.DisplayAlerts = 1
 End Function
 Function shipNamToGT()
 arShipNam = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "DH32")
@@ -522,7 +536,8 @@ Function 码头列表()
 arrBerthName = Array("欧德", "炼化", "华盛")
 End Function
 Function 获得船舶航次报表dir(localFilePath As String, localShipNameShort As String, localVoyValue As Integer)
-
+'获得船舶航次报表dir(filePath, shipNameShort, voyValue)
+'获得燃润料航次报表dir(filePath, shipNameShort, voyValue)
     Dim arVoy As Variant
     Dim iVoy As Integer
     Dim voyDir As String
@@ -549,21 +564,67 @@ Function 获得船舶航次报表dir(localFilePath As String, localShipNameShort
         End If
     Next iVoy
 '
-        
+    获得船舶航次报表dir = voyDir
         
 End Function
 Function 获得燃润料航次报表dir(localFilePath As String, localShipNameShort As String, localVoyValue As Integer)
-
+'获得船舶航次报表dir(filePath, shipNameShort, voyValue)
+'获得燃润料航次报表dir(filePath, shipNameShort, voyValue)
 Dim arOil As Variant
 Dim iOil As Integer
 Dim oilDir As String
 
-    arOil = Array("燃*" & voyValue, "*料*" & voyValue, "*" & voyValue & "燃*", "*" & voyValue & "*料*")
+    arOil = Array("*燃*" & localVoyValue, "*料*" & localVoyValue, "*" & localVoyValue & "*燃*", "*" & localVoyValue & "*料*")
     For iOil = 0 To UBound(arOil) Step 1
-        oilDir = filePath & arOil(iOil) & "*.xls?"
+        oilDir = localFilePath & arOil(iOil) & "*.xls?"
         If Len(Dir(oilDir)) > 0 Then
-            Exit For
+            获得燃润料航次报表dir = oilDir
+            Exit Function
         End If
     Next iOil
+    获得燃润料航次报表dir = oilDir
+End Function
+Function 船舶航次报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, fcvoyLine As String)
 
+Dim oldVoyW As String
+Dim newVoyW As String
+Dim fcfilePath As String
+
+    If CInt(Mid(fcvoy, 2, 2)) >= 18 Then
+    
+    
+        oldVoyW = fcvoyW.FullName
+        fcfilePath = fcvoyW.Path & "\"
+        newVoyW = fcfilePath & fcshipNameShort & "船舶航次报表" & fcvoy & fcvoyLine & ".xlsx"
+        
+        If oldVoyW <> newVoyW Then
+            fcvoyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
+            Kill oldVoyW
+        End If
+    End If
+    
+    fcvoyW.Close
+    Set fcvoyW = Nothing
+    
+End Function
+Function 燃润料航次报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, fcvoyLine As String)
+
+Dim oldVoyW As String
+Dim newVoyW As String
+Dim fcfilePath As String
+
+    If CInt(Mid(fcvoy, 2, 2)) >= 18 Then
+        oldVoyW = fcvoyW.FullName
+        fcfilePath = fcvoyW.Path & "\"
+        newVoyW = fcfilePath & fcshipNameShort & "燃润料航次报表" & fcvoy & fcvoyLine & ".xlsx"
+        
+        If oldVoyW <> newVoyW Then
+            fcvoyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
+            Kill oldVoyW
+        End If
+    End If
+    
+    fcvoyW.Close
+    Set fcvoyW = Nothing
+    
 End Function
