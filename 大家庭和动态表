@@ -11,17 +11,42 @@ Sub 开始今天上午的工作()
 '
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
-yesterday = getYesterday()
-    Set dajiating = Workbooks.Open(fileName:= _
-    "\\192.168.0.223\\航运在线\\3.2、操作部\\4.2 船舶动态表（鼎衡大家庭）\\" & Format(yesterday, "yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx")) 'Format(yesterday, "F:\\工作文档\\动态表（鼎衡大家庭）\\yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx"))
+'先打开大家庭，再打开船舶动态，然后船舶动态出现在面前，先编辑船舶动态表
+Dim filePath As String
+Dim path_da_jia_ting As String
+Dim path_dong_tai As String
 
-    Set dongtaibiao = Workbooks.Open(fileName:= _
-        "\\192.168.0.223\\航运在线\\3.2、操作部\\4.1 船舶动态表\\" & Format(yesterday, "yyyy\\m月\\船舶动态（yyyy-mm-dd）.xl\sx"))
+Dim is_da_jia_ting_exist As Boolean
+Dim is_dong_tai_exist As Boolean
+
+filePath = "\\192.168.0.223\航运在线\3.2、操作部\"
+
+For i = 0 To 30
+
+    path_da_jia_ting = filePath & "4.2 船舶动态表（鼎衡大家庭）\\" & Format(Date - i, "yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx")
+    is_da_jia_ting_exist = Len(Dir(path_da_jia_ting)) > 0
+    If is_da_jia_ting_exist Then
+        Workbooks.Open (path_da_jia_ting)
+        Exit For
+    End If
+Next i
+
+
+For i = 0 To 30
+    
+    path_dong_tai = filePath & "4.1 船舶动态表\" & Format(Date - i, "yyyy\\m月\\船舶动态（yyyy-mm-dd）.xl\sx")
+    is_dong_tai_exist = Len(Dir(path_dong_tai)) > 0
+    If is_dong_tai_exist Then
+        Workbooks.Open (path_dong_tai)
+        Exit For
+    End If
+Next i
+
+
 Sheets(1).Activate
 ActiveWindow.SmallScroll up:=20
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
-Workbooks(Format(yesterday, "船舶动态（yyyy-mm-dd）.xl\sx")).Activate
 End Sub
 Function 大家庭动态()
 'v4.1 将区域改为变量便于增加船只
@@ -97,9 +122,9 @@ Range("a2") = "            Fleet Position List                          " & Luna
 
 Set djt = ActiveWorkbook
 
-Call check_wk船舶动态
+Call 激活已打开的工作簿("动态")
 
-rngJX.Copy '大家庭船舶动态复制到动态表
+rngJX.Copy '大家庭动态表复制到船舶动态
 Range("J4").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
     :=False, Transpose:=False 'DH1-JX32
 rngAg.Copy
@@ -148,91 +173,16 @@ End Function
 Function cece()
 Range("a2") = "            Fleet Position List                         " & Lunardate(Date)
 End Function
-Function getYesterday()
-Dim zuotian As Integer
-Dim today As Integer
-If Year(Date) = 2019 Then
-    MsgBox "新的一年，请编辑新的调休安排"
-End If
-If Weekday(Date, vbMonday) = 1 Then '如果今天是周一，就打开周五的；否则就打开昨天的
-    zuotian = 3
-Else
-    zuotian = 1
-End If
-today = Day(Date)
-Select Case Month(Date)
-    Case 1 '一月
-        If Day(Date) = 2 Then '元旦
-        End If
-    Case 2 '二月春节
-        If Day(Date) = 11 Then '春节调休
-            zuotian = 2 '周日上班，周六休息，周一上班
-        ElseIf today = 12 Then '虽然是周一，但是周日上班了
-            zuotian = 1
-        ElseIf today = 22 Then
-            zuotian = 9
-        End If
-    Case 3
-    Case 4
-        If today = 8 Then
-            zuotian = 4 '周日上班，周六休息，周三上班
-        End If
-    Case 5
-        If today = 2 Then
-            zuotian = 4 '周三上班，上周六上班
-        End If
-    Case 6
-        If today = 19 Then
-            zuotian = 4 '周二上班，上周五上班
-        End If
-    Case 7
-    Case 8
-    Case 9
-    Case 10
-        If today = 8 Then '十一后上班第一天
-            zuotian = 8 '周一上班，上周日上班
-        End If
-    Case 11
-    Case 12
-End Select
-
-getYstday:
-getYesterday = Date - zuotian
-End Function
-Function check_wk船舶动态()
-'v1.0
-On Error Resume Next '如果没这句话，涉及 wkjin 语句会报错
-
-Set wkjin = Workbooks(Format(Date, "船舶动态（yyyy-mm-dd）.xl\sx"))
-Set wkzuo = Workbooks(Format(getYesterday(), "船舶动态（yyyy-mm-dd）.xl\sx"))
-If Len(wkjin.Name) > 0 Then
-    If Err.Number = 9 Then '如果wkjin打开了，就激活
-        wkjin.Activate
-    Else                    '否则就激活另一个
-        wkzuo.Activate
+Function 激活已打开的工作簿(workbook_name As String)
+'v1激活打开的workbook_name工作簿
+For i = 1 To Workbooks.Count
+    If Workbooks(i).Name Like "*" & workbook_name & "*" Then
+        Workbooks(i).Activate
+        Exit Function
     End If
-End If
+Next i
+MsgBox ("没找到！")
 End Function
-Function check_wk大家庭动态()
-'v1.0
-On Error Resume Next '如果没这句话，涉及 wkjin 语句会报错
-Debug.Print Month(Date)
-
-Set wkjin = Workbooks(Format(Date, "动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx"))
-Set wkzuo = Workbooks(Format(getYesterday(), "动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx"))
-'Debug.Print Format(yesterday, "动态表（鼎衡大家庭）yyyy-mm-dd）.xl\sx")
-If Len(wkjin.Name) > 0 Then
-    If Err.Number = 9 Then '如果wkjin打开了，就激活
-        wkjin.Activate
-    Else                    '否则就激活另一个
-        wkzuo.Activate
-    End If
-End If
-End Function
-Function ffa()
-Windows("PERSONAL.xlsb").Visible = True
-End Function
-
 Sub bbb动态表ISMSROB()
 'v3 增加了angel 123 ,DH E
 'v2处理ISMSROB
@@ -240,7 +190,7 @@ Sub bbb动态表ISMSROB()
 '删掉了了agent info表里面时间信息前的一个空格
 'v1.0
 
-Call check_wk船舶动态
+Call 激活已打开的工作簿("船舶动态")
 Set dongtaibiao = ActiveWorkbook
 Worksheets("Vessel Status").Activate
 Dim i As Integer
@@ -327,13 +277,13 @@ Next i
     Sheets("船位数据").Select
 If Range("k5") <> "" Then
     Range("K23:K41").Copy
-    Call check_wk船舶动态
+    Call 激活已打开的工作簿("船舶动态")
     Range("K4").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
         :=False, Transpose:=False
     Workbooks("PERSONAL.xlsb").Sheets("船位数据").Rows("1:21").ClearContents
     Workbooks("PERSONAL.xlsb").Sheets("船位数据").Rows("1:21").ClearFormats
 Else
-    Call check_wk船舶动态
+    Windows("PERSONAL.xlsb").Activate
     MsgBox "还没复制船舶经纬度"
 End If
 
@@ -351,15 +301,17 @@ Debug.Print fileDirNAME
 If Dir("\\192.168.0.223\\航运在线\\3.2、操作部\\4.1 船舶动态表\\" & Format(Date, "yyyy\\m月"), 16) = Empty Then
     MkDir "\\192.168.0.223\\航运在线\\3.2、操作部\\4.1 船舶动态表\\" & Format(Date, "yyyy\\m月")
 End If
-
+If Len(fileDirNAME) > 0 Then
+    dongtaibiao.Save
+Else
     dongtaibiao.SaveAs fileName:= _
         fileDirNAME, _
         FileFormat:=xlOpenXMLWorkbook, CreateBackup:=False
-
-Call check_wk大家庭动态
+End If
+Call 激活已打开的工作簿("大家庭")
 End Sub
 Function ddd大家庭下航次(r As Integer)
-Call check_wk大家庭动态
+Call 激活已打开的工作簿("大家庭")
 'Set loadP = Cells(r, 4)
 'Set discP = Cells(r, 5)
 'Set NextV = Cells(r, 9)
@@ -390,7 +342,7 @@ r = ActiveCell.Row
 If thisbk.Name Like "*大家庭*" And r > 14 Then
     r = r + 2
 End If
-Call check_wk船舶动态
+Call 激活已打开的工作簿("船舶动态")
 
 '首先统一航次命令格式
 If Cells(r, 19).Value = "" Then
