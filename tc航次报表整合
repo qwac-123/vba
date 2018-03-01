@@ -1,4 +1,4 @@
-Option Explicit
+'Option Explicit
 Dim arNextShipVoy
 
 Dim hangciDiYiCi As Boolean
@@ -204,24 +204,26 @@ For ro = 2 To [a2].End(xlDown).Row + UBound(arNewShipVoy) + 1
 End Sub
 Sub TC表下个月()
 
-tcPath = "F:\工作文档\TC表\" & Format(Date, "yyyymm") & "\"
+tcPath = "F:\工作文档\TC表\" & Format(Date - 25, "yyyymm") & "\"
 
 If Dir(tcPath, 16) = Empty Then
     MkDir tcPath
 End If
-Set nextBook = ActiveWorkbook
-Set nextSht = nextBook.Sheets(1)
+Set nowBk = ActiveWorkbook
+Set nowsht = nowBk.Sheets(1)
+'Set newBk = Workbooks.Add
+'Set newsht = newBk.Sheets(1)
 
-tcName = Format(Date, "yyyymm小船\T\C表") & ".xlsx"
-nextBook.SaveAs fileName:=tcPath & tcName, _
-        FileFormat:=xlOpenXMLWorkbook, CreateBackup:=True
+newBkname = Format(Date - 25, "yyyymm各船\T\C表") & ".xlsx"
+nowBk.SaveAs fileName:=tcPath & newBkname, _
+        FileFormat:=xlOpenXMLWorkbook, CreateBackup:=False
 
-
-arNextShipVoy = selection.Value
-arNextShipVoy = cIntVoy(arNextShipVoy)
+'nowsht.Activate
+'arNextShipVoy = selection.Value
+'arNextShipVoy = cIntVoy(arNextShipVoy)
 startRow = 2
 endRow = [a6666].End(xlUp).Row
-For iro = startRow To 111 Step 1
+For iro = startRow To endRow Step 1
     ro = iro
 '    ro = startRow
 '    iro = startRow
@@ -425,6 +427,19 @@ Call ENPortToCNPort(Range(wsh.Cells(4, 8), wsh.Cells(5, 8)))
 'zsh.Cells(rowZSht, colVoyEnd).PasteSpecial Paste:=xlPasteValues '航次结束
 
 End Function
+Sub TC总表打印分发给各操作()
+arOp = Array("陆云啸", "杨超群", "邹锐", "侯赛因", "李俐力")
+    Columns("D:K").EntireColumn.Hidden = True
+    For Each op In arOp
+        arships = 对操作名字返回船名缩写数组(op)
+        ActiveSheet.Range("$A$1:$Y$1021").AutoFilter Field:=1, Criteria1:=arships, Operator:=xlFilterValues
+        Range("C1:N1").Select
+        Range(selection, selection.End(xlDown)).Select
+        Range("C1:N963").Select
+        ExecuteExcel4Macro "PRINT(1,,,1,,,,,,,,1,,,TRUE,,FALSE)"
+    Next op
+    Columns("D:K").EntireColumn.Hidden = False
+End Sub
 Sub TC计算表拆分到各表()
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
