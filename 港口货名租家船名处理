@@ -545,20 +545,19 @@ Function 获得船舶航次报表dir(localFilePath As String, localShipNameShort
     Dim arVoy As Variant
     Dim iVoy As Integer
     Dim voyDir As String
-    '后缀*.xls?
-    '航次报表*1701*
-    '*1701航次报表*
-    'DH1航次报表*1701
-    '*船舶航次报表*1701*
-    '*1701*船舶航次报表*
-    '
-    '
-    '
-    '
-    '
-    arVoy = Array("航次报表*" & localVoyValue, "*" & localVoyValue & "航次报表*", _
+
+    arVoy = Array( _
+    "*船舶航次报表*" & localVoyValue, _
+    "*" & localVoyValue & "*船舶航次报表", _
+    "航次报表*" & localVoyValue, _
+    "* 航次报表*" & localVoyValue, _
+    "*" & localVoyValue & "航次报表", _
+    "*" & localVoyValue & "* 航次报表", _
     localShipNameShort & "航次报表*" & localVoyValue, _
-    "*船舶航次报表*" & localVoyValue, "*" & localVoyValue & "*船舶航次报表*")
+    localShipNameShort & "* 航次报表*" & localVoyValue, _
+    localShipName & "航次报表*" & localVoyValue, _
+    localShipName & "* 航次报表*" & localVoyValue, _
+    "没能找到" & localVoyValue)
     
     For iVoy = 0 To UBound(arVoy) Step 1
         voyDir = localFilePath & arVoy(iVoy) & "*.xls?"
@@ -588,7 +587,7 @@ Dim oilDir As String
     Next iOil
     获得燃润料航次报表dir = oilDir
 End Function
-Function 船舶航次报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, fcvoyLine As String)
+Function 船舶航次报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, Optional fcvoyLine As String)
 
 Dim oldVoyW As String
 Dim newVoyW As String
