@@ -1,0 +1,23 @@
+Option Explicit
+
+Sub 取消超链接并替换空格为换行符()
+'
+Dim ro As Integer
+Dim insCom As Integer
+
+Dim adr As String
+Dim prv As String
+Dim aft As String
+For ro = 3 To 85
+    Cells(ro, 8).Hyperlinks.Delete
+    adr = Cells(ro, 8).Value
+    If Len(adr) > 40 Then
+        insCom = InStr(1, adr, "com")
+        Cells(ro, 8).Replace "   ", "", xlPart
+        adr = Cells(ro, 8).Value
+        prv = Left(adr, insCom + 2)
+        aft = Right(adr, Len(adr) - Len(prv))
+        Cells(ro, 8).Value = prv & vbCrLf & aft
+    End If
+Next ro
+End Sub
