@@ -162,6 +162,10 @@ Function 货名统一为英文(col)
         ReplaceFormat:=False
     End With
 End Function
+Function q()
+Range([h4], [h5]).Select
+ENPortToCNPort (1)
+End Function
 Function ENPortToCNPort(portRange As Variant, Optional ifReplace0 As Boolean = True)
 '运价表处理.ENPortToCNPort(列号或range)
 'Dim portRange As Range
@@ -627,4 +631,19 @@ Dim fcfilePath As String
     fcvoyW.Close
     Set fcvoyW = Nothing
     
+End Function
+Function 对操作名字返回船名缩写数组(fn_op_name)
+Dim arr As Variant
+    If fn_op_name = "陆云啸" Then
+        arr = Array("DH1", "DH2", "DH16", "DH18")
+    ElseIf fn_op_name = "杨超群" Then
+        arr = Array("DH17", "JX32", "DH3") ', "DH18")
+    ElseIf fn_op_name = "邹锐" Then
+        arr = Array("DH5", "DH9", "DH10", "DH15")
+    ElseIf fn_op_name = "侯赛因" Then
+        arr = Array("HX", "AG2", "AG3")
+    ElseIf fn_op_name = "李俐力" Then
+        arr = Array("HX", "AG2", "AG3")
+    End If
+    对操作名字返回船舶数组 = arr
 End Function
