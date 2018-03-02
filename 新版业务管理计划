@@ -76,6 +76,7 @@ For r = startRow To endRow Step 1
     If Len(Dir(voyDir)) > 0 Then  '如果文件存在
         Set voyW = Workbooks.Open(fileName:=voyDir)
         Set wsh = voyW.Sheets(1)
+        wsh.Unprotect ("8888")
         'Call 业务管理获得靠离泊时间(r)
         
         Call 获取航次报表表头信息(r) 'dh1v1701testOk
@@ -171,7 +172,11 @@ l = 0
     If lcLdSep > 0 Then
         For l = 0 To lcLdSep Step 1
             instrPlus = InStr(1, lcstrLdPort, "+")
-            arLdPort(l, 0) = Mid(lcstrLdPort, 1, instrPlus - 1)
+            If instrPlus > 0 Then
+                arLdPort(l, 0) = Mid(lcstrLdPort, 1, instrPlus - 1)
+            Else
+                arLdPort(l, 0) = lcstrLdPort
+            End If
             lcstrLdPort = Right(lcstrLdPort, Len(lcstrLdPort) - instrPlus)
         Next l
     Else
@@ -186,7 +191,11 @@ d = 0
     If lcDsSep > 0 Then
         For d = 0 To lcDsSep Step 1
             instrPlus = InStr(1, lcstrDsPort, "+")
-            arDsPort(d, 0) = Mid(lcstrDsPort, 1, instrPlus - 1)
+            If instrPlus > 0 Then
+                arDsPort(d, 0) = Mid(lcstrDsPort, 1, instrPlus - 1)
+            Else
+                arDsPort(d, 0) = lcstrDsPort
+            End If
             lcstrDsPort = Right(lcstrDsPort, Len(lcstrDsPort) - instrPlus)
         Next d
     Else
@@ -206,24 +215,42 @@ End Function
 Function testchuli()
 Dim a As String
 Dim ca
-a = "1001.833MT-702.033MT"
-ca = 处理货量(a)
+a = "150：1901.709吨；500：960.654吨"
+ca = 处理货量("150：1901.709吨；500：960.654吨")
 Debug.Print ca
 End Function
 Function 处理货量(fnquantity)
 'quantity = Replace(quantity, "/", "+")'对任意多非数字字符
     '\d数字,".+"不算数字
     '\w包括0-9,a-z
+    '^\u4e00-\u9fa5非汉字
+    '\u4e00-\u9fa5汉字
+'    处理货量("150：1901.709吨；500：960.654吨")
+Dim prelen
+Dim aftlen
+
     Dim reg
     Set reg = CreateObject("vbscript.regexp")
-    reg.Pattern = "[a-zA-Z]"
+    reg.Pattern = "[a-zA-Z^\u4e00-\u9fa5]"
     reg.Global = True
     fnquantity = reg.Replace(fnquantity, "")
     
-    reg.Pattern = "[-/]"
+    reg.Pattern = "[：]"
+    reg.Global = True
+    fnquantity = reg.Replace(fnquantity, ":")
+    
+    reg.Pattern = "[-/；;&]"
     reg.Global = True
     fnquantity = reg.Replace(fnquantity, "+")
     
+'    fnquantity = "150:1901.709+500:960.654"
+'    If InStr(1, fnquantity, ":") > 0 Then
+'        fnquantity = Replace(fnquantity, Mid(fnquantity, 1, InStr(1, fnquantity, ":")), "")
+'    End If
+'
+'    reg.Pattern = "[^/d+:$]"
+'    reg.Global = True
+'    fnquantity = reg.Replace(fnquantity, "")
     If InStr(1, fnquantity, "+") > 0 Then
         fnquantity = Evaluate(fnquantity)
     End If
@@ -376,6 +403,9 @@ Dim arDiscKey() '卸货关键词
 'countL = 0
 'countD = 0
     For roReason = 37 To 66 Step 1
+        If Rows(roReason).Hidden = True Then
+            GoTo nextRoReason
+        End If
         strReason = wsh.Cells(roReason, 5).Value
         'skip
         
@@ -410,7 +440,9 @@ count_ld_in:
                         arLdPort(l, 4) = (arLdPort(l, 2) - arrivedTime) * 24 '待泊小时
                         GoTo nextRoReason
                     ElseIf waitingHour > 62 Then
-                        isOk = MsgBox("待泊超过62小时" & vbCrLf & "当前装港为:" & arLdPort(l, 0) & vbCrLf & "之前检测到第" & (roReason - 1) & "行" & vbCrLf & wsh.Cells(roReason - 1, 1).Value & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason, vbOKCancel) = vbOK
+                        wsh.Activate
+                        ActiveWindow.ScrollRow = roReason - 4 '将ro-4放到第一行
+                        isOk = MsgBox("待泊超过62小时" & vbCrLf & "当前装港为:" & arLdPort(l, 0) & vbCrLf & "之前检测到第" & (roReason - 1) & "行" & vbCrLf & "船位:" & wsh.Cells(roReason - 1, 1).Value & wsh.Cells(roReason - 1, 1).Value & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & "  " & strReason, vbOKCancel) = vbOK
                         Debug.Print "当前装港为:" & arLdPort(l, 0) & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason
                         If isOk Then
                             
@@ -427,7 +459,9 @@ count_ds_in:
                         arDsPort(d, 4) = (arDsPort(d, 2) - arrivedTime) * 24 '待泊小时
                         Exit For
                     ElseIf waitingHour > 62 Then
-                        isOk = MsgBox("待泊超过62小时" & vbCrLf & "当前卸港为:" & arDsPort(d, 0) & vbCrLf & "之前检测到第" & (roReason - 1) & "行" & vbCrLf & wsh.Cells(roReason - 1, 1).Value & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason, vbOKCancel) = vbOK
+                        wsh.Activate
+                        ActiveWindow.ScrollRow = roReason - 4 '将ro-4放到第一行
+                        isOk = MsgBox("待泊超过62小时" & vbCrLf & "当前卸港为:" & arDsPort(d, 0) & vbCrLf & "之前检测到第" & (roReason - 1) & "行" & vbCrLf & "船位" & wsh.Cells(roReason - 1, 1).Value & wsh.Cells(roReason - 1, 5).Value & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & "  " & strReason, vbOKCancel) = vbOK
                         Debug.Print "当前卸港为:" & arDsPort(d, 0) & vbCrLf & "之前检测到第" & (roReason - 1) & "行" & vbCrLf & wsh.Cells(roReason - 1, 1).Value & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason
                         If isOk Then
                             GoTo count_ds_in
@@ -452,6 +486,7 @@ count_ds_in:
                             arLdPort(l, 5) = startLdTime '开始装货时间
                             arLdPort(l, 6) = endLdTime '开始卸货时间
                             arLdPort(l, 7) = (endLdTime - arLdPort(l, 5)) * 24 '装货小时
+                            'zsh.Cells(zshRow, 5).Value = 处理货量(zsh.Cells(zshRow, 5).Value)
                             arLdPort(l, 8) = zsh.Cells(zshRow, 5).Value / arLdPort(l, 7) '装货速率
                             Exit For
                         End If
@@ -475,6 +510,7 @@ count_ds_in:
                             arDsPort(d, 5) = startDsTime
                             arDsPort(d, 6) = endDsTime
                             arDsPort(d, 7) = (endDsTime - arDsPort(d, 5)) * 24 '卸货小时
+'                            处理货量 (zsh.Cells(zshRow, 5).Value)
                             arDsPort(d, 8) = zsh.Cells(zshRow, 5).Value / arDsPort(d, 7) '卸货速率
                             Exit For
                         End If
