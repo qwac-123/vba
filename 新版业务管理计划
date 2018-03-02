@@ -62,7 +62,7 @@ For r = startRow To endRow Step 1
         shipName = 船名缩写转全称(shipName)
     End If
     voy = Cells(r, 2).Value
-    voyValue = 提取航次号(voy)
+    voyValue = CInt(Right(voy, 4))
     'lastSameShipVoy = Cells(r - 1, 1).Value & Cells(r - 1, 2).Value
     thisSameShipVoy = Cells(r, 1).Value & Cells(r, 2).Value
     isSameShipVoy = lastSameShipVoy = thisSameShipVoy
@@ -136,10 +136,11 @@ Dim i As Integer
 
 strLdPort = ""
 strDsPort = ""
-
-    Call ENPortToCNPort(Range(wsh.[h4], wsh.[5]))
+    wsh.Activate
+    Call ENPortToCNPort(wsh.Range("H4,H5,A:A"))
     
     cargo = wsh.[d4].Value '货物名称STR
+    wsh.[f4].Value = 处理货量(wsh.[f4].Value)
     quantity = wsh.[f4].Value '货量数值INT
     strLdPort = wsh.[h4].Value '装货港str
     strDsPort = wsh.[h5].Value '卸货港名
@@ -202,6 +203,33 @@ arDsPort(d, 0) = "东莞"
 '/test
 获取航次报表上半部分信息 (2)
 End Function
+Function testchuli()
+Dim a As String
+Dim ca
+a = "1001.833MT-702.033MT"
+ca = 处理货量(a)
+Debug.Print ca
+End Function
+Function 处理货量(fnquantity)
+'quantity = Replace(quantity, "/", "+")'对任意多非数字字符
+    '\d数字,".+"不算数字
+    '\w包括0-9,a-z
+    Dim reg
+    Set reg = CreateObject("vbscript.regexp")
+    reg.Pattern = "[a-zA-Z]"
+    reg.Global = True
+    fnquantity = reg.Replace(fnquantity, "")
+    
+    reg.Pattern = "[-/]"
+    reg.Global = True
+    fnquantity = reg.Replace(fnquantity, "+")
+    
+    If InStr(1, fnquantity, "+") > 0 Then
+        fnquantity = Evaluate(fnquantity)
+    End If
+    
+    处理货量 = fnquantity
+End Function
 Function 获取航次报表上半部分信息(zshRow As Integer)
 Dim roPort As Integer
 
@@ -248,7 +276,7 @@ d = 0
                 If ldPort = "" Then
                     Exit For
                 End If
-                If portName Like "*" & ldPort & "*" Then
+                If (portName Like "*" & ldPort & "*") Or (ldPort Like "*" & portName & "*") Then
                     If berthLdTime = 0 Then '是第一个靠港
                         lastVoyDsToThisVoyLd = wsh.Cells(roPort, 7).Value '装卸港距离
                         avgSpeed = wsh.Cells(roPort, 8).Value '平均航速
@@ -273,7 +301,7 @@ d = 0
                 If dsPort = "" Then
                     Exit For
                 End If
-                If portName Like "*" & dsPort & "*" Then
+                If (portName Like "*" & dsPort & "*") Or (dsPort Like "*" & portName & "*") Then
                     berthDsTime = wsh.Cells(roPort, 2).Value
                     leaveDsTime = wsh.Cells(roPort, 3).Value
                     arDsPort(countD, 1) = berthDsTime '默认抵达卸港时间
@@ -312,6 +340,7 @@ Function 获取航次报表下半部分信息(zshRow)
 '6结束装货时间
 '7装货时间
 '8装货速率（吨/小时）
+Dim isOk As Boolean
 
 Dim waitingHour As Double
 Dim l As Integer
@@ -376,24 +405,33 @@ Dim arDiscKey() '卸货关键词
                     waitingHour = (arLdPort(l, 2) - gotoBthTime) * 24 '待泊小时
                     '不对<0退出循环是因为可能还有别的装货港
                     If waitingHour > 0 And waitingHour < 62 Then
+count_ld_in:
                         arLdPort(l, 1) = arrivedTime '抵达装港时间
                         arLdPort(l, 4) = (arLdPort(l, 2) - arrivedTime) * 24 '待泊小时
                         GoTo nextRoReason
                     ElseIf waitingHour > 62 Then
-                        MsgBox "待泊超过62小时" & vbCrLf & "当前装港为:" & arLdPort(l, 0) & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason
+                        isOk = MsgBox("待泊超过62小时" & vbCrLf & "当前装港为:" & arLdPort(l, 0) & vbCrLf & "之前检测到第" & (roReason - 1) & "行" & vbCrLf & wsh.Cells(roReason - 1, 1).Value & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason, vbOKCancel) = vbOK
                         Debug.Print "当前装港为:" & arLdPort(l, 0) & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason
+                        If isOk Then
+                            
+                            GoTo count_ld_in
+                        End If
                     End If
                 Next l
                 d = 0
                 For d = 0 To UBound(arDsPort) Step 1 '判断是否为卸货前的待泊时间
                     waitingHour = (arDsPort(d, 2) - gotoBthTime) * 24 '待泊小时
                     If waitingHour > 0 And waitingHour < 62 Then
+count_ds_in:
                         arDsPort(d, 1) = arrivedTime '抵达卸港时间
                         arDsPort(d, 4) = (arDsPort(d, 2) - arrivedTime) * 24 '待泊小时
                         Exit For
                     ElseIf waitingHour > 62 Then
-                        MsgBox "待泊超过62小时" & vbCrLf & "当前卸港为:" & arDsPort(d, 0) & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason
-                        Debug.Print "当前卸港为:" & arDsPort(d, 0) & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason
+                        isOk = MsgBox("待泊超过62小时" & vbCrLf & "当前卸港为:" & arDsPort(d, 0) & vbCrLf & "之前检测到第" & (roReason - 1) & "行" & vbCrLf & wsh.Cells(roReason - 1, 1).Value & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason, vbOKCancel) = vbOK
+                        Debug.Print "当前卸港为:" & arDsPort(d, 0) & vbCrLf & "之前检测到第" & (roReason - 1) & "行" & vbCrLf & wsh.Cells(roReason - 1, 1).Value & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason
+                        If isOk Then
+                            GoTo count_ds_in
+                        End If
                     End If
                 Next d
                 GoTo nextRoReason
