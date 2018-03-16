@@ -1,11 +1,11 @@
 Sub 选中列货名转为英文()
-货名统一为英文 (selection.Column)
+货名统一为英文 (Selection.Column)
 End Sub
 Sub 英文港口转中文港口()
-ENPortToCNPort (selection.Column)
+ENPortToCNPort (Selection.Column)
 End Sub
 Sub 选中列货物名转为英文()
-货名统一为英文 (selection.Column)
+货名统一为英文 (Selection.Column)
 End Sub
 Function 货名统一为英文(col)
     With Columns(col)
@@ -154,17 +154,21 @@ Function 货名统一为英文(col)
     
     .Replace What:="BS60&导热油", Replacement:="500N+150N"
     
-    .Replace What:="CYC", Replacement:="Cyclohexane", LookAt _
-        :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
-        ReplaceFormat:=False '环己烷
-    .Replace What:="异辛烷", Replacement:="isooctane", LookAt _
-        :=xlWhole, SearchOrder:=xlByRows, MatchCase:=True, SearchFormat:=False, _
-        ReplaceFormat:=False
+    
+    .Replace What:="BS60&导热油", Replacement:="500N+150N"
+    
+    .Replace What:="戊烷（所有异构体）", Replacement:="Pentane (all isomers)"
+    .Replace What:="戊烷", Replacement:="amyl hydride"
+    .Replace What:="异戊烷", Replacement:="Isopentane"
+    .Replace What:="新戊烷", Replacement:="Neopentane"
+    .Replace What:="环戊烷", Replacement:="Pentamethylene"
+    .Replace What:="环戊烷", Replacement:="CYCLOPENTANE"
+    .Replace What:="正-戊烷", Replacement:="n-Pentane"
+
+    .Replace What:="CYC", Replacement:="Cyclohexane" '环己烷
+    
+    .Replace What:="异辛烷", Replacement:="isooctane"
     End With
-End Function
-Function q()
-Range([h4], [h5]).Select
-ENPortToCNPort (1)
 End Function
 Function ENPortToCNPort(portRange As Variant, Optional ifReplace0 As Boolean = True)
 '运价表处理.ENPortToCNPort(列号或range)
@@ -378,7 +382,7 @@ Sub Sa()
 '    ss = daa.Value
 '    Cells(ro, daa.Column) = 船名全称转缩写(ss)
 'Next
-Set sd = selection
+Set sd = Selection
 sd.Select
 单元格船名转缩写 (sd)
 '单元格船名转全称 (sd)
@@ -489,8 +493,8 @@ Function 处理船舶吨位()
 rst = 2
 red = Cells(1, 1).End(xlDown).Row
 For ro = rst To red
-    shipName = Cells(ro, 1).Value
-    shipNum = Right(shipName, 2)
+    shipname = Cells(ro, 1).Value
+    shipNum = Right(shipname, 2)
     If IsNumeric(shipNum) Then
     Else
         shipNum = Right(shipNum, 1)
@@ -517,8 +521,8 @@ Function 处理船舶类型()
 rst = 2
 red = Cells(1, 1).End(xlDown).Row
 For ro = rst To red
-    shipName = Cells(ro, 1).Value
-    shipNum = Right(shipName, 2)
+    shipname = Cells(ro, 1).Value
+    shipNum = Right(shipname, 2)
     If IsNumeric(shipNum) Then
     Else
         shipNum = Right(shipNum, 1)
@@ -645,4 +649,33 @@ Dim arr As Variant
         arr = Array("HX", "AG2", "AG3")
     End If
     对操作名字返回船舶数组 = arr
+End Function
+Function 根据航线产生内外贸(col_voyline, col_inout)
+If IsNumeric(col_voyline) Then
+Else
+    col_voyline = UCase(col_voyline)
+End If
+
+    Range(Cells(1, col_voyline), Cells(1, col_voyline).End(xlDown)).Copy Cells(1, col_inout)
+    ENPortToCNPort (col_inout)
+    replacePorts (col_inout)
+    
+    '第11列neiwaimao
+    ar_overseas = Array("韩国", "台湾", "东南亚", "香港", "朝鲜")
+    
+    For Each krng In Range(Cells(1, col_inout), Cells(1, col_inout).End(xlDown))
+    
+        count_overseas = 0
+        
+        For i = 0 To UBound(ar_overseas)
+            count_overseas = count_overseas + InStr(1, krng.Value, ar_overseas(i))
+        Next i
+        
+        If count_overseas = 0 Then '有外港就是外贸
+            krng.Value = "内贸"
+        Else
+            krng.Value = "外贸"
+        End If
+        
+    Next krng
 End Function
