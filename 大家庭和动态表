@@ -53,6 +53,7 @@ Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Sub
 Function 大家庭动态()
+Dim djt As Workbook
 'v4.1 将区域改为变量便于增加船只
 'v4 将表内公式改为vba正则表达式
 'V3 删除了DH7
@@ -63,79 +64,56 @@ Function 大家庭动态()
 ' 将船舶动态信息贴在K1格，首尾相接，然后整理到J列并分列，后接/分列去处理rob数据
 '
 
-If Range("k1") = "" Then
-    MsgBox "k1格是空的，是不是你已经点过一次了"
-    Exit Function
-End If
-Application.ScreenUpdating = False
-Application.DisplayAlerts = False
+    Set djt = ActiveWorkbook
 
-startShipRow = 4
-endShipRow = 20
-
-Set rngAShipName = Range(Cells(startShipRow, 1), Cells(endShipRow, 1))
-
-Set rngDEPorts = Range(Cells(startShipRow, 4), Cells(endShipRow, 5))
-
-Set rngJCopiedInfo = Range(Cells(startShipRow, 10), Cells(endShipRow, 10))
-Set rngKOriginInfo = Range("k1:k33")
-
-Set rngKFinalInfo = Range(Cells(startShipRow, 11), Cells(endShipRow, 11))
-
-
-Set rngJX = Range("K4:k14") '第一条船到建兴32
-Set rngAg = Range("k15:k20") '安吉到最后
-
-rngDEPorts.Interior.Pattern = xlNone
-
-With rngKOriginInfo '处理复制过来的船舶动态
-    .Replace What:="：", Replacement:=":", LookAt:=xlPart
-    .Replace What:="鼎衡", Replacement:="DH"
-    .Replace What:="建兴", Replacement:="JX"
-    .Replace What:="-", Replacement:=""
-    .Replace What:="轮", Replacement:=""
-End With
-
-For Each rngk In rngKOriginInfo
-    j = 4
-    i = 0
-    If InStr(1, rngk, ":") = 0 Then
-        If i > 2 Then
-            GoTo endchulidongtai
-        End If
-        i = i + 1
-        GoTo nextrngk
+    If Range("k1") = "" Then
+        MsgBox "k1格是空的，是不是你已经点过一次了"
+        Exit Function
     End If
-    shipInfo = Mid(rngk.Text, InStr(1, rngk.Text, ":") + 1, 999)
-    shipname = Mid(rngk.Text, 1, InStr(1, rngk.Text, ":") - 1)
-    For Each rnga In rngAShipName
-        If shipname = rnga Then
-            Cells(j, 10) = shipInfo
-            GoTo nextrngk
-        End If
-        j = j + 1
-    Next rnga
-nextrngk:
-Next rngk
-endchulidongtai:    '动态处理完毕
-rngKOriginInfo.ClearContents
-rngJCopiedInfo.Copy rngKFinalInfo
-rngAShipName.Copy rngJCopiedInfo
-Range("a1") = "上海鼎衡船队动态信息一览表 " & Format(Date, "yyyy年m月d日 aaaa") '更新日期 Range("G1:I1").FormulaR1C1 = "=IF(RC=0,TEXT(NOW(),""yyyy年m月d日 aaaa""),RC)"
-Range("a2") = "            Fleet Position List                          " & Lunardate(Date)
-
-Set djt = ActiveWorkbook
-
-Call 激活已打开的工作簿("船舶动态")
-
-rngJX.Copy '大家庭动态表复制到船舶动态
-Range("J4").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
-    :=False, Transpose:=False 'DH1-JX32
-rngAg.Copy
-Range("J17").PasteSpecial Paste:=xlPasteValues 'HX - DHE
     
-djt.Activate
-Range("h4").Select
+    
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts = False
+
+
+    
+
+        
+    startShipRow = 4
+    endShipRow = Cells(4, 1).End(xlDown).Row
+    
+    Set rngAShipName = Range(Cells(startShipRow, 1), Cells(endShipRow, 1))
+    
+    Set rngDEPorts = Range(Cells(startShipRow, 4), Cells(endShipRow, 5))
+    
+    Set rngJCopiedInfo = Range(Cells(startShipRow, 10), Cells(endShipRow, 10))
+    
+    Set rngKOriginInfo = Range("k1:k33")
+    
+    Set rngKFinalInfo = Range(Cells(startShipRow, 11), Cells(endShipRow, 11))
+'GB预计重出江湖
+    Set rngJX = Range("K4:k14") '第一条船到建兴32
+    Set rngAg = Range("k15:k20") '安吉到最后
+    
+    
+    Call 大家庭预处理信息源(rngKOriginInfo, rngAShipName)
+    
+    rngKOriginInfo.ClearContents
+    rngJCopiedInfo.Copy rngKFinalInfo
+    rngAShipName.Copy rngJCopiedInfo
+    
+    
+
+    Call 激活已打开的工作簿("船舶动态")
+    
+    rngJX.Copy '大家庭动态表复制到船舶动态
+        Range("J4").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False 'DH1-JX32
+    rngAg.Copy
+    Range("J17").PasteSpecial Paste:=xlPasteValues 'HX - DHE
+        
+    djt.Activate
+    Range("h4").Select
 
 'Range("F4:F19").FormulaR1C1 = _
 '        "=IF(RC[1]<>"""",""开往""&MID(RC[1],5,3),IF(OR(RC[2]<>"""",IFERROR(FIND(""锚泊"",RC[5]),0)>0),""锚泊""&MID(RC[5],FIND(""锚泊"",RC[5])+2,3),IF(COUNT(FIND(""靠泊"",RC[5])),IF(SUM(ISNUMBER(FIND({""张家港"",""连云港"",""鲅鱼圈"",""仙人岛""},RC[5]))*1),MID(RC[5],FIND(""靠泊"",RC[5]),5),MID(RC[5],FIND(""靠泊"",RC[5]),4)),RC[6]&""完货"")))"
@@ -144,17 +122,56 @@ Range("h4").Select
 
 
 Call 大家庭状态检查
+
+    Call 大家庭表头更新
+    
 Call 保存大家庭表
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 
         
 End Function
-Function te()
-djtfullName = "f:\a\b\c\d.xlsx"
+Function 大家庭预处理信息源(rngKOriginInfo, rngAShipName)
+Dim rngk
 
+Dim j As Integer
+Dim i As Integer
 
-Call 保存文件(ActiveWorkbook, djtfullName)
+    With rngKOriginInfo '处理复制过来的船舶动态
+        .Replace What:="：", Replacement:=":", LookAt:=xlPart
+        .Replace What:="鼎衡", Replacement:="DH"
+        .Replace What:="建兴", Replacement:="JX"
+        .Replace What:="-", Replacement:=""
+        .Replace What:="轮", Replacement:=""
+    End With
+    
+    
+    For Each rngk In rngKOriginInfo
+        j = 4
+        i = 0
+        If InStr(1, rngk, ":") = 0 Then '该单元格没有船舶动态
+            If i > 2 Then
+                Exit Function
+            End If
+            i = i + 1
+        Else
+            shipInfo = Mid(rngk.Text, InStr(1, rngk.Text, ":") + 1, 999)
+            shipname = Mid(rngk.Text, 1, InStr(1, rngk.Text, ":") - 1)
+            For Each rnga In rngAShipName
+                If shipname = rnga Then
+                    Cells(j, 10) = shipInfo
+                    GoTo nextrngk
+                End If
+                j = j + 1
+            Next rnga
+        End If
+nextrngk:
+    Next rngk
+    
+End Function
+Function 大家庭表头更新()
+    Range("a1") = "上海鼎衡船队动态信息一览表 " & Format(Date, "yyyy年m月d日 aaaa") '更新日期 Range("G1:I1").FormulaR1C1 = "=IF(RC=0,TEXT(NOW(),""yyyy年m月d日 aaaa""),RC)"
+    Range("a2") = "            Fleet Position List                          " & Lunardate(Date)
 End Function
 Function 保存文件(fnworkbook, fnfileName, Optional fnFileFormat = xlOpenXMLWorkbook, Optional fnCreateBackup = False)
 If Dir(fnfileName, 16) = Empty Then
@@ -166,6 +183,8 @@ Function 递归建立文件夹(fndir)
     Dim countslash As Integer
     Dim insslash As Integer
     Dim tempname As String
+    Dim insdot As Integer
+    
     countslash = Len(fndir) - Len(Replace(fndir, "\", ""))
     insslash = 1
     For i = 1 To countslash
@@ -177,36 +196,44 @@ Function 递归建立文件夹(fndir)
     If Dir(tempname, 16) = Empty Then
         Call 递归建立文件夹(tempname)
     End If
-    MkDir fndir
+    insdot = InStr(1, fndir, ".")
+    If insdot = 0 Then
+        MkDir fndir
+    End If
 End Function
 Function 保存大家庭表()
-local_family = Format(Date, "F:\\工作文档\\动态表（鼎衡大家庭）\\yyyy年")
-If Dir(local_family, 16) = Empty Then
-    MkDir local_family
-End If
-local_family = local_family & "\" & Format(Date, "m月")
-If Dir(local_family, 16) = Empty Then
-    MkDir local_family
-End If
-local_family = local_family & "\" & Format(Date, "\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx")
-    ActiveWorkbook.SaveAs fileName:=local_family, FileFormat:=xlOpenXMLWorkbook, CreateBackup:=False
+'local_family = Format(Date, "F:\\工作文档\\动态表（鼎衡大家庭）\\yyyy年")
+'If Dir(local_family, 16) = Empty Then
+'    MkDir local_family
+'End If
+'local_family = local_family & "\" & Format(Date, "m月")
+'If Dir(local_family, 16) = Empty Then
+'    MkDir local_family
+'End If
+
+'local_family = local_family & "\" & Format(Date, "\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx")
+local_family = local_family & "\" & Format(Date, "F:\\工作文档\\动态表（鼎衡大家庭）\\yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx")
+
+Call 保存文件(ActiveWorkbook, local_family)
+'    ActiveWorkbook.SaveAs fileName:=local_family, FileFormat:=xlOpenXMLWorkbook, CreateBackup:=False
         
 savetoHangYunZaiXian:
 djtfullName = "\\192.168.0.223\\航运在线\\3.2、操作部\\4.2 船舶动态表（鼎衡大家庭）\\" & Format(Date, "yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx")
-
-djtDir = "\\192.168.0.223\\航运在线\\3.2、操作部\\4.2 船舶动态表（鼎衡大家庭）\\" & Year(Date) & "年"
-If Dir(djtDir, 16) = Empty Then '年
-    MkDir djtDir
-End If
-
-djtDir = djtDir & "\\" & Month(Date) & "月"
-If Dir(djtDir, 16) = Empty Then
-    MkDir djtDir
-End If
-
-    ActiveWorkbook.SaveAs fileName:= _
-        djtfullName, FileFormat:= _
-        xlOpenXMLWorkbook, CreateBackup:=False
+Call 保存文件(ActiveWorkbook, djtfullName)
+'
+'djtDir = "\\192.168.0.223\\航运在线\\3.2、操作部\\4.2 船舶动态表（鼎衡大家庭）\\" & Year(Date) & "年"
+'If Dir(djtDir, 16) = Empty Then '年
+'    MkDir djtDir
+'End If
+'
+'djtDir = djtDir & "\\" & Month(Date) & "月"
+'If Dir(djtDir, 16) = Empty Then
+'    MkDir djtDir
+'End If
+'
+'    ActiveWorkbook.SaveAs fileName:= _
+'        djtfullName, FileFormat:= _
+'        xlOpenXMLWorkbook, CreateBackup:=False
 End Function
 Function 激活已打开的工作簿(workbook_name As String)
 'v1激活打开的workbook_name工作簿
