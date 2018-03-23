@@ -1,4 +1,4 @@
-Option Explicit
+'Option Explicit
 Dim arNextShipVoy
 
 Dim hangciDiYiCi As Boolean
@@ -45,30 +45,13 @@ Sub TC表制作为值表()
     ActiveWindow.SmallScroll Down:=3
     Range("A1:S49").Copy
     Range("A1:S49").Select
-    selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
         :=False, Transpose:=False
     Application.CutCopyMode = False
     Range("J43").Select
     ActiveWindow.SmallScroll Down:=-6
     ActiveWindow.LargeScroll ToRight:=-1
     ActiveWindow.SmallScroll Down:=-3
-End Sub
-Sub 批量新建文件夹()
-Dim ar
-ar = Array("鼎衡1", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17（万年青）", "鼎衡18（常春藤）", "鼎衡2", "鼎衡3", "建兴32", "鼎衡5", "鼎衡9", "恒信HX", "天使1", "天使2", "天使3", "天使11", "鼎衡A", "鼎衡E")
-For i = 0 To UBound(ar)
-Debug.Print "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & ar(i) & "\2018年"
-On Error Resume Next
-'MkDir "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & ar(i)
-'MkDir "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & ar(i) & "\2018年"
-
-Cells(i + 1, 1) = ar(i) '"\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & ar(i) & "\2018年"
-
-'sorFil = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & ar(i) & "\2017年"
-'dstFil = "F:\工作文档\航次报表2017年\" & ar(i)
-'FileCopy sorFil, dstFil
-Next i
-
 End Sub
 Sub TC统计表()
 'v2.1 修改增加了变量
@@ -91,8 +74,8 @@ Dim voyValue As Integer
 
 Dim absentVoy As String
 Dim addVoy As String
-Dim filePath As String
-Dim shipName As String
+Dim filepath As String
+Dim shipname As String
 Dim shipNameShort As String
 Dim lastShipNameShort As String
 Dim thisShipVoy As String
@@ -127,14 +110,14 @@ For r = 2 To rend Step 1
     'r = 5
     shipNameShort = Cells(r, 1).Value
     'test
-    If shipNameShort = "DH2" Then
+    If shipNameShort = "DH18" Then
         Debug.Print 1
     End If
     '/test
     isSameShip = lastShipNameShort = shipNameShort
     If Not (isSameShip) Then
-        shipName = shipNameShort
-        shipName = 船名缩写转全称(shipName)
+        shipname = shipNameShort
+        shipname = 船名缩写转全称(shipname)
         isAbsent = False
     End If
     'shipNum = Right(shipName, 2)
@@ -142,9 +125,9 @@ For r = 2 To rend Step 1
     voyValue = 提取航次号(voy)
     thisShipVoy = Cells(r, 1).Value & Cells(r, 2).Value
     'test
-    If thisShipVoy = "DH2V1803" Then
-        Debug.Print 1
-    End If
+'    If thisShipVoy = "DH2V1803" Then
+'        Debug.Print 1
+'    End If
     '/test
     isSameShipVoy = thisShipVoy = lastShipVoy
     
@@ -155,9 +138,9 @@ For r = 2 To rend Step 1
     End If
     
     voyYear = "\20" & Left(voyValue, 2) & "年\"
-    filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & voyYear '& shipNameShort
-    voyDir = 获得船舶航次报表dir(filePath, shipNameShort, voyValue)
-    oilDir = 获得燃润料航次报表dir(filePath, shipNameShort, voyValue)
+    filepath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipname & voyYear '& shipNameShort
+    voyDir = 获得船舶航次报表dir(filepath, shipNameShort, voyValue)
+    oilDir = 获得燃润料航次报表dir(filepath, shipNameShort, voyValue)
 
     If Len(Dir(voyDir)) > 0 Then  '如果文件存在
 '        oilNam = Dir(oilDir)
@@ -175,9 +158,9 @@ For r = 2 To rend Step 1
         Call 燃润料航次报表更名保存(oilW, shipNameShort, voy, voyLine)
         Call 船舶航次报表更名保存(voyW, shipNameShort, voy, voyLine)
         
-        addVoy = addVoy & shipName & voy & vbCrLf
+        addVoy = addVoy & shipname & voy & vbCrLf
     Else
-        absentVoy = absentVoy & shipName & voy & vbCrLf
+        absentVoy = absentVoy & shipname & voy & vbCrLf
         isAbsent = True
     End If
 nextr:
@@ -204,24 +187,26 @@ For ro = 2 To [a2].End(xlDown).Row + UBound(arNewShipVoy) + 1
 End Sub
 Sub TC表下个月()
 
-tcPath = "F:\工作文档\TC表\" & Format(Date, "yyyymm") & "\"
+tcPath = "F:\工作文档\TC表\" & Format(Date - 25, "yyyymm") & "\"
 
 If Dir(tcPath, 16) = Empty Then
     MkDir tcPath
 End If
-Set nextBook = ActiveWorkbook
-Set nextSht = nextBook.Sheets(1)
+Set nowBk = ActiveWorkbook
+Set nowsht = nowBk.Sheets(1)
+'Set newBk = Workbooks.Add
+'Set newsht = newBk.Sheets(1)
 
-tcName = Format(Date, "yyyymm小船\T\C表") & ".xlsx"
-nextBook.SaveAs fileName:=tcPath & tcName, _
-        FileFormat:=xlOpenXMLWorkbook, CreateBackup:=True
+newBkname = Format(Date - 25, "yyyymm各船\T\C表") & ".xlsx"
+nowBk.SaveAs fileName:=tcPath & newBkname, _
+        FileFormat:=xlOpenXMLWorkbook, CreateBackup:=False
 
-
-arNextShipVoy = selection.Value
-arNextShipVoy = cIntVoy(arNextShipVoy)
+'nowsht.Activate
+'arNextShipVoy = selection.Value
+'arNextShipVoy = cIntVoy(arNextShipVoy)
 startRow = 2
 endRow = [a6666].End(xlUp).Row
-For iro = startRow To 111 Step 1
+For iro = startRow To endRow Step 1
     ro = iro
 '    ro = startRow
 '    iro = startRow
@@ -366,22 +351,14 @@ resumeErr:
     zsh.Cells(rowZSht, colStartTime).Value = startTime
     zsh.Cells(rowZSht, colEndTime).Value = endTime
     
-    If Left(wsh.Range("a39"), 5) = "本航次消耗" Then
-        consumedDO = wsh.Range("c39").Value '轻油
-        consumedFO = wsh.Range("b39").Value '重油
-    ElseIf Left(wsh.Range("a41"), 5) = "本航次消耗" Then
-        consumedDO = wsh.Range("c41").Value '轻油
-        consumedFO = wsh.Range("b41").Value '重油
-    Else
-        MsgBox "轻油消耗在哪里？"
-        For localr = 34 To 40 Step 1
-            If Left(wsh.Cells(localr, 1), 5) = "本航次消耗" Then
-                consumedDO = wsh.Cells(localr, 3).Value '轻油
-                consumedFO = wsh.Cells(localr, 2).Value '重油
-                Exit For
-            End If
-        Next localr
-    End If
+    
+    For localr = 34 To 50 Step 1
+        If Left(wsh.Cells(localr, 1), 5) = "本航次消耗" Then
+            consumedDO = wsh.Cells(localr, 3).Value '轻油
+            consumedFO = wsh.Cells(localr, 2).Value '重油
+            Exit For
+        End If
+    Next localr
     
     zsh.Cells(rowZSht, colDO).Value = consumedDO '轻油
     zsh.Cells(rowZSht, colFO).Value = consumedFO '重油
@@ -398,6 +375,9 @@ Next t
 countErr = countErr + 1
 If countErr > 2 Then
     MsgBox "搞不定，要停下来修"
+    Err.Clear
+    countErr = 0
+    Stop
 End If
 GoTo resumeErr
 End Function
@@ -425,6 +405,19 @@ Call ENPortToCNPort(Range(wsh.Cells(4, 8), wsh.Cells(5, 8)))
 'zsh.Cells(rowZSht, colVoyEnd).PasteSpecial Paste:=xlPasteValues '航次结束
 
 End Function
+Sub TC总表打印分发给各操作()
+arOp = Array("陆云啸", "杨超群", "邹锐", "侯赛因", "李俐力")
+    Columns("D:K").EntireColumn.Hidden = True
+    For Each op In arOp
+        arships = 对操作名字返回船名缩写数组(op)
+        ActiveSheet.Range("$A$1:$Y$1021").AutoFilter Field:=1, Criteria1:=arships, Operator:=xlFilterValues
+        Range("C1:N1").Select
+        Range(Selection, Selection.End(xlDown)).Select
+        Range("C1:N963").Select
+        ExecuteExcel4Macro "PRINT(1,,,1,,,,,,,,1,,,TRUE,,FALSE)"
+    Next op
+    Columns("D:K").EntireColumn.Hidden = False
+End Sub
 Sub TC计算表拆分到各表()
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
@@ -453,10 +446,28 @@ Sub TC处理收入清单表()
 
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
+
+Dim rowIsBlank As Boolean
+Dim rowIsElse As Integer
+Dim rowIsBlue As Integer
+    
+Dim col As Integer
+Dim endRow As Integer
+Dim roBlank As Integer
+Dim ro As Integer
+
+Dim crtRoCell As Range
+
+Dim crtRoCellVal As String
+Dim strTitle As String
+
+Dim arTitle As Variant
+Dim aTit As Variant
 [b2].Offset(-1, 0).Select
-If selection.MergeCells Then
+If Selection.MergeCells Then
     Rows(1).Delete
 End If
+ActiveSheet.AutoFilterMode = False
 endRow = [a6666].End(xlUp).Row
 roBlank = 0
 For ro = 2 To endRow
@@ -565,20 +576,20 @@ Function 移除下月航次()
 For r = 2 To [a1].End(xlDown).Row
     If Cells(r, 1).Interior.color = 65535 Then
         Rows(r).Select
-        selection.Cut
+        Selection.Cut
         Sheets("Sheet3").Select
         [a66666].End(xlUp).Offset(1, 0).Select
         ActiveSheet.Paste
         Sheets("总表").Select
         Rows(r).Select
-        selection.Delete Shift:=xlUp
+        Selection.Delete Shift:=xlUp
     End If
 Next r
     
 End Function
 Sub 选中列的港口英转中()
-    ENPortToCNPort (selection.Column)
-    replacePorts (selection.Column)
+    ENPortToCNPort (Selection.Column)
+    replacePorts (Selection.Column)
 End Sub
 Function TC表新建船名航次号()
 Application.ScreenUpdating = 0
@@ -587,24 +598,24 @@ Dim ro As Integer
 Dim roVoy As Integer
 Dim voy As String
 Dim ship As String
-Dim shipName As Variant
+Dim shipname As Variant
 Dim arFuncShipName As Variant
     arFuncShipName = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "JX32", "DHA", "DHE", "AG1", "AG2", "AG3", "AG11")
     
     ro = 2
     
-    For Each shipName In arFuncShipName
+    For Each shipname In arFuncShipName
         For roVoy = 1 To 60 Step 1
     '        If ro > 2 Then
     '            Rows(ro).Insert
     '        End If
             
-            Cells(ro, 1).Value = shipName
+            Cells(ro, 1).Value = shipname
             Cells(ro, 2).Value = "V" & (1800 + roVoy)
             Cells(ro, 3).FormulaR1C1 = "=rc[-2]&rc[-1]"
             ro = ro + 1
         Next roVoy
-    Next shipName
+    Next shipname
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Function
