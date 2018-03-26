@@ -31,6 +31,11 @@ Dim str As String '单元格内容
 
 Dim dakaibaobiao As Variant ' 在VBA中，对于For Each m In a，若a是数组，m只能声明为variant 变量，这是语法决定的。
 Dim baobiao As Variant '同上
+Sub TC表打开()
+Dim TC表文件名
+TC表文件名 = "F:\工作文档\00TC表\2018年TC表.xlsx"
+Workbooks.Open TC表文件名
+End Sub
 
 Sub TC表制作为值表()
 '
@@ -53,7 +58,7 @@ Sub TC表制作为值表()
     ActiveWindow.LargeScroll ToRight:=-1
     ActiveWindow.SmallScroll Down:=-3
 End Sub
-Sub TC统计表()
+Sub TC统计表整合航次报表()
 'v2.1 修改增加了变量
 'V2 改了表
 'v1.7 现在可以正确找到航次报表的细节时间了
@@ -66,117 +71,122 @@ Sub TC统计表()
  'v1.0可以整合航次报表和燃润料报表到一张表里
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
-Dim rend As Integer
-Dim col As Integer
-Dim colDO As Integer
-Dim r As Integer
-Dim voyValue As Integer
-
-Dim absentVoy As String
-Dim addVoy As String
-Dim filepath As String
-Dim shipname As String
-Dim shipNameShort As String
-Dim lastShipNameShort As String
-Dim thisShipVoy As String
-Dim lastShipVoy As String
-Dim voy As String
-Dim voyLine As String
-Dim voyYear As String
-Dim voyDir As String
-Dim oilDir As String
-
-Dim isAbsent As Boolean
-Dim isWriten As Boolean
-Dim isSameShipVoy As Boolean
-Dim isSameShip As Boolean
-
-Dim oilW As Workbook
-Dim voyW As Workbook
-
-Set zb = ActiveWorkbook
-Set zsh = ActiveSheet
-
-
-rend = [a1].End(xlDown).Row
-For col = 1 To 24
-    If Left(Cells(1, col).Value, 2) = "轻油" Then
-        colDO = col
-        Exit For
-    End If
-Next col
+    Dim rend As Integer
+    Dim col As Integer
+    Dim colDO As Integer
+    Dim r As Integer
+    Dim voyValue As Integer
     
-For r = 2 To rend Step 1
-    'r = 5
-    shipNameShort = Cells(r, 1).Value
-    'test
-    If shipNameShort = "DH18" Then
-        Debug.Print 1
-    End If
-    '/test
-    isSameShip = lastShipNameShort = shipNameShort
-    If Not (isSameShip) Then
-        shipname = shipNameShort
-        shipname = 船名缩写转全称(shipname)
-        isAbsent = False
-    End If
-    'shipNum = Right(shipName, 2)
-    voy = Cells(r, 2).Value
-    voyValue = 提取航次号(voy)
-    thisShipVoy = Cells(r, 1).Value & Cells(r, 2).Value
-    'test
-'    If thisShipVoy = "DH2V1803" Then
-'        Debug.Print 1
-'    End If
-    '/test
-    isSameShipVoy = thisShipVoy = lastShipVoy
+    Dim absentVoy As String
+    Dim addVoy As String
+    Dim filepath As String
+    Dim shipname As String
+    Dim shipNameShort As String
+    Dim lastShipNameShort As String
+    Dim thisShipVoy As String
+    Dim lastShipVoy As String
+    Dim voy As String
+    Dim voyLine As String
+    Dim voyYear As String
+    Dim voyDir As String
+    Dim oilDir As String
     
-    isWriten = Cells(r, colDO) <> Empty
+    Dim isAbsent As Boolean
+    Dim isWriten As Boolean
+    Dim isSameShipVoy As Boolean
+    Dim isSameShip As Boolean
     
-    If isWriten Or isSameShipVoy Or (isAbsent And isSameShip) Then '已经填写了或者相同船名航次或者这条船后面没有航次报表了
-        GoTo nextr
-    End If
+    Dim oilW As Workbook
+    Dim voyW As Workbook
     
-    voyYear = "\20" & Left(voyValue, 2) & "年\"
-    filepath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipname & voyYear '& shipNameShort
-    voyDir = 获得船舶航次报表dir(filepath, shipNameShort, voyValue)
-    oilDir = 获得燃润料航次报表dir(filepath, shipNameShort, voyValue)
-
-    If Len(Dir(voyDir)) > 0 Then  '如果文件存在
-'        oilNam = Dir(oilDir)
-'        voyNam = Dir(voyDir)
-        isAbsent = False
-        Set oilW = Workbooks.Open(fileName:=oilDir)
-        Set voyW = Workbooks.Open(fileName:=voyDir)
+    Set zb = ActiveWorkbook
+    Set zsh = ActiveSheet
+    
+    
+    rend = [a1].End(xlDown).Row
+    For col = 1 To 24
+        If Left(Cells(1, col).Value, 2) = "轻油" Then
+            colDO = col
+            Exit For
+        End If
+    Next col
         
-        Call TC燃润料报表整合(oilW, r, colDO)
-        Call TC航次报表整合(voyW, r, colDO)
+    For r = 2 To rend Step 1
+        'r = 5
+        shipNameShort = Cells(r, 1).Value
+        'test
+        If shipNameShort = "DH18" Then
+            Debug.Print 1
+        End If
+        '/test
+        isSameShip = lastShipNameShort = shipNameShort
+        If Not (isSameShip) Then
+            shipname = shipNameShort
+            shipname = 船名缩写转全称(shipname)
+            isAbsent = False
+        End If
+        'shipNum = Right(shipName, 2)
+        voy = Cells(r, 2).Value
+        voyValue = 提取航次号(voy)
+        thisShipVoy = Cells(r, 1).Value & Cells(r, 2).Value
+        'test
+    '    If thisShipVoy = "DH2V1803" Then
+    '        Debug.Print 1
+    '    End If
+        '/test
+        isSameShipVoy = thisShipVoy = lastShipVoy
         
-        voyLine = voyW.Sheets(1).[h4].Value & "-" & voyW.Sheets(1).[h5].Value
-        zsh.Cells(r, colDO - 9).Value = voyLine
+        isWriten = Cells(r, colDO) <> Empty
         
-        Call 燃润料航次报表更名保存(oilW, shipNameShort, voy, voyLine)
-        Call 船舶航次报表更名保存(voyW, shipNameShort, voy, voyLine)
+        If isWriten Or isSameShipVoy Or (isAbsent And isSameShip) Then '已经填写了或者相同船名航次或者这条船后面没有航次报表了
+            GoTo nextr
+        End If
         
-        addVoy = addVoy & shipname & voy & vbCrLf
-    Else
-        absentVoy = absentVoy & shipname & voy & vbCrLf
-        isAbsent = True
-    End If
+        voyYear = "\20" & Left(voyValue, 2) & "年\"
+        filepath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipname & voyYear '& shipNameShort
+        voyDir = 获得船舶航次报表dir(filepath, shipNameShort, voyValue)
+        oilDir = 获得燃润料航次报表dir(filepath, shipNameShort, voyValue)
+    
+        If Len(Dir(voyDir)) > 0 Then  '如果文件存在
+    '        oilNam = Dir(oilDir)
+    '        voyNam = Dir(voyDir)
+            isAbsent = False
+            Set oilW = Workbooks.Open(fileName:=oilDir)
+            Set voyW = Workbooks.Open(fileName:=voyDir)
+            
+            Call TC燃润料报表整合(oilW, r, colDO)
+            Call TC航次报表整合(voyW, r, colDO)
+            
+            voyLine = voyW.Sheets(1).[h4].Value & "-" & voyW.Sheets(1).[h5].Value
+            zsh.Cells(r, colDO - 9).Value = voyLine
+            
+            Call 燃润料航次报表更名保存(oilW, shipNameShort, voy, voyLine)
+            Call 船舶航次报表更名保存(voyW, shipNameShort, voy, voyLine)
+            
+            addVoy = addVoy & shipname & voy & vbCrLf
+        Else
+            absentVoy = absentVoy & shipname & voy & vbCrLf
+            isAbsent = True
+        End If
 nextr:
-lastShipNameShort = shipNameShort
-lastShipVoy = thisShipVoy
-Next r
-If addVoy = "" Then
-    MsgBox "没有新增"
-Else
-    MsgBox "已加入:" & vbCrLf & addVoy
-End If
-If absentVoy = "" Then
-    MsgBox "没有缺的"
-Else
-    MsgBox "没有航次报表:" & vbCrLf & absentVoy
-End If
+    lastShipNameShort = shipNameShort
+    lastShipVoy = thisShipVoy
+    Next r
+    
+    If addVoy = "" Then
+        MsgBox "没有新增"
+    Else
+        MsgBox "已加入:" & vbCrLf & addVoy
+    End If
+    
+    If absentVoy = "" Then
+        MsgBox "没有缺的"
+    Else
+        MsgBox "没有航次报表:" & vbCrLf & absentVoy
+    End If
+    
+    zb.Save
+
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Sub
@@ -363,23 +373,24 @@ resumeErr:
     zsh.Cells(rowZSht, colDO).Value = consumedDO '轻油
     zsh.Cells(rowZSht, colFO).Value = consumedFO '重油
 Exit Function
+
 err_handler:
-For t = 5 To 6 Step 1
-    tempTime = wsh.Cells(t, 2).Value
-    instrSpace = InStr(1, tempTime, " ")
-    instrColon = InStr(1, tempTime, ":")
-    If instrSpace = 0 And instrColon > 0 Then
-        wsh.Cells(t, 2).Value = Left(tempTime, instrColon - 3) & " " & Right(tempTime, Len(tempTime) - instrColon + 3)
+    For t = 5 To 6 Step 1
+        tempTime = wsh.Cells(t, 2).Value
+        instrSpace = InStr(1, tempTime, " ")
+        instrColon = InStr(1, tempTime, ":")
+        If instrSpace = 0 And instrColon > 0 Then
+            wsh.Cells(t, 2).Value = Left(tempTime, instrColon - 3) & " " & Right(tempTime, Len(tempTime) - instrColon + 3)
+        End If
+    Next t
+    countErr = countErr + 1
+    If countErr > 2 Then
+        MsgBox "搞不定，要停下来修"
+        Err.Clear
+        countErr = 0
+        Stop
     End If
-Next t
-countErr = countErr + 1
-If countErr > 2 Then
-    MsgBox "搞不定，要停下来修"
-    Err.Clear
-    countErr = 0
-    Stop
-End If
-GoTo resumeErr
+    GoTo resumeErr
 End Function
 Function TC航次报表整合(objWBVoy, rowZSht, colDO)
 'v2.2 现在只选中可见单元格
@@ -405,18 +416,36 @@ Call ENPortToCNPort(Range(wsh.Cells(4, 8), wsh.Cells(5, 8)))
 'zsh.Cells(rowZSht, colVoyEnd).PasteSpecial Paste:=xlPasteValues '航次结束
 
 End Function
+Sub Macro3()
+'
+' Macro3 Macro
+'
+
+'
+'
+    ActiveSheet.Range("$A$1:$Y$1082").AutoFilter Field:=21, Criteria1:=Array( _
+        "a"), Operator:=xlFilterValues, Criteria2:=Array(1, "2-25-2018", 1, _
+        "3-22-2018")
+End Sub
+
 Sub TC总表打印分发给各操作()
-arOp = Array("陆云啸", "杨超群", "邹锐", "侯赛因", "李俐力")
+
+    ActiveSheet.Cells(1, 1).AutoFilter Field:=21, Criteria1:=Array( _
+        "a"), Operator:=xlFilterValues, Criteria2:=Array(1, Date)
+        
+    arOp = Array("陆云啸", "杨超群", "邹锐", "侯赛因", "李俐力")
+
     Columns("D:K").EntireColumn.Hidden = True
+    
     For Each op In arOp
         arships = 对操作名字返回船名缩写数组(op)
-        ActiveSheet.Range("$A$1:$Y$1021").AutoFilter Field:=1, Criteria1:=arships, Operator:=xlFilterValues
-        Range("C1:N1").Select
-        Range(Selection, Selection.End(xlDown)).Select
-        Range("C1:N963").Select
+        ActiveSheet.Cells(1, 1).AutoFilter Field:=1, Criteria1:=arships, Operator:=xlFilterValues
+        'Range("C1:N1").Select
+        Range(Range("C1:N1"), Selection.End(xlDown)).Select
         ExecuteExcel4Macro "PRINT(1,,,1,,,,,,,,1,,,TRUE,,FALSE)"
     Next op
     Columns("D:K").EntireColumn.Hidden = False
+    
 End Sub
 Sub TC计算表拆分到各表()
 Application.ScreenUpdating = 0
