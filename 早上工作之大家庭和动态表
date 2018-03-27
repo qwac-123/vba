@@ -1,59 +1,56 @@
 Dim dajiating
 Dim dongtaibiao
-Sub 开始今天上午的工作()
-'v3.1 日期判定改为对近30天查找存在的工作簿
-'v3 删除了DH7
-'V2 增加了ANGEL123,DHE
-'v1.2增加了向上滚屏代码
-'v1.1 删掉了部分无用代码，现在打开动态表会正确显示在船舶状态表
-''v1.0
-'打开动态表和大家庭并显示动态表
+Private dship As Object
+Sub 早上工作开始()
+'先打开大家庭，再打开船舶动态，最后打开主机货泵，先检查主机货泵情况，然后船舶动态出现在面前，先编辑船舶动态表
 
-'
-Application.ScreenUpdating = False
-Application.DisplayAlerts = False
-'先打开大家庭，再打开船舶动态，然后船舶动态出现在面前，先编辑船舶动态表
-Dim filepath As String
-Dim path_da_jia_ting As String
-Dim path_dong_tai As String
-
-Dim is_da_jia_ting_exist As Boolean
-Dim is_dong_tai_exist As Boolean
-
-filepath = "\\192.168.0.223\航运在线\3.2、操作部\"
-engine_pump = "\\192.168.0.223\航运在线\3.1、业务部\2 3500及以下船舶安全效益奖金\" & Format(Date, "yyyy年\\yyyymm\\yyyymm业务部月度主机、货泵统计.xl\sx")
-On Error Resume Next
-Workbooks.Open (engine_pump)
-
-For i = 0 To 30
-
-    path_da_jia_ting = filepath & "4.2 船舶动态表（鼎衡大家庭）\\" & Format(Date - i, "yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx")
-    is_da_jia_ting_exist = Len(Dir(path_da_jia_ting)) > 0
-    If is_da_jia_ting_exist Then
-        Workbooks.Open (path_da_jia_ting)
-        Exit For
-    End If
-Next i
-
-
-For i = 0 To 30
-    
-    path_dong_tai = filepath & "4.1 船舶动态表\" & Format(Date - i, "yyyy\\m月\\船舶动态（yyyy-mm-dd）.xl\sx")
-    is_dong_tai_exist = Len(Dir(path_dong_tai)) > 0
-    If is_dong_tai_exist Then
-        Workbooks.Open (path_dong_tai)
-        Exit For
-    End If
-Next i
-
-
-Sheets(1).Activate
-ActiveWindow.SmallScroll up:=20
-Application.ScreenUpdating = 1
-Application.DisplayAlerts = 1
+    Call 早上工作打开鼎衡大家庭动态表
+    Call 早上工作打开船舶动态表
+    Call 早上工作打开主机货泵表
 End Sub
-Function 大家庭动态()
-Dim djt As Workbook
+Sub 早上工作打开主机货泵表()
+    Dim engine_pump  As String
+    engine_pump = "\\192.168.0.223\航运在线\3.1、业务部\2 3500及以下船舶安全效益奖金\" & Format(Date, "yyyy年\\yyyymm\\yyyymm业务部月度主机、货泵统计.xl\sx")
+    On Error Resume Next
+    Workbooks.Open (engine_pump)
+End Sub
+Sub 早上工作打开鼎衡大家庭动态表()
+    Dim path_da_jia_ting As String
+    Dim is_da_jia_ting_exist As Boolean
+    Dim filepath As String
+    
+    filepath = "\\192.168.0.223\航运在线\3.2、操作部\"
+    
+    For i = 0 To 30
+        path_da_jia_ting = filepath & "4.2 船舶动态表（鼎衡大家庭）\\" & Format(Date - i, "yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx")
+        is_da_jia_ting_exist = Len(Dir(path_da_jia_ting)) > 0
+        If is_da_jia_ting_exist Then
+            Workbooks.Open (path_da_jia_ting)
+            Exit For
+        End If
+    Next i
+    
+End Sub
+Sub 早上工作打开船舶动态表()
+    Dim path_dong_tai As String
+    Dim is_dong_tai_exist As Boolean
+    Dim filepath As String
+    
+    filepath = "\\192.168.0.223\航运在线\3.2、操作部\"
+    
+    For i = 0 To 30
+        path_dong_tai = filepath & "4.1 船舶动态表\" & Format(Date - i, "yyyy\\m月\\船舶动态（yyyy-mm-dd）.xl\sx")
+        is_dong_tai_exist = Len(Dir(path_dong_tai)) > 0
+        If is_dong_tai_exist Then
+            Workbooks.Open (path_dong_tai)
+            Exit For
+        End If
+    Next i
+    
+    Sheets(1).Activate
+    ActiveWindow.SmallScroll up:=20
+End Sub
+Sub 早上工作大家庭动态()
 'v4.1 将区域改为变量便于增加船只
 'v4 将表内公式改为vba正则表达式
 'V3 删除了DH7
@@ -63,22 +60,24 @@ Dim djt As Workbook
 ' 处理船舶动态 Macro
 ' 将船舶动态信息贴在K1格，首尾相接，然后整理到J列并分列，后接/分列去处理rob数据
 '
+    Dim ro As Integer
+    Dim startShipRow As Integer
+    Dim endShipRow As Integer
+    
+    Dim djt As Workbook
+    Set dship = CreateObject("Scripting.Dictionary")
 
     Set djt = ActiveWorkbook
 
     If Range("k1") = "" Then
         MsgBox "k1格是空的，是不是你已经点过一次了"
-        Exit Function
+        Exit Sub
     End If
-    
     
     Application.ScreenUpdating = False
     Application.DisplayAlerts = False
-
-
     
-
-        
+    '大家庭表第一条船所在行
     startShipRow = 4
     endShipRow = Cells(4, 1).End(xlDown).Row
     
@@ -98,44 +97,43 @@ Dim djt As Workbook
     
     Call 大家庭预处理信息源(rngKOriginInfo, rngAShipName)
     
+    
     rngKOriginInfo.ClearContents
-    rngJCopiedInfo.Copy rngKFinalInfo
-    rngAShipName.Copy rngJCopiedInfo
+    For ro = startShipRow To endShipRow Step 1
+        Cells(ro, 11).Value = dship.Item(Cells(ro, 10).Value)
+    Next ro
     
-    
-
     Call 激活已打开的工作簿("船舶动态")
+    '大家庭动态表通过字典放到船舶动态
+    startShipRow = 4
+    endShipRow = Cells(4, 1).End(xlDown).Row
+    For ro = startShipRow To endShipRow Step 1
+        Cells(ro, 10).Value = dship.Item(Cells(ro, 1).Value)
+    Next ro
     
     rngJX.Copy '大家庭动态表复制到船舶动态
-        Range("J4").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
-        :=False, Transpose:=False 'DH1-JX32
+        Range("J4").PasteSpecial Paste:=xlPasteValues 'DH1-JX32
     rngAg.Copy
     Range("J17").PasteSpecial Paste:=xlPasteValues 'HX - DHE
         
     djt.Activate
     Range("h4").Select
 
-'Range("F4:F19").FormulaR1C1 = _
-'        "=IF(RC[1]<>"""",""开往""&MID(RC[1],5,3),IF(OR(RC[2]<>"""",IFERROR(FIND(""锚泊"",RC[5]),0)>0),""锚泊""&MID(RC[5],FIND(""锚泊"",RC[5])+2,3),IF(COUNT(FIND(""靠泊"",RC[5])),IF(SUM(ISNUMBER(FIND({""张家港"",""连云港"",""鲅鱼圈"",""仙人岛""},RC[5]))*1),MID(RC[5],FIND(""靠泊"",RC[5]),5),MID(RC[5],FIND(""靠泊"",RC[5]),4)),RC[6]&""完货"")))"
-'Range("h4:h19").FormulaR1C1 = _
-'    "=IFERROR(IF(SUM(ISNUMBER(FIND({""张家港"",""连云港"",""鲅鱼圈"",""仙人岛""},RC[3]))*1),""预计靠泊""&MID(RC[3],FIND(""已到"",RC[3])+2,3),""预计靠泊""&MID(RC[3],FIND(""已到"",RC[3])+2,2)&"" "")&IF(ISNUMBER(--MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))+1,2)),MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))+1,2),MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))+1,1))&""号""&IF(ISNUMBER(--MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))-4,4)),MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))-4,4)&""LT"",MID(RC[3],FIND(""/"",RC[3],FIND(""ETB"",RC[3]))-6,6)),"""")"
-
-
-Call 大家庭状态检查
-
+    Call 大家庭状态检查
+    
     Call 大家庭表头更新
     
-Call 保存大家庭表
+    Call 保存大家庭表
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 
         
-End Function
+End Sub
 Function 大家庭预处理信息源(rngKOriginInfo, rngAShipName)
 Dim rngk
-
-Dim j As Integer
 Dim i As Integer
+Dim fnro As Integer
+Dim fnstr As String
 
     With rngKOriginInfo '处理复制过来的船舶动态
         .Replace What:="：", Replacement:=":", LookAt:=xlPart
@@ -143,31 +141,25 @@ Dim i As Integer
         .Replace What:="建兴", Replacement:="JX"
         .Replace What:="-", Replacement:=""
         .Replace What:="轮", Replacement:=""
+        .Replace What:=" ", Replacement:=""
     End With
     
-    
     For Each rngk In rngKOriginInfo
-        j = 4
+        fnstr = rngk.Value
+        inscoma = InStr(1, fnstr, ":")
         i = 0
-        If InStr(1, rngk, ":") = 0 Then '该单元格没有船舶动态
+        If inscoma = 0 Then '该单元格没有船舶动态
             If i > 2 Then
                 Exit Function
             End If
             i = i + 1
         Else
-            shipInfo = Mid(rngk.Text, InStr(1, rngk.Text, ":") + 1, 999)
-            shipname = Mid(rngk.Text, 1, InStr(1, rngk.Text, ":") - 1)
-            For Each rnga In rngAShipName
-                If shipname = rnga Then
-                    Cells(j, 10) = shipInfo
-                    GoTo nextrngk
-                End If
-                j = j + 1
-            Next rnga
+            shipname = Mid(fnstr, 1, inscoma - 1)
+            shipInfo = Mid(fnstr, inscoma + 1, 99)
+            dship.Add shipname, shipInfo
         End If
-nextrngk:
-    Next rngk
-    
+     Next rngk
+     
 End Function
 Function 大家庭表头更新()
     Range("a1") = "上海鼎衡船队动态信息一览表 " & Format(Date, "yyyy年m月d日 aaaa") '更新日期 Range("G1:I1").FormulaR1C1 = "=IF(RC=0,TEXT(NOW(),""yyyy年m月d日 aaaa""),RC)"
@@ -212,7 +204,7 @@ Function 保存大家庭表()
 'End If
 
 'local_family = local_family & "\" & Format(Date, "\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx")
-local_family = local_family & "\" & Format(Date, "F:\\工作文档\\动态表（鼎衡大家庭）\\yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx")
+local_family = Format(Date, "F:\\工作文档\\动态表（鼎衡大家庭）\\yyyy年\\m月\\动态表（鼎衡大家庭）yyyy-mm-dd.xl\sx")
 
 Call 保存文件(ActiveWorkbook, local_family)
 '    ActiveWorkbook.SaveAs fileName:=local_family, FileFormat:=xlOpenXMLWorkbook, CreateBackup:=False
