@@ -30,6 +30,12 @@ Function 货名统一为英文(col)
         .Replace What:="BASE OIL（500N+150N）", Replacement:="500N+150N"
         .Replace What:="基础油500N+150N", Replacement:="500N+150N"
         .Replace What:="基础油150N+500N", Replacement:="500N+150N"
+        .Replace What:="基础油500N-150N", Replacement:="500N+150N"
+        .Replace What:="基础油150N-500N", Replacement:="500N+150N"
+        .Replace What:="基础油500N*150N", Replacement:="500N+150N"
+        .Replace What:="基础油150N*500N", Replacement:="500N+150N"
+        .Replace What:="基础油500N/150N", Replacement:="500N+150N"
+        .Replace What:="基础油150N/500N", Replacement:="500N+150N"
         .Replace What:="基础油500/150", Replacement:="500N+150N"
         .Replace What:="BO", Replacement:="500N+150N"
         .Replace What:="BASE OIL", Replacement:="500N+150N"
@@ -44,10 +50,11 @@ Function 货名统一为英文(col)
         .Replace What:="BO150N&B500N", Replacement:="500N+150N"
         .Replace What:="基础油500N 150N", Replacement:="500N+150N"
         .Replace What:="基础油150N 500N", Replacement:="500N+150N"
+        .Replace What:="BO500N/BO150N", Replacement:="500N+150N"
+        .Replace What:="BO150N/BO500N", Replacement:="500N+150N"
+        
         .Replace What:="XHVI 8/4", Replacement:="500N+150N"
         .Replace What:="GASOIL", Replacement:="500N+150N"
-        .Replace What:="BO 500N", Replacement:="500N+150N"
-        .Replace What:="BO 500N", Replacement:="500N+150N"
         .Replace What:="BS60&导热油", Replacement:="500N+150N"
         .Replace What:="BS60&导热油", Replacement:="500N+150N"
         
@@ -63,6 +70,7 @@ Function 货名统一为英文(col)
         .Replace What:="ACN", Replacement:="AN"
         .Replace What:="丙烯晴", Replacement:="AN"
         .Replace What:="丙烯腈", Replacement:="AN"
+        .Replace What:="丙希腈", Replacement:="AN"
         .Replace What:="纯苯", Replacement:="BENZENE"
         .Replace What:="苯", Replacement:="BENZENE"
         .Replace What:="BEN", Replacement:="BENZENE"
@@ -129,6 +137,7 @@ With portRange ' Cells(4, 8)
     .Replace What:="—", Replacement:="-"
     .Replace What:="廖", Replacement:="寮"
     .Replace What:=" ", Replacement:=""
+    .Replace What:="'", Replacement:=""
     '48,数字0
     '79,大写字母O
     '111,小写字母o
@@ -136,18 +145,21 @@ With portRange ' Cells(4, 8)
         .Replace What:=Chr(48), Replacement:=Chr(79)
     End If
     .Replace What:="，", Replacement:="+"
-        .Replace What:="anping", Replacement:="安平"
+    .Replace What:="ASSALIYEH", Replacement:="ASSALUYEH" '伊朗
+    .Replace What:="anping", Replacement:="安平"
     .Replace What:="bangkok", Replacement:="曼谷"
     .Replace What:="basuo", Replacement:="八所"
+    .Replace What:="BATANGAS", Replacement:="八打雁" '菲律宾
     .Replace What:="bayuquan", Replacement:="鲅鱼圈"
     .Replace What:="beihai", Replacement:="北海"
-    .Replace What:="caojin", Replacement:="漕泾"
     .Replace What:="caojing", Replacement:="漕泾"
+    .Replace What:="caojin", Replacement:="漕泾"
     .Replace What:="曹泾", Replacement:="漕泾"
     .Replace What:="changshu", Replacement:="常熟"
     .Replace What:="changzhou", Replacement:="常州"
     .Replace What:="CJK", Replacement:="长江口"
     .Replace What:="daesan", Replacement:="大山"
+    .Replace What:="DASEAN", Replacement:="大山"
     .Replace What:="dafeng", Replacement:="大丰"
     .Replace What:="dalian", Replacement:="大连"
     .Replace What:="daxie", Replacement:="大榭"
@@ -161,21 +173,36 @@ With portRange ' Cells(4, 8)
     .Replace What:="hongkong", Replacement:="香港"
     .Replace What:="HUIZHOU", Replacement:="惠州"
     .Replace What:="inchon", Replacement:="仁川"
+    .Replace What:="INCHEON", Replacement:="仁川"
+    .Replace What:="jinshan", Replacement:="金山"
     .Replace What:="jiangmen", Replacement:="江门"
     .Replace What:="jiangyin", Replacement:="江阴"
     .Replace What:="jiaxing", Replacement:="嘉兴"
     .Replace What:="jieyang", Replacement:="揭阳"
+    .Replace What:="jingjiang", Replacement:="晋江"
+    .Replace What:="jinjiang", Replacement:="晋江"
     .Replace What:="jingtang", Replacement:="京唐"
     .Replace What:="jinzhou", Replacement:="锦州"
+    .Replace What:="KANDLA", Replacement:="坎德拉" '印度西
     .Replace What:="kaohsiung", Replacement:="高雄"
+    .Replace What:="KAOSHIUNG", Replacement:="高雄"
+    .Replace What:="KAOHISUNG", Replacement:="高雄"
+    .Replace What:="KAOHSIUNT", Replacement:="高雄"
+    .Replace What:="KAPHSIUNG", Replacement:="高雄"
+    .Replace What:="KUNSHAN", Replacement:="昆山"
+    .Replace What:="KUNAK", Replacement:="库纳克" '马来西亚
     .Replace What:="laizhou", Replacement:="莱州"
     .Replace What:="lanshan", Replacement:="岚山"
+    .Replace What:="LANSHA", Replacement:="岚山"
     .Replace What:="lianyungang", Replacement:="连云港"
     .Replace What:="mailiao", Replacement:="麦寮"
+    .Replace What:="MAILAIO", Replacement:="麦寮"
     .Replace What:="maoming", Replacement:="茂名"
     .Replace What:="mawei", Replacement:="马尾"
-    .Replace What:="nanjin", Replacement:="南京"
+    .Replace What:="NAMPO", Replacement:="南浦"
     .Replace What:="nanjing", Replacement:="南京"
+    .Replace What:="nanjin", Replacement:="南京"
+    .Replace What:="NANGJIN", Replacement:="南京"
     .Replace What:="nansha", Replacement:="南沙"
     .Replace What:="nantong", Replacement:="南通"
     .Replace What:="ningbo", Replacement:="宁波"
@@ -200,14 +227,18 @@ With portRange ' Cells(4, 8)
     .Replace What:="shenhu", Replacement:="深沪" '福建晋江下的镇
     .Replace What:="shijing", Replacement:="石井"
     .Replace What:="SINGAPORE", Replacement:="新加坡"
+    .Replace What:="SINGPORE", Replacement:="新加坡"
+    .Replace What:="SON DUONG", Replacement:="山阳"
+    .Replace What:="taicang", Replacement:="太仓"
     .Replace What:="taichiung", Replacement:="台中"
     .Replace What:="taichung", Replacement:="台中"
     .Replace What:="taixin", Replacement:="泰兴"
     .Replace What:="taixing", Replacement:="泰兴"
-    .Replace What:="taizhou", Replacement:="台州"
+'    .Replace What:="taizhou", Replacement:="台州"
     .Replace What:="taizhou", Replacement:="泰州"
-    .Replace What:="tianjin", Replacement:="天健"
+    .Replace What:="tianjing", Replacement:="天津"
     .Replace What:="tianjin", Replacement:="天津"
+    .Replace What:="天健", Replacement:="天津"
     .Replace What:="ulsan", Replacement:="蔚山"
     .Replace What:="weifang", Replacement:="潍坊"
     .Replace What:="wenzhou", Replacement:="温州"
@@ -219,17 +250,24 @@ With portRange ' Cells(4, 8)
     .Replace What:="yangpu", Replacement:="洋浦"
     .Replace What:="杨浦", Replacement:="洋浦"
     .Replace What:="yangshan", Replacement:="洋山"
+    .Replace What:="YANGZHOU", Replacement:="扬州"
     .Replace What:="yantai", Replacement:="烟台"
     .Replace What:="yeosu", Replacement:="丽水"
     .Replace What:="yingkou", Replacement:="营口"
+    .Replace What:="扬州", Replacement:="仪征"
     .Replace What:="yizheng", Replacement:="仪征"
     .Replace What:="yosu", Replacement:="丽水"
-    .Replace What:="zhajiagang", Replacement:="张家港"
     .Replace What:="zhangjiagang", Replacement:="张家港"
+    .Replace What:="zhajiagang", Replacement:="张家港"
+    .Replace What:="ZHANGJIAGONG", Replacement:="张家港"
+    .Replace What:="ZHAGNJIAGANG", Replacement:="张家港"
+    .Replace What:="ZHANGJIAGAGN", Replacement:="张家港"
     .Replace What:="zhapu", Replacement:="乍浦"
-    .Replace What:="zhejiang", Replacement:="镇江"
     .Replace What:="zhenhai", Replacement:="镇海"
     .Replace What:="zhenjiang", Replacement:="镇江"
+    .Replace What:="ZHENGJIANG", Replacement:="镇江"
+    .Replace What:="zhejiang", Replacement:="镇江"
+    .Replace What:="ZHNEJIANG", Replacement:="镇江"
     .Replace What:="zhongshan", Replacement:="中山"
     .Replace What:="zhoushan", Replacement:="舟山"
     .Replace What:="zhuhai", Replacement:="珠海"
@@ -243,42 +281,51 @@ arShipNam = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH
 '0-5，3KT ; 6-9,2KT ; 10,1K5
 
 End Function
-Function replacePorts(col)
+Sub 选中列转为区域()
+Call 港口转区域(Selection.Column)
+End Sub
+Function 港口转区域(col)
 
+Dim arPorts(0 To 1)
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
 arHuaBeiPorts = Array("丹东", "大连", "营口", "锦州", "秦皇岛", "唐山", "京唐", "天津", "黄骅", _
 "鲅鱼圈", "潍坊", "莱州", "东营", "烟台", "威海", "石岛", "张家埠", "青岛", "日照", "岚山") '仙人岛
 
-arHuaDongPorts = Array("龙口", "连云港", _
+arHuaDongPorts = Array("龙口", "连云港", "芜湖", _
 "南通", "如东", "张家港", "镇海", "镇江", "南京", "大丰", "大榭", "江阴", "常熟", "泰兴", _
 "上海", "嘉兴", "吴泾", "漕泾", "乍浦", "宁波", "舟山", "石浦", "海门", "温州", "台州", _
-"常州", "仪征", "洋山", "无为", "洋口", "泰州", "北仑台塑", "宁波大榭", "如皋")
+"常州", "仪征", "洋山", "无为", "洋口", "泰州", "北仑台塑", "宁波大榭", "如皋", "青峙", "金山", "太仓", "midchina", "昆山")
 
 arHuaNanPorts = Array("赛岐", "福州", "马尾", "湄州湾", "泉州", "厦门", "东山", _
 "汕头", "西堤", "汕尾", "深圳", "广州", "南沙", "东莞", "惠州", "揭阳", "小虎岛", "中山", _
 "珠海", "江门", "阳江", "水东", "茂名", "湛江", "霞海", "海安", "北海", "防城", "海口", _
 "三亚", "八所", "海南", "洋浦", "马村", "钦州", "新会", "古雷", "深沪", _
-"南沙") '杨浦 小虎山
+"南沙", "可门", "三水", "石井", "晋江", "广东") '杨浦 小虎山,广东三水
 
 arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮", "安平") ', "香港", "澳门", "港澳台+港澳台"
 
-arKoreaPorts = Array("丽水", "蔚山", "大山", "NAMPO", "平泽")
+arKoreaPorts = Array("丽水", "蔚山", "大山", "NAMPO", "平泽", "Korea")
 
 arSEAsia = Array("BATAAN", "BATANGAS", "VAN PHONG", "VANPHONG", "KERTEH", "RAYONG", _
 "TABANGAO", "KUANTAN", "SRIRACHA", "MAPTAPHUT", "MERAK", "GRESIK", _
-"Pulau Laut", "曼谷", "bangkok", "SON DUONG", "Singapore", "新加坡", _
+"Pulau Laut", "曼谷", "bangkok", "SONDUONG", "SON DUONG", "Singapore", "新加坡", _
 "KUNAK", "KELANG", "PORT KELANG", "TARJUN", "HOCHIMINHPORT", _
-"KERTH", "BINTULU")
+"KERTH", "BINTULU", "山阳")
 'SON DUONG越南山阳,KUNAK马来,VANPHONG越南(空格被处理掉了）
-arIndia = Array("KANDLA")
 
 arMEGulf = Array("ASSALUYEH", "ASSALIYEH", "BIK")
 'Assa伊朗
-arPortPart = Array("华北", "华东", "华南", "台湾", "韩国", "东南亚", "中东")
 
+arWCI = Array("KANDLA", "WESTCOASTOFINDIA")
 
+arECI = Array("KALKATA", "EASTCOASTOFINDIA")
+
+arPortPart = Array("华北", "华东", "华南", "台湾", "韩国", "东南亚", "中东", "印度西", "印度东")
+
+'将港口转为区域
 With Columns(col)
+    .Select
     For i = 0 To UBound(arHuaBeiPorts)
         .Replace What:=arHuaBeiPorts(i), Replacement:="华北", LookAt:=xlPart
     Next i
@@ -297,29 +344,65 @@ With Columns(col)
     For n = 0 To UBound(arSEAsia)
         .Replace What:=arSEAsia(n), Replacement:="东南亚"
     Next n
-    For O = 0 To UBound(arMEGulf) Step 1
-        .Replace What:=arMEGulf(O), Replacement:="中东"
-    Next O
+    For o = 0 To UBound(arMEGulf) Step 1
+        .Replace What:=arMEGulf(o), Replacement:="中东"
+    Next o
+    For p = 0 To UBound(arWCI) Step 1
+        .Replace What:=arWCI(p), Replacement:="印度西"
+    Next p
+    For q = 0 To UBound(arECI) Step 1
+        .Replace What:=arECI(q), Replacement:="印度东"
+    Next q
 End With
-
-For r = 2 To [a1].End(xlDown).Row
-    Set rngPort = Cells(r, col)
-    valPort = rngPort.Value
-    lenPort = Len(valPort)
-    For Each part In arPortPart
-        countParts = lenPort - Len(Replace(valPort, part, "")) '替换掉了多少字
-        If countParts >= 4 Then
-            rngPort.Value = part & "内部"
-            GoTo nextRngPort
-        End If
-    Next part
-
-nextRngPort:
-Next r
-    
+Call 航线转区域(col)
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 End Function
+Function 航线转区域(col)
+Dim arPorts(0 To 1)
+arPortPart = Array("华北", "华东", "华南", "台湾", "韩国", "东南亚", "中东", "印度西", "印度东")
+For r = 1 To Cells(66666, col).End(xlUp).Row
+    Set rngPort = Cells(r, col)
+    valPort = rngPort.Value
+    If valPort = "" And Cells(r + 1, col).Value = "" Then
+        r = rngPort.End(xlDown).Row - 1
+        GoTo nextr
+    End If
+    insSlash = InStr(1, valPort, "-")
+    If insSlash > 0 Then
+        loadPorts = Left(valPort, insSlash - 1)
+        discPorts = Right(valPort, Len(valPort) - insSlash)
+        arPorts(0) = loadPorts
+        arPorts(1) = discPorts
+        valPort = ""
+        For i = 0 To 1
+            lenPort = Len(arPorts(i))
+            If lenPort > 3 Then
+                For Each part In arPortPart
+                    countParts = lenPort - Len(Replace(arPorts(i), part, "")) '替换掉了多少字
+                    If countParts >= 4 Then
+                        arPorts(i) = part
+                        Exit For
+                    End If
+                Next part
+            End If
+            valPort = valPort & arPorts(i) & "-"
+        Next i
+        valPort = Left(valPort, Len(valPort) - 1)
+        lenPort = Len(valPort)
+        For Each part In arPortPart
+            countParts = lenPort - Len(Replace(valPort, part, "")) '替换掉了多少字
+            If countParts >= 4 Then
+                valPort = part & "内部"
+                Exit For
+            End If
+        Next part
+    End If
+    rngPort.Value = valPort
+nextr:
+Next r
+End Function
+
 Sub Sa()
 'For Each daa In selection
 '    Debug.Print daa; ro = daa.Row
@@ -362,32 +445,51 @@ With nameRange
 End With
 End Function
 Function 船名全称转缩写(funcShipName)
+Dim shipLongNameArr
+Dim funcShipNameArr
+Dim arFilter
+Dim strFilter As String
+
 shipLongNameArr = Array("鼎衡1", "鼎衡2", "鼎衡3", "鼎衡5", "鼎衡9", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17*", "鼎衡18*", "鼎衡7", "建兴32", "鼎衡A", "鼎衡E", "天使1", "天使2", "天使3", "天使11")
 funcShipNameArr = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "DH7", "JX32", "DHA", "DHE", "AG1", "AG2", "AG3", "AG11")
+
+arFilter = Array(" ", "轮", "月", "度")
+arTrans = Array("DINGHENG", "GOLDEN", "鼎衡")
+arDH = Array("DINGHENG", "鼎衡")
+arGD = Array("GOLDEN", "金色")
+arAG = Array("AngelNo.", "天使", "安吉")
 funcShipName = UCase(funcShipName)
-If InStr(1, funcShipName, " ") > 0 Then
-    funcShipName = Replace(funcShipName, " ", "")
-End If
-If InStr(1, funcShipName, "DINGHENG") > 0 Then
-    funcShipName = Replace(funcShipName, "DINGHENG", "DH")
-End If
-If InStr(1, funcShipName, "DH") > 0 Then
-    funcShipName = Replace(funcShipName, "DH", "鼎衡")
-End If
+
+'格式化funcShipName
+'For Each strFilter In arFilter
+'    If InStr(1, funcShipName, strFilter) > 0 Then
+'        funcShipName = Replace(funcShipName, strFilter, "")
+'    End If
+'Next strFilter
+'
+'
+'    .Replace "HENGXIN", "HX", xlPart
+'    .Replace "AngelNo.", "AG", xlPart
+'    .Replace "Epoch", "E", xlPart
+'    .Replace "Golden", "G", xlPart
 
 '
-    If Left(funcShipName, 1) = "鼎" Or Left(funcShipName, 1) = "建" Then
+    If Left(funcShipName, 1) = "鼎" Then
         If funcShipName Like "鼎衡17*" Then
             funcShipName = "DH17"
         ElseIf funcShipName = "鼎衡18*" Then
             funcShipName = "DH18"
-        ElseIf funcShipName = "建兴32" Then
-            funcShipName = "JX32"
-        ElseIf funcShipName = "恒信HX" Then
-            funcShipName = "HX"
         Else
             funcShipName = Replace(funcShipName, "鼎衡", "DH")
         End If
+    ElseIf funcShipName = "建兴32" Then
+        funcShipName = "JX32"
+    ElseIf funcShipName = "恒信HX" Then
+        funcShipName = "HX"
+    ElseIf Left(funcShipName, 1) = "天" Then
+        funcShipName = Replace(funcShipName, "天使", "AG")
+    ElseIf Left(funcShipName, 1) = "安" Then
+        funcShipName = Replace(funcShipName, "安吉", "AG")
     End If
     船名全称转缩写 = funcShipName
 End Function
@@ -484,29 +586,55 @@ For ro = 2 To 379
 Next ro
 End Function
 Function 处理船舶吨位()
+Dim shipname As String
 rst = 2
 red = Cells(1, 1).End(xlDown).Row
 For ro = rst To red
     shipname = Cells(ro, 1).Value
     shipNum = Right(shipname, 2)
-    If IsNumeric(shipNum) Then
+    If Left(shipname, 1) = "A" Then
+        'angel1,2,3,11
+        If IsNumeric(shipNum) Then
+        Else
+            shipNum = Right(shipNum, 1)
+        End If
+        Select Case shipNum
+            Case 1 To 3
+                dwt = 7600
+            Case 11
+                dwt = 17000
+        End Select
+        
+    ElseIf Left(shipname, 1) = "H" Then
+        'hx
+        dwt = 13898
+    ElseIf Right(shipname, 1) = "E" Then
+        'dhepoch
+        dwt = 8500
+    ElseIf Right(shipname, 1) = "A" Then
+        'dhepoch
+        dwt = 8500
     Else
-        shipNum = Right(shipNum, 1)
+        'dh1 , 2, 3, 5, 9, 10, 15, 16, 17, 18, 32
+        If IsNumeric(shipNum) Then
+        Else
+            shipNum = Right(shipNum, 1)
+        End If
+        Select Case shipNum
+            Case 1 To 5
+                dwt = 3500
+            Case 7
+                dwt = 1500
+            Case 9 To 10
+                dwt = 3500
+            Case 15 To 16
+                dwt = 2000
+            Case 17 To 18
+                dwt = 3000
+            Case 32
+                dwt = 2000
+        End Select
     End If
-    Select Case shipNum
-        Case 1 To 5
-            dwt = 3500
-        Case 7
-            dwt = 1500
-        Case 9 To 10
-            dwt = 3500
-        Case 15 To 16
-            dwt = 2000
-        Case 17 To 18
-            dwt = 3000
-        Case 32
-            dwt = 2000
-    End Select
     Cells(ro, 3).Value = dwt
     
 Next ro
@@ -646,7 +774,7 @@ Dim arr As Variant
     对操作名字返回船名缩写数组 = arr
 End Function
 Sub 航线转为内外贸()
-'replacePorts ("K")
+'港口转区域 ("K")
 Call 根据航线产生内外贸("K", "L")
 
 End Sub
@@ -658,7 +786,7 @@ End If
 
     Range(Cells(1, col_voyline), Cells(1, col_voyline).End(xlDown)).Copy Cells(1, col_inout)
     ENPortToCNPort (col_inout)
-    replacePorts (col_inout)
+    港口转区域 (col_inout)
     
     '第11列neiwaimao
     ar_overseas = Array("韩国", "台湾", "东南亚", "香港", "朝鲜")
@@ -679,4 +807,16 @@ End If
         
     Next krng
 End Function
-
+Function 找表内数据尾行(fnsht, fnrowStart, Optional fncol = 2)
+'fnroStart是数据区的第一行，不是表头
+'返回0，说明表内无数据
+    If fnsht.Cells(fnrowStart, fncol) = "" Then
+        '如果第一行没数据
+        找表内数据尾行 = 0
+    ElseIf fnsht.Cells(fnrowStart + 1, fncol) = "" Then
+        '第一行有数据，第二行没有
+        找表内数据尾行 = fnrowStart
+    Else
+        找表内数据尾行 = fnsht.Cells(fnrowStart, fncol).End(xlDown).Row
+    End If
+End Function
