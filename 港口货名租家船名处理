@@ -4,8 +4,8 @@ End Sub
 Sub 英文港口转中文港口()
 ENPortToCNPort (Selection.Column)
 End Sub
-Sub 选中列货物名转为英文()
-货名统一为英文 (Selection.Column)
+Sub 选中列转为区域()
+Call 港口转区域(Selection.Column)
 End Sub
 Function 货名统一为英文(col)
     With Columns(col)
@@ -52,11 +52,11 @@ Function 货名统一为英文(col)
         .Replace What:="基础油150N 500N", Replacement:="500N+150N"
         .Replace What:="BO500N/BO150N", Replacement:="500N+150N"
         .Replace What:="BO150N/BO500N", Replacement:="500N+150N"
-        
-        .Replace What:="XHVI 8/4", Replacement:="500N+150N"
-        .Replace What:="GASOIL", Replacement:="500N+150N"
-        .Replace What:="BS60&导热油", Replacement:="500N+150N"
-        .Replace What:="BS60&导热油", Replacement:="500N+150N"
+'
+'        .Replace What:="XHVI 8/4", Replacement:="500N+150N"
+'        .Replace What:="GASOIL", Replacement:="500N+150N"
+'        .Replace What:="BS60&导热油", Replacement:="500N+150N"
+'        .Replace What:="BS60&导热油", Replacement:="500N+150N"
         
         .Replace What:="AA", Replacement:="Acetic acid"
         .Replace What:="冰醋酸", Replacement:="Acetic acid"
@@ -135,6 +135,7 @@ With portRange ' Cells(4, 8)
     .Replace What:="\", Replacement:="-"
     .Replace What:="－", Replacement:="-"
     .Replace What:="—", Replacement:="-"
+    .Replace What:="--", Replacement:="-"
     .Replace What:="廖", Replacement:="寮"
     .Replace What:=" ", Replacement:=""
     .Replace What:="'", Replacement:=""
@@ -194,6 +195,7 @@ With portRange ' Cells(4, 8)
     .Replace What:="laizhou", Replacement:="莱州"
     .Replace What:="lanshan", Replacement:="岚山"
     .Replace What:="LANSHA", Replacement:="岚山"
+    .Replace What:="岚山港", Replacement:="岚山"
     .Replace What:="lianyungang", Replacement:="连云港"
     .Replace What:="mailiao", Replacement:="麦寮"
     .Replace What:="MAILAIO", Replacement:="麦寮"
@@ -281,29 +283,30 @@ arShipNam = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH
 '0-5，3KT ; 6-9,2KT ; 10,1K5
 
 End Function
-Sub 选中列转为区域()
-Call 港口转区域(Selection.Column)
-End Sub
 Function 港口转区域(col)
 
 Dim arPorts(0 To 1)
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
 arHuaBeiPorts = Array("丹东", "大连", "营口", "锦州", "秦皇岛", "唐山", "京唐", "天津", "黄骅", _
-"鲅鱼圈", "潍坊", "莱州", "东营", "烟台", "威海", "石岛", "张家埠", "青岛", "日照", "岚山") '仙人岛
+"鲅鱼圈", "潍坊", "莱州", "东营", "烟台", "威海", "石岛", "张家埠", "青岛", "日照", "岚山", _
+"仙人岛", "长兴岛")
 
 arHuaDongPorts = Array("龙口", "连云港", "芜湖", _
 "南通", "如东", "张家港", "镇海", "镇江", "南京", "大丰", "大榭", "江阴", "常熟", "泰兴", _
 "上海", "嘉兴", "吴泾", "漕泾", "乍浦", "宁波", "舟山", "石浦", "海门", "温州", "台州", _
-"常州", "仪征", "洋山", "无为", "洋口", "泰州", "北仑台塑", "宁波大榭", "如皋", "青峙", "金山", "太仓", "midchina", "昆山")
+"常州", "仪征", "洋山", "无为", "洋口", "泰州", "北仑台塑", "宁波大榭", "如皋", "青峙", _
+"独山港", "金山", "太仓", "midchina", "昆山", "浙江", "温洲")
 
 arHuaNanPorts = Array("赛岐", "福州", "马尾", "湄州湾", "泉州", "厦门", "东山", _
 "汕头", "西堤", "汕尾", "深圳", "广州", "南沙", "东莞", "惠州", "揭阳", "小虎岛", "中山", _
 "珠海", "江门", "阳江", "水东", "茂名", "湛江", "霞海", "海安", "北海", "防城", "海口", _
 "三亚", "八所", "海南", "洋浦", "马村", "钦州", "新会", "古雷", "深沪", _
-"南沙", "可门", "三水", "石井", "晋江", "广东") '杨浦 小虎山,广东三水
+"南沙", "可门", "三水", "石井", "晋江", "广东", "杨浦", "小虎山", "广东", _
+"三水", "漳州", "小虎石化")
 
-arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮", "安平") ', "香港", "澳门", "港澳台+港澳台"
+arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮", "安平")
+', "香港", "澳门", "港澳台+港澳台"
 
 arKoreaPorts = Array("丽水", "蔚山", "大山", "NAMPO", "平泽", "Korea")
 
@@ -311,13 +314,13 @@ arSEAsia = Array("BATAAN", "BATANGAS", "VAN PHONG", "VANPHONG", "KERTEH", "RAYON
 "TABANGAO", "KUANTAN", "SRIRACHA", "MAPTAPHUT", "MERAK", "GRESIK", _
 "Pulau Laut", "曼谷", "bangkok", "SONDUONG", "SON DUONG", "Singapore", "新加坡", _
 "KUNAK", "KELANG", "PORT KELANG", "TARJUN", "HOCHIMINHPORT", _
-"KERTH", "BINTULU", "山阳")
+"KERTH", "BINTULU", "山阳", "库纳克")
 'SON DUONG越南山阳,KUNAK马来,VANPHONG越南(空格被处理掉了）
 
 arMEGulf = Array("ASSALUYEH", "ASSALIYEH", "BIK")
 'Assa伊朗
 
-arWCI = Array("KANDLA", "WESTCOASTOFINDIA")
+arWCI = Array("KANDLA", "WESTCOASTOFINDIA", "坎德拉")
 
 arECI = Array("KALKATA", "EASTCOASTOFINDIA")
 
@@ -361,7 +364,7 @@ End Function
 Function 航线转区域(col)
 Dim arPorts(0 To 1)
 arPortPart = Array("华北", "华东", "华南", "台湾", "韩国", "东南亚", "中东", "印度西", "印度东")
-For r = 1 To Cells(66666, col).End(xlUp).Row
+For r = 1 To Cells(1, col).End(xlDown).Row
     Set rngPort = Cells(r, col)
     valPort = rngPort.Value
     If valPort = "" And Cells(r + 1, col).Value = "" Then
@@ -621,11 +624,7 @@ For ro = rst To red
             shipNum = Right(shipNum, 1)
         End If
         Select Case shipNum
-            Case 1 To 5
-                dwt = 3500
-            Case 7
-                dwt = 1500
-            Case 9 To 10
+            Case 1 To 10
                 dwt = 3500
             Case 15 To 16
                 dwt = 2000
@@ -819,4 +818,81 @@ Function 找表内数据尾行(fnsht, fnrowStart, Optional fncol = 2)
     Else
         找表内数据尾行 = fnsht.Cells(fnrowStart, fncol).End(xlDown).Row
     End If
+End Function
+Function 剔除泊位()
+With Selection ' Cells(4, 8)
+    .Replace What:="码头", Replacement:="", LookAt:=xlPart
+    .Replace What:="泊位", Replacement:=""
+    .Replace What:="小虎石化", Replacement:=""
+    .Replace What:="中化格力", Replacement:=""
+    .Replace What:="诚晖", Replacement:=""
+    .Replace What:="索普", Replacement:=""
+    .Replace What:="青峙", Replacement:=""
+    .Replace What:="台塑", Replacement:=""
+    .Replace What:="华洋", Replacement:=""
+    .Replace What:="华西", Replacement:=""
+    .Replace What:="清江", Replacement:=""
+    .Replace What:="中油泰富", Replacement:=""
+    .Replace What:="扬子泊位", Replacement:=""
+    .Replace What:="三菱化工", Replacement:=""
+    .Replace What:="利士德化", Replacement:=""
+    .Replace What:="孚宝", Replacement:=""
+    .Replace What:="奥德费尔", Replacement:=""
+    .Replace What:="恒力码头", Replacement:=""
+    .Replace What:="新港区", Replacement:=""
+    .Replace What:="丽东", Replacement:=""
+    .Replace What:="龙翔", Replacement:=""
+    .Replace What:="外走马埭", Replacement:=""
+    .Replace What:="三江", Replacement:=""
+    .Replace What:="粤海", Replacement:=""
+    .Replace What:="炼化", Replacement:=""
+    .Replace What:="欧德", Replacement:=""
+    .Replace What:="高栏格力", Replacement:=""
+    .Replace What:="中海油", Replacement:=""
+    .Replace What:="联成", Replacement:=""
+    .Replace What:="东联", Replacement:=""
+    .Replace What:="炼化", Replacement:=""
+    .Replace What:="福炼", Replacement:=""
+    .Replace What:="长江国际", Replacement:=""
+    .Replace What:="万华", Replacement:=""
+    .Replace What:="石化", Replacement:=""
+    .Replace What:="华盛", Replacement:=""
+    .Replace What:="金明", Replacement:=""
+    .Replace What:="振戎", Replacement:=""
+    .Replace What:="阳鸿", Replacement:=""
+    .Replace What:="科元", Replacement:=""
+    .Replace What:="百安", Replacement:=""
+    .Replace What:="海洋", Replacement:=""
+    .Replace What:="泰山", Replacement:=""
+    .Replace What:="恒基达鑫", Replacement:=""
+    .Replace What:="高栏", Replacement:=""
+    .Replace What:="东洲", Replacement:=""
+    .Replace What:="海湾", Replacement:=""
+    .Replace What:="新港", Replacement:=""
+    .Replace What:="石井", Replacement:=""
+    .Replace What:="恒力", Replacement:=""
+    .Replace What:="扬巴", Replacement:=""
+    .Replace What:="甘井子", Replacement:=""
+    .Replace What:="临港", Replacement:=""
+    .Replace What:="中东", Replacement:=""
+    .Replace What:="新港福佳", Replacement:=""
+    .Replace What:="思多而特", Replacement:=""
+    .Replace What:="顺岸", Replacement:=""
+    .Replace What:="杨子", Replacement:=""
+    .Replace What:="扬子", Replacement:=""
+    .Replace What:="油", Replacement:=""
+    .Replace What:="泰地", Replacement:=""
+    .Replace What:="福建", Replacement:=""
+    .Replace What:="广西", Replacement:=""
+    .Replace What:="粤海", Replacement:=""
+    .Replace What:="镇司", Replacement:=""
+    .Replace What:="三菱化工", Replacement:=""
+    .Replace What:="三菱化工", Replacement:=""
+    .Replace What:="三菱化工", Replacement:=""
+    .Replace What:="三菱化工", Replacement:=""
+    .Replace What:="三菱化工", Replacement:=""
+    .Replace What:="三菱化工", Replacement:=""
+    .Replace What:="三菱化工", Replacement:=""
+    .Replace What:="三菱化工", Replacement:=""
+End With
 End Function
