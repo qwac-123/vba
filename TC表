@@ -125,8 +125,14 @@ Application.DisplayAlerts = 0
             shipname = 船名缩写转全称(shipname)
             isAbsent = False
         End If
+        If shipname = "DH15" Then
+            Stop
+        End If
         'shipNum = Right(shipName, 2)
         voy = Cells(r, 2).Value
+        If shipname = "DH15" Then
+            Stop
+        End If
         voyValue = 提取航次号(voy)
         thisShipVoy = Cells(r, 1).Value & Cells(r, 2).Value
         'test
@@ -190,11 +196,11 @@ nextr:
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Sub
-Sub TC增加本月航次()
-arNewShipVoy = Array()
-For ro = 2 To [a2].End(xlDown).Row + UBound(arNewShipVoy) + 1
-    
-End Sub
+'Sub TC增加本月航次()
+'arNewShipVoy = Array()
+'For ro = 2 To [a2].End(xlDown).Row + UBound(arNewShipVoy) + 1
+'
+'End Sub
 Sub TC表下个月()
 
 tcPath = "F:\工作文档\TC表\" & Format(Date - 25, "yyyymm") & "\"
@@ -503,7 +509,8 @@ For ro = 2 To endRow
     Set crtRoCell = Cells(ro, 1)
     crtRoCellVal = crtRoCell.Value
     rowIsBlank = crtRoCellVal = ""
-    rowIsElse = crtRoCellVal = "其他"
+    rowIsElse = Cells(ro, 3).Value = "其他"
+    rowIsElse = rowIsElse Or (Cells(ro, 8).Value Like "*租金*")
     rowIsBlue = crtRoCell.Interior.color = 15773696
     'rowIsRemark = Cells(ro, 16) <> ""
     If rowIsBlank Or rowIsBlue Or rowIsElse Then
@@ -525,22 +532,29 @@ For i = 0 To UBound(arTitle)
         Range("C1").Value = "船名+航次"
         Range([c2], [a2].End(xlDown).Offset(0, 2)).FormulaR1C1 = "=RC[-2]&RC[-1]"
         GoTo nextaTit
+'    ElseIf aTit = "航线" Then
+'        Call ENPortToCNPort(i - 1)
+'        GoTo nextaTit
     ElseIf aTit = "航行区域" Then
+        Call ENPortToCNPort(i)
         Columns(i).Copy
         Columns(i + 1).Insert Shift:=xlToRight
-        Call 航线转区域
+        Cells(1, i + 1) = "航行区域"
+        Call 港口转区域(i + 1)
         GoTo nextaTit
     End If
     
     For col = i + 1 To 13
         strTitle = Cells(1, col).Value
-        If strTitle = aTit Then
+        If strTitle = "货名" Then
+            Call 货名统一为英文(col)
+            Call 货名统一为中文(col)
+        ElseIf strTitle = aTit Then
             If i + 1 <> col Then
                 Columns(col).Cut
                 Columns(i + 1).Insert Shift:=xlToRight
             End If
             Exit For
-        
         End If
     Next col
 nextaTit:
@@ -626,7 +640,18 @@ Function 航线转区域()
 'Columns("f").Copy Columns("G")
 [g1] = "航行区域"
 Call ENPortToCNPort("G")
-Call replacePorts("G")
+Call 港口转区域("G")
+End Function
+Function 近三年()
+For i = 2 To 4
+    Sheets(i).Activate
+    Columns("h").Copy
+    Columns("I").Select
+    Selection.Insert Shift:=xlToRight
+    Columns("I").Select
+    Call ENPortToCNPort("I")
+    Call 港口转区域("I")
+Next i
 End Function
 Function 移除下月航次()
 For r = 2 To [a1].End(xlDown).Row
@@ -645,7 +670,7 @@ Next r
 End Function
 Sub 选中列的港口英转中()
     ENPortToCNPort (Selection.Column)
-    replacePorts (Selection.Column)
+    '港口转区域 (Selection.Column)
 End Sub
 Function TC表新建船名航次号()
 Application.ScreenUpdating = 0
