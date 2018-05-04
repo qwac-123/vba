@@ -61,6 +61,7 @@ Sub 早上工作打开船舶动态表()
     ActiveWindow.SmallScroll up:=20
 End Sub
 Sub 早上工作大家庭动态()
+'20180504 增加对大船多换行的信息处理
 '20180424
 '20180423 增加了航次列，链接到船舶动态表
 'v4.2 将大家庭动态放入字典以匹配
@@ -108,7 +109,7 @@ Sub 早上工作大家庭动态()
     Set rngAShipName = Range(Cells(startShipRow, 1), Cells(endShipRow, 1))
     
     
-    Set rngOriginInfo = Range(Cells(1, col_info), Cells(33, col_info))
+    Set rngOriginInfo = Range(Cells(1, col_info), Cells(100, col_info))
     
     Set rngFinalInfo = Range(Cells(startShipRow, col_info), Cells(endShipRow, col_info))
     
@@ -142,10 +143,14 @@ Application.DisplayAlerts = True
 End Sub
 Function 大家庭预处理信息源(rngOriginInfo, rngAShipName)
 Dim rnginfo
-Dim i As Integer
-Dim fnro As Integer
-Dim fnstr As String
 
+Dim i As Integer
+Dim ibigship As Integer
+Dim fnro As Integer
+Dim roinfo As Integer
+Dim fnstr As String
+Dim arBigship
+    arBigship = Array("GB", "HX", "AG1", "AG2", "AG3", "AG11", "DHA", "DHB", "DHC", "DHD", "DHE")
     With rngOriginInfo '处理复制过来的船舶动态
         .Replace What:="：", Replacement:=":", LookAt:=xlPart
         .Replace What:="鼎衡", Replacement:="DH"
@@ -153,18 +158,49 @@ Dim fnstr As String
         .Replace What:="-", Replacement:=""
         .Replace What:="轮", Replacement:=""
         .Replace What:=" ", Replacement:=""
+        .Replace What:="AngelNo.", Replacement:="AG"
+        .Replace What:="AngelNo", Replacement:="AG"
+        .Replace What:="EPOCH", Replacement:="E"
     End With
     
     For Each rnginfo In rngOriginInfo
         fnstr = rnginfo.Value
         inscoma = InStr(1, fnstr, ":")
+        lenfnstr = Len(fnstr)
         i = 0
-        If inscoma = 0 Then '该单元格没有船舶动态
+            
+        If lenfnstr = 0 Then
+             '该单元格没有船舶动态
             If i > 2 Then
                 Exit Function
             End If
             i = i + 1
+        ElseIf inscoma = 0 Then
+            '是大船信息
+            
+            For ibigship = 0 To UBound(arBigship)
+                If fnstr Like "*" & arBigship(ibigship) & "*" Then
+                    isNewBigship = False
+                    shipname = arBigship(ibigship)
+                    shipInfo = Replace(fnstr, shipname, "")
+                    Do While (Not (isNewBigship))
+                        '只要这一行信息不是新的船，就继续
+                        rnginfo = rnginfo.Offset(1, 0)
+                        fnstr = rnginfo.Value
+                        shipInfo = shipInfo & vbCrLf & fnstr
+                        
+                        For ibigship = 0 To UBound(arBigship)
+                            If fnstr Like "*" & arBigship(ibigship) & "*" Then
+                                isNewBigship = True
+                                Exit For
+                            End If
+                        Next ibigship
+                    Loop
+                    Exit For
+                End If
         Else
+            '小船信息
+            isBigship = False
             shipname = Mid(fnstr, 1, inscoma - 1)
             shipInfo = Mid(fnstr, inscoma + 1, 99)
             dship.Add shipname, shipInfo
@@ -297,7 +333,7 @@ Sub bbb动态表ISMSROB()
     End With
 
 For i = 4 To 22 Step 1
-    ROB = Cells(i, 15).Value 'column "O"
+    ROB = Application.WorksheetFunction.Clean(Cells(i, 15).Value) 'column "O"
     Do While (Left(ROB, 1) = "/")
         ROB = Right(ROB, Len(ROB) - 1)
     Loop
@@ -414,11 +450,13 @@ Sub aaa快速下航次()
     Dim r As Integer
     Dim ro_ship As Integer '动态表和大家庭船队列表的行号
     Dim ro_info As Integer '动态表代理信息的行号
+    Dim ro_select As Integer
     Dim col As Integer
     Dim col_ship As Integer
     Dim col_crtvoy As Integer
     Dim col_crtpot As Integer
     Dim col_crtagt As Integer
+    Dim col_select As Integer
     
     Dim col_nxtvoy As Integer
     Dim col_nxtpot As Integer
@@ -427,8 +465,8 @@ Sub aaa快速下航次()
     
     Dim thisbk As Workbook '当前工作簿，大家庭或是动态表
     Dim thissht As Worksheet
-    ro_ship = Selection.Row
-    col_ship = Selection.Columns
+    ro_select = Selection.Row
+    col_select = Selection.Column
     Set thisbk = ActiveWorkbook
     Set thissht = ActiveSheet
     
@@ -436,11 +474,13 @@ Sub aaa快速下航次()
     Application.DisplayAlerts = 0
     
     If thisbk.Name Like "*大家庭*" Or ActiveSheet.Name Like "*Vessel Status*" Then
+        ro_ship = ro_select
         If ro_ship < 4 Then
             ro_ship = 4
         End If
         ro_info = 1 + 2 * (ro_ship - 3)
     ElseIf ActiveSheet.Name Like "*agent info.*" Then
+        ro_ship = ro_select
         '确保ro_info在3、5、7行
         If ro_ship < 3 Then
             ro_ship = 3
@@ -467,9 +507,8 @@ Sub aaa快速下航次()
     Cells(ro_ship, col_departport).Value = Cells(ro_ship, col_dsporttime - 1).Value
     Cells(ro_ship, col_departtime).Value = ""
     Cells(ro_ship, col_ldporttime).Value = ""
-    Cells(ro_ship, col_departtime).Value = ""
     Cells(ro_ship, col_dsporttime).Value = ""
-    Cells(ro_ship, col_berth).Value = Cells(ro_ship, col_ldporttime - 1).Value
+    Cells(ro_ship, col_berth).Value = Cells(ro_ship, col_nextcargo - 2).Value
     Cells(ro_ship, col_cargo).Value = Cells(ro_ship, col_nextcargo).Value
     Cells(ro_ship, col_quantity).Value = Cells(ro_ship, col_nextquantity).Value
     Cells(ro_ship, col_nextcargo).Value = ""
@@ -477,18 +516,19 @@ Sub aaa快速下航次()
     '处理代理信息表
     Sheets("agent info.").Activate
     For col = 1 To 10
-        If Cells(2, col).Value Like "*航次*" Then
+        If Cells(2, col).Value Like "航次*" Then
             col_crtvoy = col
-        ElseIf Cells(2, col).Value Like "*港口*" Then
+        ElseIf Cells(2, col).Value Like "港口*" Then
             col_crtpot = col
-        ElseIf Cells(2, col).Value Like "*当前航次代*" Then
+        ElseIf Cells(2, col).Value Like "当前航次代*" Then
             col_crtagt = col
 '        ElseIf Cells(2, col).Value Like "*下航次*" Then
 '            col_nxtvoy = col
-        ElseIf Cells(2, col).Value Like "*港口*" Then
+        ElseIf Cells(2, col).Value Like "下航次港口*" Then
             col_nxtpot = col
-        ElseIf Cells(2, col).Value Like "*下航次代*" Then
+        ElseIf Cells(2, col).Value Like "下航次代*" Then
             col_nxtagt = col
+            Exit For
         End If
     Next col
     
@@ -499,9 +539,13 @@ Sub aaa快速下航次()
     Cells(ro_info + 1, col_crtpot).Value = Cells(ro_info + 1, col_nxtpot).Value
     Cells(ro_info + 1, col_crtagt).Value = Cells(ro_info + 1, col_nxtagt).Value
     
+    Cells(ro_info, col_nxtpot).Value = ""
+    Cells(ro_info + 1, col_nxtpot).Value = ""
+    Cells(ro_info, col_nxtagt).Value = ""
+    Cells(ro_info + 1, col_nxtagt).Value = ""
     thisbk.Activate
     thissht.Activate
-    Cells(ro_ship, col_ship).Select
+    Cells(ro_select, col_select).Select
 Application.ScreenUpdating = True
 Application.DisplayAlerts = True
 End Sub
@@ -1153,3 +1197,24 @@ LunardateDayStr = LunardateDayStr & "月"
 LunardateDayStr = LunardateDayStr & DayName(curDay)
 Lunardate = LunardateStr & LunardateDayStr
 End Function
+
+Function test()
+Dim r
+Dim rng As Range
+Dim i As Integer
+
+Set r = CreateObject("vbscript.regexp") '
+
+ad = Selection.Value
+r.Pattern = "\?"
+r.Global = True
+    ad = r.Replace(ad, "")
+r.Pattern = "\s"
+r.Global = True
+    ad = r.Replace(ad, "")
+
+Debug.Print ad & 1
+
+End Function
+
+
