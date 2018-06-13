@@ -2,22 +2,22 @@ Option Explicit
 Dim zb As Workbook
 Dim zsh As Worksheet
 Dim wsh As Worksheet
-Dim arLdPort(0 To 2, 0 To 9) '装货港三个，0-2
-Dim arDsPort(0 To 2, 0 To 9) '卸货港三个，0-2
+Dim arLdPort(0 To 2, 0 To 10) '装货港三个，0-2
+Dim arDsPort(0 To 2, 0 To 10) '卸货港三个，0-2
 'arLdPort,arDsPort
-'装卸货港三个，0-2，0-8个细节信息
+'装卸货港三个，0-2，0-10个细节信息
 '将有关港口的信息做到一个数组里
-'0装货码头名字
-'1抵达装货码头时间
-'2靠泊装货码头时间
-'3离泊装货码头时间
-'4待泊时间
-'5开始装货时间
-'6结束装货时间
-'7装货时间
-'8装货速率（吨/小时）
-'9备注（空值）
-
+'0.装货码头名字
+'1.抵达装货码头时刻
+'2.靠泊装货码头时刻
+'3.开始装货时刻
+'4.结束装货时刻
+'5.离泊装货码头时刻
+'6.待泊时长
+'7.装货前等待时长
+'8.装货后等待时长
+'9.装货时长
+'10.装货速率（吨/小时）
 Sub 新版业务管理航次报表整合()
  'v1.0可以整合航次报表和燃润料报表到一张表里
 Application.ScreenUpdating = 0
@@ -28,57 +28,65 @@ Dim endRow As Integer
 Dim r As Integer
 Dim voyValue As Integer
 
-Dim shipName As String
+Dim shipname As String
 Dim shipNameShort As String
 Dim lastShipNameShort As String
 Dim voy As String
 Dim lastSameShipVoy As String
 Dim thisSameShipVoy As String
 Dim voyYear As String
-Dim filePath As String
+Dim filepath As String
 Dim voyDir As String
+Dim oilDir As String
 Dim voyLine As String
 Dim addVoy As String
 Dim absentVoy As String
 
 Dim isSameShipVoy As Boolean
 
+Dim oilW As Workbook
 Dim voyW As Workbook
 
 
 Set zb = ActiveWorkbook
 Set zsh = ActiveSheet
-startRow = [c6666].End(xlUp).Row + 1
+If Cells(2, 3) = "" Then
+    startRow = 2
+Else
+    startRow = [c1].End(xlDown).Row + 1
+End If
 endRow = [a1].End(xlDown).Row
-startRow = 2
 lastShipNameShort = ""
 For r = startRow To endRow Step 1
-    If Cells(r, 3) <> "" Then
+    If Cells(r, 3) <> "" Then '已经填写过了
         GoTo nextr
     End If
     shipNameShort = Cells(r, 1).Value
     If lastShipNameShort <> shipNameShort Then
-        shipName = shipNameShort
-        shipName = 船名缩写转全称(shipName)
+        shipname = shipNameShort
+        shipname = 船名缩写转全称(shipname)
     End If
     voy = Cells(r, 2).Value
     voyValue = CInt(Right(voy, 4))
-    'lastSameShipVoy = Cells(r - 1, 1).Value & Cells(r - 1, 2).Value
     thisSameShipVoy = Cells(r, 1).Value & Cells(r, 2).Value
     isSameShipVoy = lastSameShipVoy = thisSameShipVoy
     
     voyYear = "\20" & Left(voyValue, 2) & "年\"
-    filePath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipName & voyYear
+    filepath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\" & shipname & voyYear
     
-    'oilDir = 获得燃润料航次报表dir(filePath, shipNameShort, voyValue)
-    voyDir = 获得船舶航次报表dir(filePath, shipNameShort, voyValue)
+    oilDir = 获得燃润料航次报表dir(filepath, shipNameShort, voyValue)
+    voyDir = 获得船舶航次报表dir(filepath, shipNameShort, voyValue)
     
     If Len(Dir(voyDir)) > 0 Then  '如果文件存在
-        Set voyW = Workbooks.Open(fileName:=voyDir)
-        Set wsh = voyW.Sheets(1)
+        Set oilW = Workbooks.Open(fileName:=oilDir)
+        Set wsh = oilW.Sheets(1)
         wsh.Unprotect ("8888")
         'Call 业务管理获得靠离泊时间(r)
         
+        Call 获取燃润料航次报表燃油消耗(r)
+        
+        Set voyW = Workbooks.Open(fileName:=voyDir)
+        Set wsh = voyW.Sheets(1)
         Call 获取航次报表表头信息(r) 'dh1v1701testOk
         
         Call 获取航次报表上半部分信息(r) 'dh1v1701testOk
@@ -89,11 +97,11 @@ For r = startRow To endRow Step 1
         
         'voyW.Close
         voyLine = zsh.Cells(r, 3).Value
-        Call 船舶航次报表更名保存(voyW, shipNameShort, voy, voyLine)
-        
-        addVoy = addVoy & shipName & voy & vbCrLf
+'        Call 船舶航次报表更名保存(voyW, shipNameShort, voy, voyLine)
+'        Call 燃润料航次报表更名保存(oilW, shipNameShort, voy, voyLine)
+        addVoy = addVoy & shipname & voy & vbCrLf
     Else
-        absentVoy = absentVoy & shipName & voy & vbCrLf
+        absentVoy = absentVoy & shipname & voy & vbCrLf
     End If
 nextr:
 lastSameShipVoy = thisSameShipVoy
@@ -115,6 +123,16 @@ Set wsh = Nothing
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Sub
+Function 获取燃润料航次报表燃油消耗(zshRow)
+    Dim fnro
+    For fnro = 35 To 45
+        If wsh.Cells(fnro, 1).Value Like "*本航次消耗*" Then
+            zsh.Cells(zshRow, 72).Value = wsh.Cells(fnro, 2).Value
+            zsh.Cells(zshRow, 73).Value = wsh.Cells(fnro, 3).Value
+            Exit For
+        End If
+    Next fnro
+End Function
 Function 获取航次报表表头信息(zshRow)
 Dim cargo As String
 Dim quantity As String
@@ -133,12 +151,12 @@ Dim countDsSep As Integer
 
 'Dim arSepaKey() '分隔符关键词
 
-Dim i As Integer
+Dim I As Integer
 
 strLdPort = ""
 strDsPort = ""
     wsh.Activate
-    Call ENPortToCNPort(wsh.Range("H4,H5,A:A"))
+    'Call ENPortToCNPort(wsh.Range("H4,H5,A:A"))
     
     cargo = wsh.[d4].Value '货物名称STR
     wsh.[f4].Value = 处理货量(wsh.[f4].Value)
@@ -166,6 +184,18 @@ strDsPort = ""
 End Function
 Function 获取装货港名字(lcLdSep As Integer, lcstrLdPort As String)
 'lcLdSep 装货港的分隔符号的个数
+'0.装货码头名字
+'1.抵达装货码头时刻
+'2.靠泊装货码头时刻
+'3.开始装货时刻
+'4.结束装货时刻
+'5.离泊装货码头时刻
+'6.待泊时长
+'7.装货前等待时长
+'8.装货后等待时长
+'9.装货时长
+'10.装货速率（吨/小时）
+
 Dim l As Integer
 Dim instrPlus As Integer
 l = 0
@@ -215,9 +245,10 @@ End Function
 Function testchuli()
 Dim a As String
 Dim ca
-a = "150：1901.709吨；500：960.654吨"
-ca = 处理货量("150：1901.709吨；500：960.654吨")
-Debug.Print ca
+For ca = 2 To 666
+
+Cells(ca, 6).Value = 处理货量(Cells(ca, 6).Value)
+Next
 End Function
 Function 处理货量(fnquantity)
 'quantity = Replace(quantity, "/", "+")'对任意多非数字字符
@@ -239,18 +270,10 @@ Dim aftlen
     reg.Global = True
     fnquantity = reg.Replace(fnquantity, ":")
     
-    reg.Pattern = "[-/；;&]"
+    reg.Pattern = "[-/；;&\r\n]"
     reg.Global = True
     fnquantity = reg.Replace(fnquantity, "+")
     
-'    fnquantity = "150:1901.709+500:960.654"
-'    If InStr(1, fnquantity, ":") > 0 Then
-'        fnquantity = Replace(fnquantity, Mid(fnquantity, 1, InStr(1, fnquantity, ":")), "")
-'    End If
-'
-'    reg.Pattern = "[^/d+:$]"
-'    reg.Global = True
-'    fnquantity = reg.Replace(fnquantity, "")
     If InStr(1, fnquantity, "+") > 0 Then
         fnquantity = Evaluate(fnquantity)
     End If
@@ -266,7 +289,7 @@ Dim dsPort As String
 
 Dim countL As Integer
 Dim countD As Integer
-Dim i As Integer
+Dim I As Integer
 Dim l As Integer
 Dim d As Integer
 
@@ -288,18 +311,20 @@ Dim actualWashingTime As Double
 countL = 0
 countD = 0
 
-i = 0
+I = 0
 l = 0
 d = 0
 
     For roPort = 7 To 25 Step 1
         portName = Left(wsh.Cells(roPort, 1).Value, 2)
-        If portName = "" Then
+        If portName = "" Or portName = "上一" Then
+            
             GoTo nextRoPort
         End If
         If countL <= UBound(arLdPort) Then
             For l = countL To UBound(arLdPort)
                 ldPort = arLdPort(l, 0)
+                'arLdPort(l,0)：装港名字
                 If ldPort = "" Then
                     Exit For
                 End If
@@ -314,9 +339,20 @@ d = 0
                     End If
                     berthLdTime = wsh.Cells(roPort, 2).Value
                     leaveLdTime = wsh.Cells(roPort, 3).Value
+                    '0.装货码头名字
+                    '1.抵达装货码头时刻
+                    '2.靠泊装货码头时刻
+                    '3.开始装货时刻
+                    '4.结束装货时刻
+                    '5.离泊装货码头时刻
+                    '6.待泊时长
+                    '7.装货前等待时长
+                    '8.装货后等待时长
+                    '9.装货时长
+                    '10.装货速率（吨/小时）
                     arLdPort(countL, 1) = berthLdTime '默认抵达装港时间
                     arLdPort(countL, 2) = berthLdTime '靠泊装港时间
-                    arLdPort(countL, 3) = leaveLdTime '离泊装港时间
+                    arLdPort(countL, 5) = leaveLdTime '离泊装港时间
                     countL = countL + 1
                     GoTo nextRoPort
                 End If
@@ -333,7 +369,7 @@ d = 0
                     leaveDsTime = wsh.Cells(roPort, 3).Value
                     arDsPort(countD, 1) = berthDsTime '默认抵达卸港时间
                     arDsPort(countD, 2) = berthDsTime '靠泊卸港时间
-                    arDsPort(countD, 3) = leaveDsTime '离泊卸港时间
+                    arDsPort(countD, 5) = leaveDsTime '离泊卸港时间
                     countD = countD + 1
                     GoTo nextRoPort
                 End If
@@ -347,8 +383,9 @@ d = 0
 nextRoPort:
     Next roPort
 
-    If arLdPort(0, 2) = 0 Or arDsPort(0, 2) = 0 Or arLdPort(0, 3) = 0 Or arDsPort(0, 3) = 0 Then 'If arLdPort(0,2) = 0 Or berthDsTime = 0 Then
+    If arLdPort(0, 2) = 0 Or arDsPort(0, 2) = 0 Or arLdPort(0, 5) = 0 Or arDsPort(0, 5) = 0 Then 'If arLdPort(0,2) = 0 Or berthDsTime = 0 Then
         MsgBox "无靠离泊时间,请停下来调试"
+        Stop
         Debug.Print 1
     End If
     
@@ -356,17 +393,20 @@ nextRoPort:
 End Function
 Function 获取航次报表下半部分信息(zshRow)
 'arLdPort,arDsPort
-'装卸货港三个，0-2，0-8个细节信息
+'装卸货港三个，0-2，0-10个细节信息
 '将有关港口的信息做到一个数组里
+
 '0装货码头名字
 '1抵达装货码头时间
 '2靠泊装货码头时间
 '3离泊装货码头时间
 '4待泊时间
-'5开始装货时间
-'6结束装货时间
-'7装货时间
-'8装货速率（吨/小时）
+'5装货前等待时间
+'6开始装货时间
+'7装货后等待时间
+'8结束装货时间
+'9装货时间
+'10装货速率（吨/小时）
 Dim isOk As Boolean
 
 Dim waitingHour As Double
@@ -436,17 +476,31 @@ Dim arDiscKey() '卸货关键词
                     '不对<0退出循环是因为可能还有别的装货港
                     If waitingHour > 0 And waitingHour < 62 Then
 count_ld_in:
+
+'0.装货码头名字
+'1.抵达装货码头时刻
+'2.靠泊装货码头时刻
+'3.开始装货时刻
+'4.结束装货时刻
+'5.离泊装货码头时刻
+'6.待泊时长
+'7.装货前等待时长
+'8.装货后等待时长
+'9.装货时长
+'10.装货速率（吨/小时）
                         arLdPort(l, 1) = arrivedTime '抵达装港时间
-                        arLdPort(l, 4) = (arLdPort(l, 2) - arrivedTime) * 24 '待泊小时
+                        arLdPort(l, 6) = (arLdPort(l, 2) - arrivedTime) * 24 '待泊小时
                         GoTo nextRoReason
                     ElseIf waitingHour > 62 Then
                         wsh.Activate
                         ActiveWindow.ScrollRow = roReason - 4 '将ro-4放到第一行
                         isOk = MsgBox("待泊超过62小时" & vbCrLf & "当前装港为:" & arLdPort(l, 0) & vbCrLf & "之前检测到第" & (roReason - 1) & "行" & vbCrLf & "船位:" & wsh.Cells(roReason - 1, 1).Value & wsh.Cells(roReason - 1, 1).Value & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & "  " & strReason, vbOKCancel) = vbOK
+                        
                         Debug.Print "当前装港为:" & arLdPort(l, 0) & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason
                         If isOk Then
-                            
                             GoTo count_ld_in
+                        Else
+                            Stop
                         End If
                     End If
                 Next l
@@ -455,8 +509,19 @@ count_ld_in:
                     waitingHour = (arDsPort(d, 2) - gotoBthTime) * 24 '待泊小时
                     If waitingHour > 0 And waitingHour < 62 Then
 count_ds_in:
+                        '0.卸货码头名字
+                        '1.抵达卸货码头时刻
+                        '2.靠泊卸货码头时刻
+                        '3.开始卸货时刻
+                        '4.结束卸货时刻
+                        '5.离泊卸货码头时刻
+                        '6.待泊时长
+                        '7.卸货前等待时长
+                        '8.卸货后等待时长
+                        '9.卸货时长
+                        '10.卸货速率（吨/小时）
                         arDsPort(d, 1) = arrivedTime '抵达卸港时间
-                        arDsPort(d, 4) = (arDsPort(d, 2) - arrivedTime) * 24 '待泊小时
+                        arDsPort(d, 6) = (arDsPort(d, 2) - arrivedTime) * 24 '待泊小时
                         Exit For
                     ElseIf waitingHour > 62 Then
                         wsh.Activate
@@ -465,6 +530,8 @@ count_ds_in:
                         Debug.Print "当前卸港为:" & arDsPort(d, 0) & vbCrLf & "之前检测到第" & (roReason - 1) & "行" & vbCrLf & wsh.Cells(roReason - 1, 1).Value & vbCrLf & "当前检测到第" & roReason & "行" & vbCrLf & "船位:" & wsh.Cells(roReason, 1).Value & vbCrLf & strReason
                         If isOk Then
                             GoTo count_ds_in
+                        Else
+                            Stop
                         End If
                     End If
                 Next d
@@ -479,15 +546,27 @@ count_ds_in:
                     strLocation = wsh.Cells(roReason, 1).Value
                     startLdTime = wsh.Cells(roReason, 2).Value
                     endLdTime = wsh.Cells(roReason, 3).Value
-                    
+                    '0.装货码头名字
+                    '1.抵达装货码头时刻
+                    '2.靠泊装货码头时刻
+                    '3.开始装货时刻
+                    '4.结束装货时刻
+                    '5.离泊装货码头时刻
+                    '6.待泊时长
+                    '7.装货前等待时长
+                    '8.装货后等待时长
+                    '9.装货时长
+                    '10.装货速率（吨/小时）
                     For l = 0 To UBound(arLdPort) Step 1
                         If arLdPort(l, 1) <= startLdTime And startLdTime <= arLdPort(l, 3) Then '这个装货港ar
                             arLdPort(l, 0) = strLocation '靠港码头名字
-                            arLdPort(l, 5) = startLdTime '开始装货时间
-                            arLdPort(l, 6) = endLdTime '开始卸货时间
-                            arLdPort(l, 7) = (endLdTime - arLdPort(l, 5)) * 24 '装货小时
+                            arLdPort(l, 3) = startLdTime '开始装货时刻
+                            arLdPort(l, 4) = endLdTime '结束装货时间
+                            arLdPort(l, 7) = (startLdTime - arLdPort(l, 2)) * 24 '5装货前等待时长
+                            arLdPort(l, 7) = 1
+                            arLdPort(l, 9) = (endLdTime - arLdPort(l, 5)) * 24 '装货小时
                             'zsh.Cells(zshRow, 5).Value = 处理货量(zsh.Cells(zshRow, 5).Value)
-                            arLdPort(l, 8) = zsh.Cells(zshRow, 5).Value / arLdPort(l, 7) '装货速率
+                            arLdPort(l, 10) = zsh.Cells(zshRow, 5).Value / arLdPort(l, 7) '装货速率
                             Exit For
                         End If
                     Next l
@@ -531,7 +610,7 @@ Function 将码头信息填入总表(zshRow As Integer)
 Dim col As Integer
 'Dim startCol As Integer
 'Dim endCol As Integer
-Dim i As Integer
+Dim I As Integer
 Dim l As Integer
 Dim d As Integer
     '找装货码头1
@@ -557,26 +636,39 @@ Dim d As Integer
 '9是备注，一般是空的
 
         For l = 0 To UBound(arLdPort)
-            For i = 0 To 9
-                zsh.Cells(zshRow, col).Value = arLdPort(l, i)
+            For I = 0 To 9
+                zsh.Cells(zshRow, col).Value = arLdPort(l, I)
                 col = col + 1
-            Next i
+            Next I
         Next l
         
         For d = 0 To UBound(arDsPort)
-            For i = 0 To 9
-                zsh.Cells(zshRow, col).Value = arDsPort(d, i)
+            For I = 0 To 9
+                zsh.Cells(zshRow, col).Value = arDsPort(d, I)
                 col = col + 1
-            Next i
+            Next I
         Next d
         
         Erase arLdPort
         Erase arDsPort
 End Function
 Function 船名分组()
+Dim arship
+Dim arshipName
+Dim arGp1
+Dim arGp2
+Dim arGp3
+
+Dim ro As Integer
+Dim I As Integer
+Dim j As Integer
+Dim k As Integer
+Dim lastShip As String
+Dim shipname As String
+
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
-    arShip = Array("鼎衡15", "鼎衡16", "建兴32", "鼎衡", "鼎衡1", "鼎衡17", "鼎衡3", "鼎衡", "鼎衡2", "鼎衡5", "鼎衡9", "鼎衡10", "鼎衡18")
+    arship = Array("鼎衡15", "鼎衡16", "建兴32", "鼎衡", "鼎衡1", "鼎衡17", "鼎衡3", "鼎衡", "鼎衡2", "鼎衡5", "鼎衡9", "鼎衡10", "鼎衡18")
     arshipName = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "DH7", "JX32", "DHA", "DHE", "AG1", "AG2", "AG3", "AG11")
     arGp1 = Array("DH15", "DH16", "JX32")
     arGp2 = Array("DH17", "DH1", "DH3")
@@ -584,25 +676,25 @@ Application.DisplayAlerts = 0
     
     For ro = 2 To [b2].End(xlDown).Row
         lastShip = Cells(ro - 1, 2).Value
-        shipName = Cells(ro, 2).Value
-        If lastShip = shipName Then
+        shipname = Cells(ro, 2).Value
+        If lastShip = shipname Then
             Cells(ro, 1).Value = Cells(ro - 1, 1).Value
             GoTo nextRO
         End If
-        For i = 0 To UBound(arGp1)
-            If shipName = arGp1(i) Then
+        For I = 0 To UBound(arGp1)
+            If shipname = arGp1(I) Then
                 Cells(ro, 1).Value = 1
                 GoTo nextRO
             End If
-        Next i
+        Next I
         For j = 0 To UBound(arGp2)
-            If shipName = arGp2(j) Then
+            If shipname = arGp2(j) Then
                 Cells(ro, 1).Value = 2
                 GoTo nextRO
             End If
         Next j
         For k = 0 To UBound(arGp3)
-            If shipName = arGp3(k) Then
+            If shipname = arGp3(k) Then
                 Cells(ro, 1).Value = 3
                 GoTo nextRO
             End If
@@ -613,24 +705,415 @@ Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Function
 Function 增加航次号()
+Dim I As Integer
+Dim ro As Integer
+Dim startRow As Integer
+Dim voyVal As Integer
+Dim shipname As String
+Dim v As Integer
+
+
 Application.ScreenUpdating = 0
 Application.DisplayAlerts = 0
-For i = 2 To 1000
-    ro = i
+For I = 2 To 1000
+    ro = I
     If Cells(ro, 1) <> Cells(ro + 1, 1) Then
         startRow = ro
-        shipName = Cells(ro, 1)
+        shipname = Cells(ro, 1)
         voyVal = CInt(Right(Cells(ro, 2), 4))
         For v = voyVal To 1760
             Rows(ro + 1).Insert
-            Cells(ro + 1, 1) = shipName
+            Cells(ro + 1, 1) = shipname
             Cells(ro + 1, 2) = "V" & v
             ro = ro + 1
         Next v
-    i = ro
+    I = ro
     End If
-Next i
+Next I
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
+End Function
+Function 月度安全效益奖金打分()
+    Dim filepath As String
+    Dim F
+    Dim wbname As String
+    Dim wbfullname As String
+    Dim wb As Workbook
+    
+    Dim I As Integer
+    filepath = Format(Date - 16, "F:\\工作文档\\月度安全效益奖金\\yyyymm\\")
+    F = filepath & "*.xls?"
+    wbname = Dir(F)
+    
+    Do While wbname <> ""
+        wbfullname = filepath & wbname
+        Set wb = Workbooks.Open(wbfullname)
+        wb.Sheets(2).Activate
+        
+        wb.Sheets(2).[d14] = "满足"
+        wb.Sheets(2).[d15] = "满足"
+        wb.Sheets(2).[f14] = 0
+        wb.Sheets(2).[f15] = 0
+        ActiveWindow.ScrollRow = 14
+        wbname = Dir
+    Loop
+    Debug.Print Dir(F)
+End Function
+Function 关闭工作簿()
+Dim I As Integer
+Dim arship
+Dim shipname
+Dim wbname As String
+Dim wb As Workbook
+arship = Array("鼎衡1", "鼎衡2", "鼎衡3", "鼎衡5", "鼎衡9", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17*", "鼎衡18*", "鼎衡7", "建兴32")
+For Each wb In Workbooks
+    wbname = wb.Name
+    For Each shipname In arship
+        If wbname Like "*" & shipname & "*" Then
+            wb.Close True
+            Exit For
+        End If
+    Next shipname
+Next wb
+End Function
+Function 循环打开表并关掉()
+    Dim fnfilepath As String
+    Dim F
+    
+    Dim wbname As String
+    Dim wbfullname As String
+    Dim condi
+    
+    Dim col As Integer
+    Dim ro As Integer
+    Dim speed
+    Dim isstill As Boolean
+    Dim isgo As Boolean
+    
+    Dim wb As Workbook
+    
+    Dim I As Integer
+    fnfilepath = "\\192.168.0.223\\航运在线\\3.2、操作部\\4.2 船舶动态表（鼎衡大家庭）\\2018年\\2月\\"
+    F = fnfilepath & "*.xls?"
+    wbname = Dir(F)
+    Set zsh = ActiveSheet
+    Do While wbname <> ""
+        wbfullname = fnfilepath & wbname
+        Set wb = Workbooks.Open(wbfullname)
+        col = CInt(Mid(wbname, InStr(1, wbname, ".") - 2, 2)) + 14
+        Debug.Print col - 14
+        For ro = 15 To 20
+            If zsh.Cells(ro - 2, col).Value <> "" Then
+                
+                condi = wb.Sheets(1).Cells(ro, 6).Value
+                isstill = (InStr(1, condi, "靠") + InStr(1, condi, "泊") + InStr(1, condi, "完") + InStr(1, condi, "加") + InStr(1, condi, "厂")) > 0
+                isgo = InStr(1, condi, "开") > 0
+                If isstill Then
+                    zsh.Cells(ro - 2, col).Value = 0
+                    If zsh.Cells(ro - 2, col).Comment Is Nothing Then
+                        zsh.Cells(ro - 2, col).AddComment condi
+                    Else
+                        
+                        Debug.Print zsh.Cells(ro - 2, col).Comment.Text
+                        Stop
+                    End If
+                ElseIf isgo Then
+                    zsh.Cells(ro - 2, col).Value = Int(zsh.Cells(ro - 2, 4).Value)
+                End If
+            End If
+            Debug.Print wb.Sheets(1).Cells(ro, 1).Value, condi, zsh.Cells(ro - 2, col).Value
+        Next ro
+        'Debug.Print zsh.Cells(1, col)
+        'Set zsh = ActiveSheet
+        wb.Close False
+        wbname = Dir
+    Loop
+    Debug.Print Dir(F)
+End Function
+Function 月度安全与绩效考核奖励计划主机货泵本月指标()
+Dim oripath As String
+Dim topath As String
+Dim F As String
+Dim engine As String
+Dim pump As String
+Dim shipname As String
+
+Dim pathstr As String
+
+Dim I As Integer
+Dim ro As Integer
+Dim inscoma As Integer
+Dim insgreat As Integer
+Dim insm As Integer
+Dim single_pump As Integer
+Dim double_pump As Integer
+
+Dim arPath
+Dim wb As Workbook
+
+Dim zsh As Worksheet
+
+Set zsh = ActiveSheet
+restart:
+arPath = Array(Format(Date, "管理计划yyyymm\\"), _
+"管理计划\")
+
+    I = 0
+    pathstr = ""
+    Do
+        oripath = "\\192.168.0.223\航运在线\32、船舶安全生产月度管理计划\" & Format(Date, "yyyymm\\") & arPath(I)
+        pathstr = pathstr & oripath & vbCrLf
+        F = Dir(oripath, 16)
+        I = I + 1
+    Loop While (I <= UBound(arPath) And F = "")
+    If F = "" Then
+        MsgBox "地址不对" & vbCrLf & pathstr
+        Stop
+        GoTo restart
+    End If
+topath = "F:\工作文档\月度安全效益奖金\" & Format(Date, "yyyymm\\")
+
+ro = 2
+Do
+    If F = "." Or F = ".." Then
+        F = Dir
+    Else
+        'FileCopy oripath & F, topath & F
+        Set wb = Workbooks.Open(oripath & F)
+        engine = wb.Sheets("考核表").[c14].Value
+        pump = wb.Sheets("考核表").[c15].Value
+        
+        shipname = Left(F, 4)
+        shipname = 船名全称转缩写(shipname)
+        If shipname = "AG11" Then
+            Stop
+        Else
+            
+            cgc1 = wb.Sheets("业务时间节省").[d4]
+            cgc2 = wb.Sheets("业务时间节省").[f4]
+            cgc3 = wb.Sheets("业务时间节省").[h4]
+            spc1 = wb.Sheets("业务时间节省").[i4]
+            spc2 = wb.Sheets("业务时间节省").[k4]
+            spc3 = wb.Sheets("业务时间节省").[m4]
+            tcclass = ""
+            For col = 1 To 18 Step 1
+                tcclass = tcclass & " " & wb.Sheets("业务时间节省").Cells(4, col)
+            Next col
+            insgreat = InStr(1, pump, "≥")
+            insm = InStr(insgreat + 2, pump, "M")
+            single_pump = CInt(Mid(pump, insgreat + 1, insm - insgreat - 1))
+            insgreat = InStr(insm + 4, pump, "≥")
+            insm = InStr(insgreat + 3, pump, "M")
+            
+    '        double_pump = CInt(Mid(pump, insgreat + 1, insm - insgreat - 1))
+            zsh.Activate
+            
+            zsh.Cells(ro, 1).Value = shipname
+    '        zsh.Cells(ro, 3).Value = single_pump
+    '        zsh.Cells(ro, 4).Value = double_pump
+            zsh.Cells(ro, 6).Value = engine
+            zsh.Cells(ro, 7).Value = pump
+            zsh.Cells(ro, 13).Value = cgc1
+            zsh.Cells(ro, 14).Value = cgc2
+            zsh.Cells(ro, 15).Value = cgc3
+            zsh.Cells(ro, 16).Value = spc1
+            zsh.Cells(ro, 17).Value = spc2
+            zsh.Cells(ro, 18).Value = spc3
+            zsh.Cells(ro, 19).Value = tcclass
+            
+            ro = ro + 1
+        End If
+'        If MsgBox(wb.Name, vbYesNo) = vbYes Then
+'            wb.Close
+'        Else
+'            Stop
+'        End If
+        F = Dir
+    End If
+Loop While F <> ""
+
+End Function
+Function 移动所选单元格后面两格的批注()
+    Selection.Offset(0, 2).Copy
+    
+    Selection.PasteSpecial Paste:=xlPasteComments
+    
+    Selection.Offset(0, 2).ClearComments
+End Function
+Sub 月度安全与绩效考核奖励计划业务时间加公式()
+    Dim col As Integer
+    Dim bthro As Integer
+    
+    Dim oristr As String
+    
+    Dim tank_standard
+    Dim spro_standard
+    Dim spro_count
+    Dim prepare_standard
+    
+    Dim is_sepcial_no_comment As Boolean
+    Dim is_prepare_standard_error As Boolean
+    
+    Sheets("业务时间节省").Activate
+    
+    For col = 4 To 12 Step 2
+        '理论可用洗舱时间
+'        If Cells(8, col).Value = 0 Then
+'        Else
+        Cells(10, col).FormulaR1C1 = "=IF(R[-1]C=0,0,R[-2]C/R[-1]C)"
+        '特殊情况增减
+        With Cells(11, col)
+            If .Value <> 0 And (.Comment Is Nothing) Then
+                '有特殊情况且没有说明原因
+                is_sepcial_no_comment = True
+            Else
+                is_sepcial_no_comment = False
+            End If
+        End With
+        '可用洗舱时间
+        Cells(12, col).FormulaR1C1 = "=IF(R[-1]C=""NO TKC"",1000,R[-2]C-R[-1]C)"
+        '备舱时间指标
+        tank_standard = Cells(4, 4).Value
+        spro_standard = Cells(4, 9).Value
+        'tank_count = Cells(14, col).Value
+        spro_count = Cells(15, col).Value
+        
+        prepare_standard = tank_standard + spro_count / 2 * spro_standard
+        With Cells(16, col)
+            If .Value > prepare_standard And (.Comment Is Nothing) Then
+                '值比一级备舱高且没有说明原因
+                is_prepare_standard_error = True
+            Else
+                is_prepare_standard_error = False
+            End If
+        End With
+        
+        '备舱时间偏差
+        With Cells(17, col)
+            .FormulaR1C1 = "=IF(R[-1]C-R[-5]C<0,0,R[-1]C-R[-4]C)"
+            If .Value > 0 Then
+                If is_sepcial_no_comment Then
+                    oristr = "有特殊增减没有情况说明"
+                End If
+                If is_prepare_standard_error Then
+                    oristr = oristr & vbCrLf & "备舱时间指标没有换装货物说明"
+                End If
+            
+                If (is_sepcial_no_comment Or is_prepare_standard_error) And .Value > 0 Then
+                    '前面的特殊增减没有说明
+                    '.Value = 0
+                    .Font.color = 255
+                    
+                    If .Comment Is Nothing Then
+                        .AddComment
+                        .Comment.Text Text:=oristr
+                    Else
+                        .Comment.Text Text:=.Comment.Text & vbCrLf & oristr
+                    End If
+                End If
+            End If
+        End With
+        '装货前等待时间
+        '装货后等待时间
+        '卸货前等待时间
+        '卸货后等待时间
+        For bthro = 21 To 24
+            With Cells(bthro, col + 1)
+                .FormulaR1C1 = "=IFERROR(IF(RC[-1]="""",0,RC3-RC[-1]),0)"
+                If IsNumeric(.Offset(0, -1).Value) Then
+                    If .Value < 0 And (Not (.Comment Is Nothing) Or Not (.Offset(0, -1).Comment Is Nothing)) Then
+                        '是负数并且有批注
+                        .Value = 0
+                        .Font.color = 255
+                    End If
+                    
+                End If
+            End With
+        Next bthro
+        oristr = ""
+    Next col
+    Cells(18, 3).FormulaR1C1 = "=SUM(R[-1]C[1]:R[-1]C[10])"
+    Cells(25, 3).FormulaR1C1 = _
+        "=SUM(R[-4]C[2]:R[-1]C[2],R[-4]C[4]:R[-1]C[4],R[-4]C[6]:R[-1]C[6],R[-4]C[8]:R[-1]C[8],R[-4]C[10]:R[-1]C[10])"
+    
+    Sheets("考核表").Activate
+    [d4].FormulaR1C1 = "=业务时间节省!R[14]C[-1]"
+    [d5].FormulaR1C1 = "=业务时间节省!R[20]C[-1]"
+    [f4].FormulaR1C1 = "=200*RC[-2]"
+    [F5].FormulaR1C1 = "=200*RC[-2]"
+   ' [d24].Value = [c24].Value
+    
+End Sub
+Function 月度联动主机货泵(fnwb_eng_pump)
+
+Dim sht_pump As Worksheet
+Dim sht_engine As Worksheet
+
+Dim roengine As Integer
+Dim ropump As Integer
+Dim fnro As Integer
+
+Dim shipname As String
+
+Set sht_pump = fnwb_eng_pump.Sheets("货泵")
+Set sht_engine = fnwb_eng_pump.Sheets("主机")
+
+
+
+    Sheets("考核表").Activate
+    shipname = 船名全称转缩写(Left(ActiveWorkbook.Name, 4))
+    For fnro = 2 To 25
+        If sht_engine.Cells(fnro, 1).Value = shipname Then
+            roengine = fnro
+        End If
+        If sht_pump.Cells(fnro, 1).Value = shipname Then
+            ropump = fnro
+            Exit For
+        End If
+    Next fnro
+    
+        
+    [d14].FormulaR1C1 = "=[" & fnwb_eng_pump.Name & "]主机!R" & roengine & "C16"
+    [d15].FormulaR1C1 = "=[" & fnwb_eng_pump.Name & "]货泵!R" & ropump & "C11"
+    [f14].FormulaR1C1 = "=RC[-2]*(-10)"
+    [f15].FormulaR1C1 = "=RC[-2]*(-20)"
+    
+End Function
+Sub 处理所有月度表()
+Dim x As Variant, x1 As Variant, w As Workbook, wsh As Worksheet
+Dim wb_eng_pump As Workbook
+Dim t As Workbook, ts As Worksheet, I As Integer, l As Integer, h As Long
+Dim rng As Range, rng1 As Range
+Dim color, start, xNum   As Integer
+Dim shipname As String
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+x = Application.GetOpenFilename(FileFilter:="Excel文件 (*.xls; *.xlsx),*.xls; *.xlsx,所有文件(*.*),*.*", _
+       Title:="Excel选择", MultiSelect:=True)
+Call 早上工作打开上个月主机货泵表
+Set wb_eng_pump = ActiveWorkbook
+xNum = 1
+For Each x1 In x
+
+    If x1 <> False Then
+        Set w = Workbooks.Open(x1)
+        shipname = 船名全称转缩写(Left(ActiveWorkbook.Name, 4))
+        Call 月度安全与绩效考核奖励计划业务时间加公式
+        Call 月度联动主机货泵(wb_eng_pump)
+        w.SaveAs "批改后" & shipname, FileFormat:=xlOpenXMLWorkbook
+        
+        'w.Close True
+    End If
+Next x1
+
+End Sub
+Function 批量产生新版航次报表()
+timeIndex = "\\192.168.0.223\航运在线\32、船舶安全生产月度管理计划\201806\管理计划"
+
+
+If shipname = "AG11" Then
+    Stop
+End If
+
 End Function
 
