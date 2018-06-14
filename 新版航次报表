@@ -1,0 +1,243 @@
+Sub 批量产生新版航次报表与燃油报表()
+'
+' 批量产生新版航次报表与燃油报表 Macro
+'
+
+'
+Dim filepath As String
+Dim reportpath As String
+Dim shipNameShort As String
+
+Dim voyValue As Integer
+Dim iship As Integer
+
+Dim zwb As Workbook
+Dim vsht As Worksheet
+Dim osht As Worksheet
+
+Dim arRob
+Dim arob(0 To 6)
+
+Set zwb = ActiveWorkbook
+Set zvsht = zwb.Sheets(1)
+Set zosht = zwb.Sheets(2)
+'    timeIndex = "\\192.168.0.223\航运在线\32、船舶安全生产月度管理计划\201806\管理计划\"
+
+    Set insht = ActiveSheet
+    For col = 1 To 30
+        If insht.Cells(1, col).Value Like "单泵*" Then
+            colpump1 = col
+        ElseIf insht.Cells(1, col).Value = "货舱数量" Then
+            coltank = col
+        ElseIf insht.Cells(1, col).Value = "装货前" Then
+            colpreld = col
+        End If
+        
+    Next col
+arship = Array("鼎衡1", "鼎衡2", "鼎衡3", "鼎衡5", "鼎衡9", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17（万年青）", "鼎衡18（常春藤）", "建兴32", "金色祝福GB", "恒信HX", "天使1", "天使2", "天使3", "天使11", "鼎衡A", "鼎衡E")
+arshipshort = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "JX32", "GB", "HX", "AG1", "AG2", "AG3", "AG11", "DHA", "DHE")
+arVoy = Array("1817", "1815", "1819", "1821", "1819", "1820", "1830", "1827", "1823", "1818", "1829", "1803", "1806", "1810", "1806", "1811", "1805", "1801", "1808")
+
+oripath = "\\192.168.0.223\航运在线\10、油料管理部\航次报表\"
+
+    
+For iship = 0 To UBound(arship)
+    shipname = arship(iship)
+    shipNameShort = arshipshort(iship)
+    voyValue = arVoy(iship)
+    voyValue = voyValue + 3
+erhd:
+    filepath = oripath & shipname & "\2018年\"
+    voyDir = 获得船舶航次报表dir(filepath, shipNameShort, voyValue)
+    oilDir = 获得燃润料航次报表dir(filepath, shipNameShort, voyValue)
+    
+    If Len(Dir(voyDir)) > 0 Then
+        Set voywb = Workbooks.Open(voyDir)
+        Set vsht = voywb.Sheets(1)
+        isNew = False
+        If Dir(voyDir) Like "*与*" Then
+            isNew = True
+            Set osht = voywb.Sheets(2)
+        Else
+            Set oilwb = Workbooks.Open(oilDir)
+            Set osht = oilwb.Sheets(1)
+        End If
+    Else
+        Debug.Print voyDir
+        Debug.Print voyValue
+        
+        voyValue = voyValue - 1
+        If voyValue < 1801 Then
+            Stop
+        End If
+        GoTo erhd
+    End If
+    vsht.Activate
+    Stop
+    endTime = [d5]
+    If isNew Then
+    Else
+        depTime = [c7].End(xlDown).Value
+    End If
+    For ro = 50 To 120 Step 1
+        If Cells(ro, 1).Value Like "二副" Then
+            secondOfficer = Cells(ro, 2)
+            firstOfficer = Cells(ro, 5)
+            captain = Cells(ro, 8)
+            Exit For
+        End If
+    Next ro
+    If MsgBox(vsht.Cells(ro, 1) & secondOfficer, vbYesNo) = vbNo Then
+        Stop
+    End If
+    
+    osht.Activate
+    
+    For ro = 36 To 55
+        If Cells(ro, 1).Value Like "航次末结存*" Then
+            For ir = 0 To 6
+                arob(ir) = Cells(ro, ir + 2).Value
+            Next ir
+            thirdEngine = Cells(ro + 2, 2)
+            chiefEngine = Cells(ro + 2, 6)
+            If MsgBox(osht.Cells(ro + 2, 1) & thirdEngine, vbYesNo) = vbNo Then
+                Stop
+            End If
+            Exit For
+        End If
+    Next ro
+    insht.Activate
+    pump1 = 0
+    pump2 = 0
+    pump3 = 0
+    pump4 = 0
+    
+    cargoTank = 0
+    cgc1 = 0
+    cgc2 = 0
+    cgc3 = 0
+    spc1 = 0
+    spc2 = 0
+    spc3 = 0
+    preLoad = 0
+    aftLoad = 0
+    preDisc = 0
+    aftDisc = 0
+
+    If shipNameShort <> "AG11" Then
+        For inro = 2 To 21 Step 1
+            If shipNameShort = insht.Cells(inro, 1).Value Then
+                pump1 = insht.Cells(inro, colpump1).Value
+                pump2 = insht.Cells(inro, colpump1 + 1).Value
+                pump3 = insht.Cells(inro, colpump1 + 2).Value
+                pump4 = insht.Cells(inro, colpump1 + 3).Value
+                cargoTank = insht.Cells(inro, coltank).Value
+                cgc1 = insht.Cells(inro, coltank + 1).Value
+                cgc2 = insht.Cells(inro, coltank + 2).Value
+                cgc3 = insht.Cells(inro, coltank + 3).Value
+                spc1 = insht.Cells(inro, coltank + 4).Value
+                spc2 = insht.Cells(inro, coltank + 5).Value
+                spc3 = insht.Cells(inro, coltank + 6).Value
+
+                preLoad = insht.Cells(inro, colpreld).Value
+                aftLoad = insht.Cells(inro, colpreld + 1).Value
+                preDisc = insht.Cells(inro, colpreld + 2).Value
+                aftDisc = insht.Cells(inro, colpreld + 3).Value
+
+                Exit For
+            End If
+            If inro > 30 Then
+                Stop
+            End If
+        Next inro
+    Else
+        Stop
+    End If
+    
+    
+    zvsht.Activate
+    '表顶
+    Range("B2") = shipNameShort
+    '表头
+    Range("B4") = arVoy(iship)
+    Range("B5") = endTime
+    Range("D5") = ""
+    Range("H7") = depTime
+    '航次时间区域清除内容
+    zvsht.Range([A8], [J19]).ClearContents
+    '装卸货时间区域清除内容
+    zvsht.Range([B23], [H34]).ClearContents
+    
+    '卸货指标
+    zvsht.[k21].Value = pump1
+    zvsht.[m21].Value = pump2
+    If pump3 <> 0 Then
+        zvsht.[l21].Copy zvsht.[n21]
+        zvsht.[l21].Copy zvsht.[n22]
+        zvsht.[l21].Copy zvsht.[o21]
+        zvsht.[l21].Copy zvsht.[o22]
+        zvsht.[o21].Value = pump3
+        zvsht.[o22].Value = pump4
+    Else
+        zvsht.[n21].Clear
+        zvsht.[n22].Clear
+        zvsht.[o21].Clear
+        zvsht.[o22].Clear
+    End If
+    '备舱指标
+    zvsht.[f50].Value = cgc1
+    zvsht.[g50].Value = cgc2
+    zvsht.[h50].Value = cgc3
+    zvsht.[f51].Value = spc1
+    zvsht.[g51].Value = spc2
+    zvsht.[h51].Value = spc3
+    
+    zvsht.[f52].Value = cargoTank
+    zvsht.[h52].Value = 2
+    zvsht.[f53].Value = 0
+'    Range("H53").Select
+    Range("H55:H56,F55,F59,H59:H60,F63,H63:H64,B55,D55,B59,D59,B63,D63,D61,D65").ClearContents
+
+    Range("A68:C77,E68:H77,A81:C90,E81:H90").Select
+    Selection.ClearContents
+    Range("B92").FormulaR1C1 = secondOfficer
+    Range("E92").FormulaR1C1 = firstOfficer
+    Range("H92").FormulaR1C1 = captain
+    zosht.Activate
+    Range("H4:H6").Select
+    Selection.ClearContents
+    Range("F9").Select
+    Selection.ClearContents
+    Range("D9").Select
+    Selection.ClearContents
+    Range("B9").Select
+    Selection.ClearContents
+    ActiveWindow.SmallScroll Down:=9
+    Range("E12:H30").Select
+    Selection.ClearContents
+    ActiveWindow.SmallScroll Down:=15
+    
+    '本航次总加装记录
+    Range("B32:H38").Select
+    Selection.ClearContents
+    '41上航次结存更新
+    For ir = 0 To 6 Step 1
+        Cells(41, ir + 2).Value = arob(ir)
+        If ir > 7 Then
+            Stop
+        End If
+    Next ir
+
+    '航次末结存清除
+    Range("B42:H42").ClearContents
+    '航次末结存清除
+    Range("B44:H44").ClearContents
+    
+    Range("B46").Value = thirdEngine
+    Range("F46").Value = chiefEngine
+    zvsht.Protect "8888"
+    zosht.Protect "8888"
+    zwb.SaveAs "F:\工作文档\EXCEL\批改航次报表\新版航次报表\20180614\" & shipNameShort & "航次报表与燃油报表V" & arVoy(iship) & ".xlsx", xlOpenXMLWorkbook
+Next iship
+
+End Sub
