@@ -1,17 +1,19 @@
 Sub 选中列货名转为英文()
 货名统一为英文 (Selection.Column)
 End Sub
+Sub 选中列货名转为中文()
+货名统一为英文 (Selection.Column)
+货名统一为中文 (Selection.Column)
+End Sub
 Sub 英文港口转中文港口()
 ENPortToCNPort (Selection.Column)
 End Sub
-Sub 选中列转为区域()
-Call 港口转区域(Selection.Column)
-End Sub
 Function 货名统一为英文(col)
+    
     With Columns(col)
-
+        
         .Replace What:="150N", Replacement:="500N+150N", LookAt:=xlWhole
-        .Replace What:="150N", Replacement:="500N+150N"
+        .Replace What:="500N", Replacement:="500N+150N"
         .Replace What:="150N+500N", Replacement:="500N+150N"
         .Replace What:="500N&150N", Replacement:="500N+150N"
         .Replace What:="150N&500N", Replacement:="500N+150N"
@@ -58,30 +60,43 @@ Function 货名统一为英文(col)
 '        .Replace What:="BS60&导热油", Replacement:="500N+150N"
 '        .Replace What:="BS60&导热油", Replacement:="500N+150N"
         
+        .Replace What:="工业用", Replacement:=""
+        .Replace What:="石油", Replacement:="" '
         .Replace What:="AA", Replacement:="Acetic acid"
         .Replace What:="冰醋酸", Replacement:="Acetic acid"
         .Replace What:="冰乙酸", Replacement:="Acetic acid"
-        .Replace What:="乙酸乙酯", Replacement:="acetic ether"
+        .Replace What:="工业用冰乙酸", Replacement:="Acetic acid"
+        .Replace What:="acetic ether", Replacement:="ethyl acetate"
+        .Replace What:="乙酸乙酯", Replacement:="ethyl acetate"
+        .Replace What:="醋酸乙酯", Replacement:="ethyl acetate"
+        .Replace What:="EAC", Replacement:="ethyl acetate"
         .Replace What:="丙酮", Replacement:="Acetone"
         .Replace What:="ACE", Replacement:="Acetone"
         .Replace What:="act", Replacement:="Acetone"
-        .Replace What:="酒精", Replacement:="alcohol"
+        .Replace What:="酒精", Replacement:="ethanol"
+        .Replace What:="alcohol", Replacement:="ethanol"
         .Replace What:="戊烷", Replacement:="amyl hydride"
         .Replace What:="ACN", Replacement:="AN"
         .Replace What:="丙烯晴", Replacement:="AN"
         .Replace What:="丙烯腈", Replacement:="AN"
         .Replace What:="丙希腈", Replacement:="AN"
+        .Replace What:="ACRYLONIRILE", Replacement:="AN"
+        .Replace What:="ACRYLONITRILE", Replacement:="AN"
         .Replace What:="纯苯", Replacement:="BENZENE"
         .Replace What:="苯", Replacement:="BENZENE"
         .Replace What:="BEN", Replacement:="BENZENE"
         .Replace What:="BZ", Replacement:="BENZENE"
-        .Replace What:="碳9", Replacement:="C-9"
-        .Replace What:="碳九", Replacement:="C-9"
-        .Replace What:="C9", Replacement:="C-9"
+        .Replace What:="碳9", Replacement:="C9"
+        .Replace What:="碳九", Replacement:="C9"
+        .Replace What:="C-9", Replacement:="C9"
+        .Replace What:="碳5", Replacement:="C5"
+        .Replace What:="碳五", Replacement:="C5"
+        .Replace What:="C-5", Replacement:="C5"
         .Replace What:="CYC", Replacement:="Cyclohexane" '环己烷
         .Replace What:="环戊烷", Replacement:="CYCLOPENTANE"
         .Replace What:="二甲基甲酰胺", Replacement:="Dimethylformamide"
         .Replace What:="乙醇", Replacement:="ethanol"
+        .Replace What:="IPA", Replacement:="ISONONYL ALCOHOL"
         .Replace What:="异壬醇", Replacement:="ISONONYL ALCOHOL"
         .Replace What:="异辛烷", Replacement:="isooctane"
         .Replace What:="异戊烷", Replacement:="Isopentane"
@@ -97,10 +112,12 @@ Function 货名统一为英文(col)
         .Replace What:="正丁醇", Replacement:="NBA"
         .Replace What:="新戊烷", Replacement:="Neopentane"
         .Replace What:="正-戊烷", Replacement:="n-Pentane"
-        .Replace What:="辛醇", Replacement:="Octanol (all isomers)"
+        .Replace What:="辛醇", Replacement:="Octanol"
         .Replace What:="邻二甲苯", Replacement:="O-XYLENE"
         .Replace What:="OX", Replacement:="O-XYLENE"
         .Replace What:="对二甲苯", Replacement:="PARAXYLENE"
+        .Replace What:="PARA-XYLENE", Replacement:="PARAXYLENE"
+        .Replace What:="p-Xylene", Replacement:="PARAXYLENE"
         .Replace What:="环戊烷", Replacement:="Pentamethylene"
         .Replace What:="戊烷（所有异构体）", Replacement:="Pentane (all isomers)"
         .Replace What:="苯酚", Replacement:="Phenol"
@@ -108,34 +125,311 @@ Function 货名统一为英文(col)
         .Replace What:="SM", Replacement:="STYRENE MONOMER"
         .Replace What:="TOL", Replacement:="TOLUENE"
         .Replace What:="甲苯", Replacement:="TOLUENE"
-        .Replace What:="三甲苯", Replacement:="Trimethylbenzene (all isomers)"
+        .Replace What:="三甲苯", Replacement:="Trimethylbenzene"
         .Replace What:="醋酸乙烯", Replacement:="VINYL ACETATE"
         .Replace What:="乙酸乙烯酯", Replacement:="VINYL ACETATE"
         .Replace What:="工业用乙酸乙烯酯", Replacement:="VINYL ACETATE"
         .Replace What:="二甲苯", Replacement:="Xylenes"
+        .Replace What:="PX", Replacement:="p-Xylene"
+        .Replace What:="对二甲苯", Replacement:="p-Xylene"
+        .Replace What:="PARAXYLENE", Replacement:="p-Xylene"
+        
+        .Replace What:="MEK", Replacement:="Methyl Ethyl Ketone"
+        .Replace What:="甲基乙基酮", Replacement:="Methyl Ethyl Ketone"
+        .Replace What:="甲基乙基甲酮", Replacement:="Methyl Ethyl Ketone"
+        .Replace What:="抽余油", Replacement:="RAFFINATE OIL"
     End With
+End Function
+Function 货名统一为中文(col)
+
+    With Columns(col)
+        .Replace What:="BENZENE", Replacement:="苯"
+        .Replace What:="Phenol", Replacement:="苯酚"
+        .Replace What:="STYRENE MONOMER", Replacement:="苯乙烯"
+        .Replace What:="Acetic acid", Replacement:="冰醋酸"
+        .Replace What:="Acetone", Replacement:="丙酮"
+        .Replace What:="AN", Replacement:="丙烯腈"
+        .Replace What:="VINYL ACETATE", Replacement:="醋酸乙烯"
+        .Replace What:="PARAXYLENE", Replacement:="对二甲苯"
+        .Replace What:="Xylenes", Replacement:="二甲苯"
+        .Replace What:="Dimethylformamide", Replacement:="二甲基甲酰胺"
+        .Replace What:="Cyclohexane", Replacement:="环己烷"
+        .Replace What:="CYCLOPENTANE", Replacement:="环戊烷"
+        .Replace What:="MIX XYLENE", Replacement:="混二甲苯"
+        .Replace What:="500N+150N", Replacement:="基础油"
+        .Replace What:="TOLUENE", Replacement:="甲苯"
+        .Replace What:="Methanol", Replacement:="甲醇"
+        .Replace What:="Methyl tert butyl ether", Replacement:="甲基叔丁基醚"
+        .Replace What:="MMA", Replacement:="甲甲酯"
+        .Replace What:="O-XYLENE", Replacement:="邻二甲苯"
+        .Replace What:="Trimethylbenzene", Replacement:="三甲苯"
+        .Replace What:="C5", Replacement:="碳9"
+        .Replace What:="C9", Replacement:="碳9"
+        .Replace What:="Pentane", Replacement:="戊烷"
+        .Replace What:="Octanol", Replacement:="辛醇"
+        .Replace What:="Neopentane", Replacement:="新戊烷"
+        .Replace What:="ethanol", Replacement:="乙醇"
+        .Replace What:="MEG", Replacement:="乙二醇"
+        .Replace What:="ethyl acetate", Replacement:="乙酸乙酯"
+        .Replace What:="ISONONYL ALCOHOL", Replacement:="异壬醇"
+        .Replace What:="Isopentane", Replacement:="异戊烷"
+        .Replace What:="isooctane", Replacement:="异辛烷"
+        .Replace What:="NBA", Replacement:="正丁醇"
+        .Replace What:="n-Pentane", Replacement:="正戊烷"
+        .Replace What:="RAFFINATE OIL", Replacement:="抽余油"
+        .Replace What:="STYRENE　MONOMER", Replacement:="苯乙烯"
+        .Replace What:="Methyl Ethyl Ketone", Replacement:="甲基乙基酮"
+    End With
+End Function
+Function ENPortToCNPortAll()
+
+Application.ScreenUpdating = False
+Application.DisplayAlerts = False
+With Selection
+    
+    .Replace What:="廖", Replacement:="寮"
+    .Replace What:="麥", Replacement:="麦"
+    
+    .Replace What:="*ASSALIYEH*", Replacement:="ASSALUYEH"
+    .Replace What:="*anping*", Replacement:="安平"
+    .Replace What:="*basuo*", Replacement:="八所"
+    .Replace What:="*bayuquan*", Replacement:="鲅鱼圈"
+    .Replace What:="*beihai*", Replacement:="北海"
+    .Replace What:="*caojing*", Replacement:="漕泾"
+    .Replace What:="*caojin*", Replacement:="漕泾"
+    .Replace What:="*曹泾*", Replacement:="漕泾"
+    .Replace What:="*changshu*", Replacement:="常熟"
+    .Replace What:="*changzhou*", Replacement:="常州"
+    .Replace What:="*CJK*", Replacement:="长江口"
+    .Replace What:="*daesan*", Replacement:="大山"
+    .Replace What:="*DASEAN*", Replacement:="大山"
+    .Replace What:="*dafeng*", Replacement:="大丰"
+    .Replace What:="*dalian*", Replacement:="大连"
+    .Replace What:="*daxie*", Replacement:="大榭"
+    .Replace What:="*dongguan*", Replacement:="东莞"
+    .Replace What:="*dongying*", Replacement:="东营"
+    .Replace What:="*fuzhou*", Replacement:="福州"
+    .Replace What:="*guangdong*", Replacement:="广东"
+    .Replace What:="*guangzhou*", Replacement:="广州"
+    .Replace What:="*gulei*", Replacement:="古雷"
+    .Replace What:="*hainan*", Replacement:="海南"
+    .Replace What:="*hongkong*", Replacement:="香港"
+    .Replace What:="*HUIZHOU*", Replacement:="惠州"
+    .Replace What:="*inchon*", Replacement:="仁川"
+    .Replace What:="*INCHEON*", Replacement:="仁川"
+    .Replace What:="*jinshan*", Replacement:="金山"
+    .Replace What:="*jiangmen*", Replacement:="江门"
+    .Replace What:="*jiangyin*", Replacement:="江阴"
+    .Replace What:="*jiaxing*", Replacement:="嘉兴"
+    .Replace What:="*jieyang*", Replacement:="揭阳"
+    .Replace What:="*jingjiang*", Replacement:="晋江"
+    .Replace What:="*jinjiang*", Replacement:="晋江"
+    .Replace What:="*jingtang*", Replacement:="京唐"
+    .Replace What:="*jinzhou*", Replacement:="锦州"
+    .Replace What:="*kaohsiung*", Replacement:="高雄"
+    .Replace What:="*KAOSH*", Replacement:="高雄"
+    .Replace What:="*KAOSHIUNG*", Replacement:="高雄"
+    .Replace What:="*KAOHIS*", Replacement:="高雄"
+    .Replace What:="*KAOHSI*", Replacement:="高雄"
+    .Replace What:="*KAOSI*", Replacement:="高雄"
+    .Replace What:="*KAPHSIUNG*", Replacement:="高雄"
+    .Replace What:="*KUNSHAN*", Replacement:="昆山"
+    .Replace What:="*laizhou*", Replacement:="莱州"
+    .Replace What:="*lanshan*", Replacement:="岚山"
+    .Replace What:="*LANSHA*", Replacement:="岚山"
+    .Replace What:="*lianyungang*", Replacement:="连云港"
+    .Replace What:="*mailiao*", Replacement:="麦寮"
+    .Replace What:="*MAILAIO*", Replacement:="麦寮"
+    .Replace What:="*maoming*", Replacement:="茂名"
+    .Replace What:="*mawei*", Replacement:="马尾"
+    .Replace What:="*nanjing*", Replacement:="南京"
+    .Replace What:="*nanjin*", Replacement:="南京"
+    .Replace What:="*NANGJIN*", Replacement:="南京"
+    .Replace What:="*nansha*", Replacement:="南沙"
+    .Replace What:="*nantong*", Replacement:="南通"
+    .Replace What:="*ningbo*", Replacement:="宁波"
+    .Replace What:="*ningo*", Replacement:="宁波"
+    .Replace What:="*onsan*", Replacement:="蔚山"
+    .Replace What:="*平仄*", Replacement:="平泽"
+    .Replace What:="*PPYOUNGTEAK*", Replacement:="平泽"
+    .Replace What:="*PYEONGTAEK*", Replacement:="平泽"
+    .Replace What:="*pyongtaek*", Replacement:="平泽"
+    .Replace What:="*PYOUNGTEAK*", Replacement:="平泽"
+    .Replace What:="*pyungtaek*", Replacement:="平泽"
+    .Replace What:="*qingdao*", Replacement:="青岛"
+    .Replace What:="*qingzhi*", Replacement:="青峙"
+    .Replace What:="*qinzhou*", Replacement:="钦州"
+    .Replace What:="*quanzhou*", Replacement:="泉州"
+    .Replace What:="*RUDONG*", Replacement:="如东"
+    .Replace What:="*RUgao*", Replacement:="如皋"
+    .Replace What:="*sanshui*", Replacement:="三水"
+    .Replace What:="*shandong*", Replacement:="山东"
+    .Replace What:="*shanghai*", Replacement:="上海"
+    .Replace What:="*shantou*", Replacement:="汕头"
+    .Replace What:="*shenhu*", Replacement:="深沪"
+    .Replace What:="*shijing*", Replacement:="石井"
+    .Replace What:="*SINGAPORE*", Replacement:="新加坡"
+    .Replace What:="*SINGPORE*", Replacement:="新加坡"
+    .Replace What:="*taicang*", Replacement:="太仓"
+    .Replace What:="*taichiung*", Replacement:="台中"
+    .Replace What:="*taichung*", Replacement:="台中"
+    .Replace What:="*taixin*", Replacement:="泰兴"
+    .Replace What:="*taixing*", Replacement:="泰兴"
+'    .Replace What:="*taizhou*", Replacement:="台州"
+    .Replace What:="*taizhou*", Replacement:="泰州"
+    .Replace What:="*tianjing*", Replacement:="天津"
+    .Replace What:="*tianjin*", Replacement:="天津"
+    .Replace What:="*天健*", Replacement:="天津"
+    .Replace What:="*ulsan*", Replacement:="蔚山"
+    .Replace What:="*weifang*", Replacement:="潍坊"
+    .Replace What:="*wenzhou*", Replacement:="温州"
+    .Replace What:="*wujing*", Replacement:="吴泾"
+    .Replace What:="*xiamen*", Replacement:="厦门"
+    .Replace What:="*夏门*", Replacement:="厦门"
+    .Replace What:="*xiaohudao*", Replacement:="小虎岛"
+    .Replace What:="*xinhui*", Replacement:="新会"
+    .Replace What:="*yangpu*", Replacement:="洋浦"
+    .Replace What:="*杨浦*", Replacement:="洋浦"
+    .Replace What:="*yangshan*", Replacement:="洋山"
+    .Replace What:="*YANGZHOU*", Replacement:="扬州"
+    .Replace What:="*yantai*", Replacement:="烟台"
+    .Replace What:="*yeosu*", Replacement:="丽水"
+    .Replace What:="*yingkou*", Replacement:="营口"
+    .Replace What:="*扬州*", Replacement:="仪征"
+    .Replace What:="*yizheng*", Replacement:="仪征"
+    .Replace What:="*yosu*", Replacement:="丽水"
+    .Replace What:="*zhangjiagang*", Replacement:="张家港"
+    .Replace What:="*zhajiagang*", Replacement:="张家港"
+    .Replace What:="*ZHANGJIAGONG*", Replacement:="张家港"
+    .Replace What:="*ZHAGNJIAGANG*", Replacement:="张家港"
+    .Replace What:="*ZHANGJIAGAGN*", Replacement:="张家港"
+    .Replace What:="*zhapu*", Replacement:="乍浦"
+    .Replace What:="*独山港*", Replacement:="乍浦"
+    .Replace What:="*zhenhai*", Replacement:="镇海"
+    .Replace What:="*zhenjiang*", Replacement:="镇江"
+    .Replace What:="*ZHENGJIANG*", Replacement:="镇江"
+    .Replace What:="*zhejiang*", Replacement:="镇江"
+    .Replace What:="*ZHNEJIANG*", Replacement:="镇江"
+    .Replace What:="*zhongshan*", Replacement:="中山"
+    .Replace What:="*zhoushan*", Replacement:="舟山"
+    .Replace What:="*zhuhai*", Replacement:="珠海"
+    
+        .Replace What:="*ASSALUYEH*", Replacement:="ASSALUYEH"
+    .Replace What:="*安平*", Replacement:="安平"
+    .Replace What:="*八所*", Replacement:="八所"
+    .Replace What:="*鲅鱼圈*", Replacement:="鲅鱼圈"
+    .Replace What:="*北海*", Replacement:="北海"
+    .Replace What:="*漕泾*", Replacement:="漕泾"
+    .Replace What:="*常熟*", Replacement:="常熟"
+    .Replace What:="*常州*", Replacement:="常州"
+    .Replace What:="*长江口*", Replacement:="长江口"
+    .Replace What:="*大山*", Replacement:="大山"
+    .Replace What:="*大丰*", Replacement:="大丰"
+    .Replace What:="*大连*", Replacement:="大连"
+    .Replace What:="*大榭*", Replacement:="大榭"
+    .Replace What:="*东莞*", Replacement:="东莞"
+    .Replace What:="*东营*", Replacement:="东营"
+    .Replace What:="*福州*", Replacement:="福州"
+    .Replace What:="*广东*", Replacement:="广东"
+    .Replace What:="*广州*", Replacement:="广州"
+    .Replace What:="*古雷*", Replacement:="古雷"
+    .Replace What:="*海南*", Replacement:="海南"
+    .Replace What:="*香港*", Replacement:="香港"
+    .Replace What:="*惠州*", Replacement:="惠州"
+    .Replace What:="*仁川*", Replacement:="仁川"
+    .Replace What:="*金山*", Replacement:="金山"
+    .Replace What:="*江门*", Replacement:="江门"
+    .Replace What:="*江阴*", Replacement:="江阴"
+    .Replace What:="*嘉兴*", Replacement:="嘉兴"
+    .Replace What:="*揭阳*", Replacement:="揭阳"
+    .Replace What:="*晋江*", Replacement:="晋江"
+    .Replace What:="*京唐*", Replacement:="京唐"
+    .Replace What:="*锦州*", Replacement:="锦州"
+    .Replace What:="*高雄*", Replacement:="高雄"
+    .Replace What:="*昆山*", Replacement:="昆山"
+    .Replace What:="*莱州*", Replacement:="莱州"
+    .Replace What:="*岚山*", Replacement:="岚山"
+    .Replace What:="*连云港*", Replacement:="连云港"
+    .Replace What:="*麦寮*", Replacement:="麦寮"
+    .Replace What:="*茂名*", Replacement:="茂名"
+    .Replace What:="*马尾*", Replacement:="马尾"
+    .Replace What:="*南京*", Replacement:="南京"
+    .Replace What:="*南沙*", Replacement:="南沙"
+    .Replace What:="*南通*", Replacement:="南通"
+    .Replace What:="*宁波*", Replacement:="宁波"
+    .Replace What:="*蔚山*", Replacement:="蔚山"
+    .Replace What:="*平泽*", Replacement:="平泽"
+    .Replace What:="*青岛*", Replacement:="青岛"
+    .Replace What:="*青峙*", Replacement:="青峙"
+    .Replace What:="*钦州*", Replacement:="钦州"
+    .Replace What:="*泉州*", Replacement:="泉州"
+    .Replace What:="*如东*", Replacement:="如东"
+    .Replace What:="*如皋*", Replacement:="如皋"
+    .Replace What:="*三水*", Replacement:="三水"
+    .Replace What:="*山东*", Replacement:="山东"
+    .Replace What:="*上海*", Replacement:="上海"
+    .Replace What:="*汕头*", Replacement:="汕头"
+    .Replace What:="*深沪*", Replacement:="深沪"
+    .Replace What:="*石井*", Replacement:="石井"
+    .Replace What:="*新加坡*", Replacement:="新加坡"
+    .Replace What:="*太仓*", Replacement:="太仓"
+    .Replace What:="*台中*", Replacement:="台中"
+    .Replace What:="*泰兴*", Replacement:="泰兴"
+    .Replace What:="*台州*", Replacement:="台州"
+    .Replace What:="*泰州*", Replacement:="泰州"
+    .Replace What:="*天津*", Replacement:="天津"
+    .Replace What:="*潍坊*", Replacement:="潍坊"
+    .Replace What:="*温州*", Replacement:="温州"
+    .Replace What:="*吴泾*", Replacement:="吴泾"
+    .Replace What:="*厦门*", Replacement:="厦门"
+    .Replace What:="*小虎岛*", Replacement:="小虎岛"
+    .Replace What:="*新会*", Replacement:="新会"
+    .Replace What:="*洋浦*", Replacement:="洋浦"
+    .Replace What:="*洋山*", Replacement:="洋山"
+    .Replace What:="*扬州*", Replacement:="扬州"
+    .Replace What:="*烟台*", Replacement:="烟台"
+    .Replace What:="*丽水*", Replacement:="丽水"
+    .Replace What:="*营口*", Replacement:="营口"
+    .Replace What:="*仪征*", Replacement:="仪征"
+    .Replace What:="*张家港*", Replacement:="张家港"
+    .Replace What:="*乍浦*", Replacement:="乍浦"
+    .Replace What:="*镇海*", Replacement:="镇海"
+    .Replace What:="*镇江*", Replacement:="镇江"
+    .Replace What:="*中山*", Replacement:="中山"
+    .Replace What:="*舟山*", Replacement:="舟山"
+    .Replace What:="*珠海*", Replacement:="珠海"
+    .Replace What:="*仙人岛*", Replacement:="仙人岛"
+    .Replace What:="*龙翔*", Replacement:="南京"
+    .Replace What:="*MERAK*", Replacement:="MERAK"
+    .Replace What:="*KERTEH*", Replacement:="KERTEH"
+    .Replace What:="*DEASAN*", Replacement:="DEASAN"
+    .Replace What:="*BUSHEHR*", Replacement:="BUSHEHR"
+    .Replace What:="*BIK*", Replacement:="BIK"
+    .Replace What:="*B.I.k*", Replacement:="BIK"
+    
+End With
 End Function
 Function ENPortToCNPort(portRange As Variant, Optional ifReplace0 As Boolean = True)
 '运价表处理.ENPortToCNPort(列号或range)
 'Dim portRange As Range
 Dim typePara As String
-
+Dim fnrng
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
 typePara = TypeName(portRange)
 If typePara = "Range" Then
+    Set fnrng = portRange
 ElseIf IsNumeric(portRange) Or typePara = "String" Then
-    Set portRange = Columns(portRange)
+    Set fnrng = Columns(portRange)
 End If
 
 
-With portRange ' Cells(4, 8)
+With fnrng ' Cells(4, 8)
     .Replace What:="/", Replacement:="-", LookAt:=xlPart
     .Replace What:="&", Replacement:="+"
     .Replace What:="\", Replacement:="-"
     .Replace What:="－", Replacement:="-"
     .Replace What:="—", Replacement:="-"
-    .Replace What:="--", Replacement:="-"
     .Replace What:="廖", Replacement:="寮"
     .Replace What:=" ", Replacement:=""
     .Replace What:="'", Replacement:=""
@@ -148,9 +442,7 @@ With portRange ' Cells(4, 8)
     .Replace What:="，", Replacement:="+"
     .Replace What:="ASSALIYEH", Replacement:="ASSALUYEH" '伊朗
     .Replace What:="anping", Replacement:="安平"
-    .Replace What:="bangkok", Replacement:="曼谷"
     .Replace What:="basuo", Replacement:="八所"
-    .Replace What:="BATANGAS", Replacement:="八打雁" '菲律宾
     .Replace What:="bayuquan", Replacement:="鲅鱼圈"
     .Replace What:="beihai", Replacement:="北海"
     .Replace What:="caojing", Replacement:="漕泾"
@@ -184,24 +476,20 @@ With portRange ' Cells(4, 8)
     .Replace What:="jinjiang", Replacement:="晋江"
     .Replace What:="jingtang", Replacement:="京唐"
     .Replace What:="jinzhou", Replacement:="锦州"
-    .Replace What:="KANDLA", Replacement:="坎德拉" '印度西
     .Replace What:="kaohsiung", Replacement:="高雄"
     .Replace What:="KAOSHIUNG", Replacement:="高雄"
     .Replace What:="KAOHISUNG", Replacement:="高雄"
     .Replace What:="KAOHSIUNT", Replacement:="高雄"
     .Replace What:="KAPHSIUNG", Replacement:="高雄"
     .Replace What:="KUNSHAN", Replacement:="昆山"
-    .Replace What:="KUNAK", Replacement:="库纳克" '马来西亚
     .Replace What:="laizhou", Replacement:="莱州"
     .Replace What:="lanshan", Replacement:="岚山"
     .Replace What:="LANSHA", Replacement:="岚山"
-    .Replace What:="岚山港", Replacement:="岚山"
     .Replace What:="lianyungang", Replacement:="连云港"
     .Replace What:="mailiao", Replacement:="麦寮"
     .Replace What:="MAILAIO", Replacement:="麦寮"
     .Replace What:="maoming", Replacement:="茂名"
     .Replace What:="mawei", Replacement:="马尾"
-    .Replace What:="NAMPO", Replacement:="南浦"
     .Replace What:="nanjing", Replacement:="南京"
     .Replace What:="nanjin", Replacement:="南京"
     .Replace What:="NANGJIN", Replacement:="南京"
@@ -230,7 +518,6 @@ With portRange ' Cells(4, 8)
     .Replace What:="shijing", Replacement:="石井"
     .Replace What:="SINGAPORE", Replacement:="新加坡"
     .Replace What:="SINGPORE", Replacement:="新加坡"
-    .Replace What:="SON DUONG", Replacement:="山阳"
     .Replace What:="taicang", Replacement:="太仓"
     .Replace What:="taichiung", Replacement:="台中"
     .Replace What:="taichung", Replacement:="台中"
@@ -283,44 +570,43 @@ arShipNam = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH
 '0-5，3KT ; 6-9,2KT ; 10,1K5
 
 End Function
+Sub 选中列转为区域()
+Call 港口转区域(Selection.Column)
+End Sub
 Function 港口转区域(col)
 
 Dim arPorts(0 To 1)
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
 arHuaBeiPorts = Array("丹东", "大连", "营口", "锦州", "秦皇岛", "唐山", "京唐", "天津", "黄骅", _
-"鲅鱼圈", "潍坊", "莱州", "东营", "烟台", "威海", "石岛", "张家埠", "青岛", "日照", "岚山", _
-"仙人岛", "长兴岛")
+"鲅鱼圈", "潍坊", "莱州", "东营", "烟台", "威海", "石岛", "张家埠", "青岛", "日照", "岚山") '仙人岛
 
 arHuaDongPorts = Array("龙口", "连云港", "芜湖", _
 "南通", "如东", "张家港", "镇海", "镇江", "南京", "大丰", "大榭", "江阴", "常熟", "泰兴", _
 "上海", "嘉兴", "吴泾", "漕泾", "乍浦", "宁波", "舟山", "石浦", "海门", "温州", "台州", _
-"常州", "仪征", "洋山", "无为", "洋口", "泰州", "北仑台塑", "宁波大榭", "如皋", "青峙", _
-"独山港", "金山", "太仓", "midchina", "昆山", "浙江", "温洲")
+"常州", "仪征", "洋山", "无为", "洋口", "泰州", "北仑台塑", "宁波大榭", "如皋", "青峙", "金山", "太仓", "midchina", "昆山")
 
 arHuaNanPorts = Array("赛岐", "福州", "马尾", "湄州湾", "泉州", "厦门", "东山", _
 "汕头", "西堤", "汕尾", "深圳", "广州", "南沙", "东莞", "惠州", "揭阳", "小虎岛", "中山", _
 "珠海", "江门", "阳江", "水东", "茂名", "湛江", "霞海", "海安", "北海", "防城", "海口", _
 "三亚", "八所", "海南", "洋浦", "马村", "钦州", "新会", "古雷", "深沪", _
-"南沙", "可门", "三水", "石井", "晋江", "广东", "杨浦", "小虎山", "广东", _
-"三水", "漳州", "小虎石化")
+"南沙", "可门", "三水", "石井", "晋江", "广东") '杨浦 小虎山,广东三水
 
-arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮", "安平")
-', "香港", "澳门", "港澳台+港澳台"
+arTaiwanPorts = Array("台北", "高雄", "花莲", "台中", "基隆", "麦寮", "安平") ', "香港", "澳门", "港澳台+港澳台"
 
 arKoreaPorts = Array("丽水", "蔚山", "大山", "NAMPO", "平泽", "Korea")
 
 arSEAsia = Array("BATAAN", "BATANGAS", "VAN PHONG", "VANPHONG", "KERTEH", "RAYONG", _
 "TABANGAO", "KUANTAN", "SRIRACHA", "MAPTAPHUT", "MERAK", "GRESIK", _
-"Pulau Laut", "曼谷", "bangkok", "SONDUONG", "SON DUONG", "Singapore", "新加坡", _
+"Pulau Laut", "bangkok", "SONDUONG", "SON DUONG", "Singapore", "新加坡", _
 "KUNAK", "KELANG", "PORT KELANG", "TARJUN", "HOCHIMINHPORT", _
-"KERTH", "BINTULU", "山阳", "库纳克")
+"KERTH", "BINTULU")
 'SON DUONG越南山阳,KUNAK马来,VANPHONG越南(空格被处理掉了）
 
 arMEGulf = Array("ASSALUYEH", "ASSALIYEH", "BIK")
 'Assa伊朗
 
-arWCI = Array("KANDLA", "WESTCOASTOFINDIA", "坎德拉")
+arWCI = Array("KANDLA", "WESTCOASTOFINDIA")
 
 arECI = Array("KALKATA", "EASTCOASTOFINDIA")
 
@@ -329,9 +615,9 @@ arPortPart = Array("华北", "华东", "华南", "台湾", "韩国", "东南亚"
 '将港口转为区域
 With Columns(col)
     .Select
-    For i = 0 To UBound(arHuaBeiPorts)
-        .Replace What:=arHuaBeiPorts(i), Replacement:="华北", LookAt:=xlPart
-    Next i
+    For I = 0 To UBound(arHuaBeiPorts)
+        .Replace What:=arHuaBeiPorts(I), Replacement:="华北", LookAt:=xlPart
+    Next I
     For j = 0 To UBound(arHuaDongPorts)
         .Replace What:=arHuaDongPorts(j), Replacement:="华东"
     Next j
@@ -347,9 +633,9 @@ With Columns(col)
     For n = 0 To UBound(arSEAsia)
         .Replace What:=arSEAsia(n), Replacement:="东南亚"
     Next n
-    For o = 0 To UBound(arMEGulf) Step 1
-        .Replace What:=arMEGulf(o), Replacement:="中东"
-    Next o
+    For O = 0 To UBound(arMEGulf) Step 1
+        .Replace What:=arMEGulf(O), Replacement:="中东"
+    Next O
     For p = 0 To UBound(arWCI) Step 1
         .Replace What:=arWCI(p), Replacement:="印度西"
     Next p
@@ -364,7 +650,7 @@ End Function
 Function 航线转区域(col)
 Dim arPorts(0 To 1)
 arPortPart = Array("华北", "华东", "华南", "台湾", "韩国", "东南亚", "中东", "印度西", "印度东")
-For r = 1 To Cells(1, col).End(xlDown).Row
+For r = 1 To Cells(33333, col).End(xlUp).Row
     Set rngPort = Cells(r, col)
     valPort = rngPort.Value
     If valPort = "" And Cells(r + 1, col).Value = "" Then
@@ -378,19 +664,19 @@ For r = 1 To Cells(1, col).End(xlDown).Row
         arPorts(0) = loadPorts
         arPorts(1) = discPorts
         valPort = ""
-        For i = 0 To 1
-            lenPort = Len(arPorts(i))
+        For I = 0 To 1
+            lenPort = Len(arPorts(I))
             If lenPort > 3 Then
                 For Each part In arPortPart
-                    countParts = lenPort - Len(Replace(arPorts(i), part, "")) '替换掉了多少字
+                    countParts = lenPort - Len(Replace(arPorts(I), part, "")) '替换掉了多少字
                     If countParts >= 4 Then
-                        arPorts(i) = part
+                        arPorts(I) = part
                         Exit For
                     End If
                 Next part
             End If
-            valPort = valPort & arPorts(i) & "-"
-        Next i
+            valPort = valPort & arPorts(I) & "-"
+        Next I
         valPort = Left(valPort, Len(valPort) - 1)
         lenPort = Len(valPort)
         For Each part In arPortPart
@@ -464,11 +750,11 @@ arAG = Array("AngelNo.", "天使", "安吉")
 funcShipName = UCase(funcShipName)
 
 '格式化funcShipName
-'For Each strFilter In arFilter
-'    If InStr(1, funcShipName, strFilter) > 0 Then
-'        funcShipName = Replace(funcShipName, strFilter, "")
-'    End If
-'Next strFilter
+For I = 0 To UBound(arFilter)
+    If InStr(1, funcShipName, arFilter(I)) > 0 Then
+        funcShipName = Replace(funcShipName, arFilter(I), "")
+    End If
+Next I
 '
 '
 '    .Replace "HENGXIN", "HX", xlPart
@@ -477,6 +763,7 @@ funcShipName = UCase(funcShipName)
 '    .Replace "Golden", "G", xlPart
 
 '
+
     If Left(funcShipName, 1) = "鼎" Then
         If funcShipName Like "鼎衡17*" Then
             funcShipName = "DH17"
@@ -514,6 +801,10 @@ Function 船名缩写转全称(funcShipName As String)
         funcShipName = "恒信HX"
     ElseIf initialName = "J" Then
         funcShipName = "建兴32"
+    ElseIf initialName = "G" Then
+        If funcShipName = "GB" Then
+            funcShipName = "金色祝福GB"
+        End If
     End If
     船名缩写转全称 = funcShipName
 End Function
@@ -590,8 +881,10 @@ Next ro
 End Function
 Function 处理船舶吨位()
 Dim shipname As String
+Dim cx
 rst = 2
 red = Cells(1, 1).End(xlDown).Row
+
 For ro = rst To red
     shipname = Cells(ro, 1).Value
     shipNum = Right(shipname, 2)
@@ -604,36 +897,60 @@ For ro = rst To red
         Select Case shipNum
             Case 1 To 3
                 dwt = 7600
+                cx = "大船外贸"
             Case 11
                 dwt = 17000
+                cx = "大船外贸"
         End Select
-        
-    ElseIf Left(shipname, 1) = "H" Then
-        'hx
-        dwt = 13898
-    ElseIf Right(shipname, 1) = "E" Then
-        'dhepoch
-        dwt = 8500
-    ElseIf Right(shipname, 1) = "A" Then
-        'dhepoch
-        dwt = 8500
-    Else
-        'dh1 , 2, 3, 5, 9, 10, 15, 16, 17, 18, 32
-        If IsNumeric(shipNum) Then
+    ElseIf Left(shipname, 1) = "D" Then
+        'DH123,591015,161718,ABCDE
+        If Right(shipname, 1) = "A" Then
+            'dhadmiral
+            dwt = 13204
+                cx = "大船外贸"
+        ElseIf Right(shipname, 1) = "E" Then
+            'dhepoch
+            dwt = 8500
+                cx = "大船外贸"
         Else
-            shipNum = Right(shipNum, 1)
+            'dh1 , 2, 3, 5, 9, 10, 15, 16, 17, 18, 32
+            If IsNumeric(shipNum) Then
+            Else
+                shipNum = Right(shipNum, 1)
+            End If
+            Select Case shipNum
+                Case 1 To 10
+                        dwt = 3500
+                    cx = "鼎衡内贸"
+                Case 15 To 16
+                    dwt = 2000
+                    cx = "鼎衡内贸"
+                Case 17 To 18
+                    dwt = 3000
+                    cx = "鼎衡内贸"
+                Case 32
+                    dwt = 2000
+                    cx = "租赁内贸"
+            End Select
         End If
-        Select Case shipNum
-            Case 1 To 10
-                dwt = 3500
-            Case 15 To 16
-                dwt = 2000
-            Case 17 To 18
-                dwt = 3000
-            Case 32
-                dwt = 2000
-        End Select
+    ElseIf Left(shipname, 1) = "G" Then
+        'Golden
+        dwt = 14445
+                cx = "大船外贸"
+    ElseIf Left(shipname, 1) = "H" Then
+        'HX
+        dwt = 13898
+                cx = "大船外贸"
+    ElseIf Left(shipname, 1) = "J" Then
+        'JX32
+        dwt = 2000
+                    cx = "租赁内贸"
+    ElseIf Left(shipname, 1) = "Y" Then
+        'YX29
+        dwt = 2000
+                    cx = "租赁内贸"
     End If
+    Cells(ro, 2).Value = cx
     Cells(ro, 3).Value = dwt
     
 Next ro
@@ -665,6 +982,7 @@ Function 码头列表()
 arrBerthName = Array("欧德", "炼化", "华盛")
 End Function
 Function 获得船舶航次报表dir(localFilePath As String, localShipNameShort As String, localVoyValue As Integer)
+'localFilePath:"\\192.168.0.223\航运在线\10、油料管理部\航次报表\鼎衡1\2018年\"
 '获得船舶航次报表dir(filePath, shipNameShort, voyValue)
 '获得燃润料航次报表dir(filePath, shipNameShort, voyValue)
     Dim arVoy As Variant
@@ -723,20 +1041,23 @@ Dim fcfilePath As String
     
         oldVoyW = fcvoyW.FullName
         fcfilePath = fcvoyW.Path & "\"
-        newVoyW = fcfilePath & fcshipNameShort & "船舶航次报表" & fcvoy & fcvoyLine & ".xlsx"
-        
+        If InStr(1, fcvoyW.Name, "与") > 0 Then
+            newVoyW = fcfilePath & fcshipNameShort & "航次报表与燃油报表" & fcvoy & fcvoyLine & ".xlsx"
+        Else
+            newVoyW = fcfilePath & fcshipNameShort & "船舶航次报表" & fcvoy & fcvoyLine & ".xlsx"
+        End If
         If oldVoyW <> newVoyW Then
             fcvoyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
-            Kill oldVoyW
-
+            If InStr(1, Right(oldVoyW, 20), "?") = 0 Then
+                Kill oldVoyW
+            Else
+                MsgBox "请手动删除" & oldVoyW
+                Stop
+            End If
         End If
     End If
-    
-    fcvoyW.Close True
-    Set fcvoyW = Nothing
-    
 End Function
-Function 燃润料航次报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, fcvoyLine As String)
+Function 燃润料航次报表更名保存(fcvoyW As Workbook, fcshipNameShort As String, fcvoy As String, Optional fcvoyLine As String)
 
 Dim oldVoyW As String
 Dim newVoyW As String
@@ -745,17 +1066,17 @@ Dim fcfilePath As String
     If CInt(Mid(fcvoy, 2, 2)) >= 18 Then
         oldVoyW = fcvoyW.FullName
         fcfilePath = fcvoyW.Path & "\"
-        newVoyW = fcfilePath & fcshipNameShort & "燃润料航次报表" & fcvoy & fcvoyLine & ".xlsx"
+        If InStr(1, fcvoyW.Name, "与") > 0 Then
+            newVoyW = fcfilePath & fcshipNameShort & "航次报表与燃油报表" & fcvoy & fcvoyLine & ".xlsx"
+        Else
+            newVoyW = fcfilePath & fcshipNameShort & "燃润料航次报表" & fcvoy & fcvoyLine & ".xlsx"
+        End If
         
         If oldVoyW <> newVoyW Then
             fcvoyW.SaveAs newVoyW, FileFormat:=xlOpenXMLWorkbook
             Kill oldVoyW
         End If
     End If
-    
-    fcvoyW.Close True
-    Set fcvoyW = Nothing
-    
 End Function
 Function 对操作名字返回船名缩写数组(fn_op_name)
 Dim arr As Variant
@@ -794,9 +1115,9 @@ End If
     
         count_overseas = 0
         
-        For i = 0 To UBound(ar_overseas)
-            count_overseas = count_overseas + InStr(1, krng.Value, ar_overseas(i))
-        Next i
+        For I = 0 To UBound(ar_overseas)
+            count_overseas = count_overseas + InStr(1, krng.Value, ar_overseas(I))
+        Next I
         
         If count_overseas = 0 Then '有外港就是外贸
             krng.Value = "内贸"
@@ -818,81 +1139,4 @@ Function 找表内数据尾行(fnsht, fnrowStart, Optional fncol = 2)
     Else
         找表内数据尾行 = fnsht.Cells(fnrowStart, fncol).End(xlDown).Row
     End If
-End Function
-Function 剔除泊位()
-With Selection ' Cells(4, 8)
-    .Replace What:="码头", Replacement:="", LookAt:=xlPart
-    .Replace What:="泊位", Replacement:=""
-    .Replace What:="小虎石化", Replacement:=""
-    .Replace What:="中化格力", Replacement:=""
-    .Replace What:="诚晖", Replacement:=""
-    .Replace What:="索普", Replacement:=""
-    .Replace What:="青峙", Replacement:=""
-    .Replace What:="台塑", Replacement:=""
-    .Replace What:="华洋", Replacement:=""
-    .Replace What:="华西", Replacement:=""
-    .Replace What:="清江", Replacement:=""
-    .Replace What:="中油泰富", Replacement:=""
-    .Replace What:="扬子泊位", Replacement:=""
-    .Replace What:="三菱化工", Replacement:=""
-    .Replace What:="利士德化", Replacement:=""
-    .Replace What:="孚宝", Replacement:=""
-    .Replace What:="奥德费尔", Replacement:=""
-    .Replace What:="恒力码头", Replacement:=""
-    .Replace What:="新港区", Replacement:=""
-    .Replace What:="丽东", Replacement:=""
-    .Replace What:="龙翔", Replacement:=""
-    .Replace What:="外走马埭", Replacement:=""
-    .Replace What:="三江", Replacement:=""
-    .Replace What:="粤海", Replacement:=""
-    .Replace What:="炼化", Replacement:=""
-    .Replace What:="欧德", Replacement:=""
-    .Replace What:="高栏格力", Replacement:=""
-    .Replace What:="中海油", Replacement:=""
-    .Replace What:="联成", Replacement:=""
-    .Replace What:="东联", Replacement:=""
-    .Replace What:="炼化", Replacement:=""
-    .Replace What:="福炼", Replacement:=""
-    .Replace What:="长江国际", Replacement:=""
-    .Replace What:="万华", Replacement:=""
-    .Replace What:="石化", Replacement:=""
-    .Replace What:="华盛", Replacement:=""
-    .Replace What:="金明", Replacement:=""
-    .Replace What:="振戎", Replacement:=""
-    .Replace What:="阳鸿", Replacement:=""
-    .Replace What:="科元", Replacement:=""
-    .Replace What:="百安", Replacement:=""
-    .Replace What:="海洋", Replacement:=""
-    .Replace What:="泰山", Replacement:=""
-    .Replace What:="恒基达鑫", Replacement:=""
-    .Replace What:="高栏", Replacement:=""
-    .Replace What:="东洲", Replacement:=""
-    .Replace What:="海湾", Replacement:=""
-    .Replace What:="新港", Replacement:=""
-    .Replace What:="石井", Replacement:=""
-    .Replace What:="恒力", Replacement:=""
-    .Replace What:="扬巴", Replacement:=""
-    .Replace What:="甘井子", Replacement:=""
-    .Replace What:="临港", Replacement:=""
-    .Replace What:="中东", Replacement:=""
-    .Replace What:="新港福佳", Replacement:=""
-    .Replace What:="思多而特", Replacement:=""
-    .Replace What:="顺岸", Replacement:=""
-    .Replace What:="杨子", Replacement:=""
-    .Replace What:="扬子", Replacement:=""
-    .Replace What:="油", Replacement:=""
-    .Replace What:="泰地", Replacement:=""
-    .Replace What:="福建", Replacement:=""
-    .Replace What:="广西", Replacement:=""
-    .Replace What:="粤海", Replacement:=""
-    .Replace What:="镇司", Replacement:=""
-    .Replace What:="三菱化工", Replacement:=""
-    .Replace What:="三菱化工", Replacement:=""
-    .Replace What:="三菱化工", Replacement:=""
-    .Replace What:="三菱化工", Replacement:=""
-    .Replace What:="三菱化工", Replacement:=""
-    .Replace What:="三菱化工", Replacement:=""
-    .Replace What:="三菱化工", Replacement:=""
-    .Replace What:="三菱化工", Replacement:=""
-End With
 End Function
