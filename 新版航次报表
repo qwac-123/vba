@@ -1,11 +1,4 @@
-Sub 下午工作打开滞期费统计表()
-Dim dempath As String
-Dim demfile As String
-    dempath = "\\192.168.0.223\航运在线\3.1、业务部\19、滞期费\"
-    demfile = "滞期费跟踪表（业务部）.xlsx"
-    Workbooks.Open dempath & demfile
 
-End Sub
 Sub 批量产生新版航次报表与燃油报表()
 '
 ' 批量产生新版航次报表与燃油报表 Macro
@@ -26,7 +19,12 @@ Dim osht As Worksheet
 Dim arRob
 Dim arob(0 To 6)
 
-Set zwb = ActiveWorkbook
+If ActiveWorkbook.Name Like "*与*" Then
+    Set zwb = ActiveWorkbook
+Else
+    MsgBox ActiveWorkbook.Name
+    Stop
+End If
 Set zvsht = zwb.Sheets(1)
 Set zosht = zwb.Sheets(2)
 '    timeIndex = "\\192.168.0.223\航运在线\32、船舶安全生产月度管理计划\201806\管理计划\"
@@ -261,3 +259,21 @@ erhd:
 Next iship
 
 End Sub
+Function 临时修改()
+x = Application.GetOpenFilename(FileFilter:="Excel文件 (*.xls; *.xlsx),*.xls; *.xlsx,所有文件(*.*),*.*", _
+       Title:="Excel选择", MultiSelect:=True) '选择要被合并的簿
+       
+For Each x1 In x
+Set w = Workbooks.Open(x1)
+w.Sheets(1).Unprotect 8888
+w.Sheets(1).Activate
+With [d2]
+    .FormulaR1C1 = "=R[3]C"
+    .Locked = True
+    .FormulaHidden = False
+End With
+    w.Sheets(1).Protect 8888, DrawingObjects:=True, Contents:=True, Scenarios:=True
+    w.Close True
+Next x1
+End Function
+
