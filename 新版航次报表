@@ -72,10 +72,9 @@ erhd:
             Set oilwb = Workbooks.Open(oilDir)
             Set osht = oilwb.Sheets(1)
         End If
+        zvsht.Unprotect "8888"
+        zosht.Unprotect "8888"
     Else
-        Debug.Print voyDir
-        Debug.Print voyValue
-        
         voyValue = voyValue - 1
         If voyValue < 1801 Then
             Stop
@@ -83,13 +82,20 @@ erhd:
         GoTo erhd
     End If
     vsht.Activate
-    Stop
     endTime = [d5]
     If isNew Then
     Else
         depTime = [c7].End(xlDown).Value
     End If
-    For ro = 50 To 120 Step 1
+    If MsgBox(depTime, vbYesNo) = vbNo Then
+        Stop
+    End If
+    secondOfficer = ""
+    firstOfficer = ""
+    captain = ""
+    thirdEngine = ""
+    chiefEngine = ""
+    For ro = 50 To 180 Step 1
         If Cells(ro, 1).Value Like "二副" Then
             secondOfficer = Cells(ro, 2)
             firstOfficer = Cells(ro, 5)
@@ -247,6 +253,11 @@ erhd:
     Range("F46").Value = chiefEngine
     zvsht.Protect "8888"
     zosht.Protect "8888"
+    voywb.Close
+        If Dir(voyDir) Like "*与*" Then
+        Else
+            oilwb.Close
+        End If
     zwb.SaveAs "F:\工作文档\EXCEL\批改航次报表\新版航次报表\20180614\" & shipNameShort & "航次报表与燃油报表V" & arVoy(iship) & ".xlsx", xlOpenXMLWorkbook
 Next iship
 
