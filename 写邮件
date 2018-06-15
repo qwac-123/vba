@@ -1,0 +1,168 @@
+Option Explicit
+
+Sub 发送邮件()
+   Dim ierr As Integer
+   Dim iCount As Integer, iTotal As Integer
+    Dim ro As Integer
+   Worksheets("Sheet1").Select
+   Range("A2").Select
+
+   iCount = 0
+   iTotal = 0
+   Do While ActiveCell.Value <> ""
+        ro = ActiveCell.Row
+        Cells(ro, 7).Value = ""
+       ierr = SendMail(ActiveCell.Value, ActiveCell.Offset(0, 1).Value, ActiveCell.Offset(0, 2).Value, ActiveCell.Offset(0, 3).Value, ActiveCell.Offset(0, 4).Value, ActiveCell.Offset(0, 5).Value)
+        If ierr = 0 Then
+            iCount = iCount + 1
+            Cells(ro, 7).Value = "OK"
+        Else
+            Cells(ro, 7).Value = "Fail"
+       End If
+       iTotal = iTotal + 1
+       ActiveCell.Offset(1, 0).Select
+   Loop
+
+   MsgBox "共发送" & iTotal & "个，成功发送邮件" & iCount & "个！"
+End Sub
+
+'*******************************************************************'
+'经测试在OUTLOOK 2000中不会显示警告窗口.
+'引用：Microseft Outlook *.0 Object Library
+'需要注意一点 , 邮件的标题, 否则不能自动放送!
+'**********************************************************************
+Public Function SendMail(strTo As String, strSubject As String, strBody As String, Optional strAttachment As String = "", Optional strCC As String = "", Optional strBCC As String = "") As Integer
+
+'    If MsgBox("请确保已在OUTLOOK内编程访问中设置“从不向我发出可疑活动警告（不推荐）”", vbYesNo) = vbNo Then
+'        MsgBox "请前往outlook,2007:工具-信任中心,编程访问" & vbCrLf & "2016:左上角文件-选项-信任中心"
+'        Stop
+'    End If
+    
+'   On Error GoTo errHandler
+   '定义outlook的对象变量
+   Dim objOutlook As New Outlook.Application
+   '定义outlook邮件的对象变量
+   Dim objMail As MailItem
+    Dim I As Integer
+   '创建objOutlook为Outlook应用程序对象
+   Set objOutlook = New Outlook.Application
+   '创建objMail为一个邮件对象
+   Set objMail = objOutlook.CreateItem(olMailItem)
+    '创建签名
+    Dim SigString As String
+    Dim Signature As String
+   '循环添加附件
+   Dim strArray
+   strArray = Split(strAttachment, "|")
+   For I = 0 To UBound(strArray)
+       objMail.Attachments.Add strArray(I) 'ThisWorkbook.Path & "\" & strArray(I) '如果有多个附件，分别添加
+   Next
+
+   objMail.To = strTo '设置收信人的邮箱
+   'If ChkEmail(strCC) = 0 Then
+       objMail.CC = strCC '设置抄送的邮箱
+   'End If
+
+   If ChkEmail(strBCC) = 0 Then
+       objMail.BCC = strBCC '设置密送的邮箱
+   End If
+
+   '设置邮件的主题
+   If strSubject <> "" Then
+       objMail.Subject = strSubject
+   Else
+       objMail.Subject = "主题"
+   End If
+'
+'   '设置邮件正文
+'   objMail.Body = strBody
+   '设置邮件签名
+   '签名（.rtf、.txt、.htm）
+'Windows 7 和 Windows Vista 驱动器:\Users\用户\AppData\Roaming\Microsoft\Signatures
+'Windows XP 驱动器:\Documents and Settings\用户\Application Data\Microsoft\Signatures
+'大多数签名使用htm格式，因此只需编辑htm文件即可改变Outlook中签名的呈现方式。
+'   SigString = Environ("appdata") & _
+'     "\Microsoft\Signatures\cyh.htm"
+    SigString = "C:\Users\Administrator\AppData\Roaming\Microsoft\Signatures\cyh.htm"
+    If Dir(SigString) <> "" Then
+        Signature = GetBoiler(SigString)
+    Else
+    
+        Signature = ""
+    End If
+    
+    '设置邮件正文带签名
+    strBody = "<FONT SIZE = 3><font face=verdana>船长：<br><br>    晚上好。<br><br>    随附件发来了新版的航次报表，请后续按照此航次报表填写。<br>    其中关于在港时间、装卸货情况、洗舱时间等考核的指标、判定及计算以船员部的表为主，本表作为辅助。<br>在填写船员部业务管理计划表时可以只写相关航次号，我会填写该航次。<br><br>    请在发来公司的同时附上电子版的时间表(excel推荐,word也可)<br>    填写中有任何问题请联系我，电话或邮箱都可。<br><br>祝一切顺利。"
+    objMail.HTMLBody = strBody & "<br><br>" & Signature
+
+    
+   With objMail
+       '新建邮件窗口显示，如果不熟练可以取消注释
+       .Display
+       '邮件发送
+       Stop
+       .Send
+   End With
+   '销毁objMail对象
+   Set objMail = Nothing
+   '销毁objOutlook对象
+   Set objOutlook = Nothing
+   SendMail = 0
+   Exit Function
+
+errHandler:
+   SendMail = 1
+End Function
+'检查邮件是否规范
+Function ChkEmail(str As String)
+   Dim reg
+   Set reg = CreateObject("vbscript.regexp")
+   reg.Pattern = "^[\w.-]+@[\w.-]+$"
+   If reg.test(str) Then
+       ChkEmail = 0
+   Else
+       ChkEmail = 1
+   End If
+End Function
+Sub Send_Email()
+        Dim I     As Integer
+        Dim MyOutlookApp     As Outlook.Application
+        Dim MyFolder     As Outlook.MAPIFolder
+        Dim MyNewMail     As Outlook.MailItem
+        Dim MyAttachments     As Outlook.Attachments                   '附件
+        
+        Set MyOutlookApp = New Outlook.Application
+        
+        Set MyFolder = MyOutlookApp.GetNamespace("MAPI ").GetDefaultFolder(olFolderInbox).Folders("我的邮件文件夹 ")
+        
+        Set MyNewMail = MyOutlookApp.CreateItem(olMailItem)
+        With MyNewMail
+                .To = "YourFridentMail@sina.com "                         '目标邮件地址
+                .CC = "aaa@qq.com"
+                .Subject = "test "                                         '标题
+                .HTMLBody = " <p> <b> This </b>   is   <font   color= '#ff000 '> red </font> </p> "
+                .AlternateRecipientAllowed = True         '此邮件可转发
+                .AutoForwarded = True                                 '此邮件允许自动转发
+                .DeleteAfterSubmit = False                         '发送后保留副本
+                '发送之后移动到指定文件夹
+                .SaveSentMessageFolder = MyOutlookApp.GetNamespace("MAPI ").GetDefaultFolder(olFolderInbox).Folders("备份文件夹 ")
+                .ReadReceiptRequested = True                     '要求收件人回执
+                'SaveSentMessageFolder
+        End With
+        '附件
+        Set MyAttachments = MyNewMail.Attachments
+        MyAttachments.Add "c:\win\abc.txt ", olByValue
+        MyNewMail.Save         '保存
+        MyNewMail.Send         '发送
+        
+        MyFolder.Display         '显示office   outlook
+End Sub
+Function GetBoiler(ByVal sFile As String) As String
+'获取签名
+    Dim fso As Object
+    Dim ts As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set ts = fso.GetFile(sFile).OpenAsTextStream(1, -2)
+    GetBoiler = ts.readall
+    ts.Close
+End Function
