@@ -1,0 +1,436 @@
+Option Explicit
+
+Sub 发送邮件()
+    Dim sht_title As String
+   Dim ierr As Integer
+   Dim iCount As Integer, iTotal As Integer
+    Dim ro As Integer
+   Worksheets("Sheet1").Select
+   Range("A2").Select
+    
+   iCount = 0
+   iTotal = 0
+   Do While ActiveCell.Value <> ""
+        ro = ActiveCell.row
+        Cells(ro, 7).Value = ""
+       ierr = SendMail(ActiveCell.Value, ActiveCell.Offset(0, 1).Value, ActiveCell.Offset(0, 2).Value, ActiveCell.Offset(0, 3).Value, ActiveCell.Offset(0, 4).Value, ActiveCell.Offset(0, 5).Value)
+        If ierr = 0 Then
+            iCount = iCount + 1
+            Cells(ro, 7).Value = "OK"
+        Else
+            Cells(ro, 7).Value = "Fail"
+       End If
+       iTotal = iTotal + 1
+       ActiveCell.Offset(1, 0).Select
+   Loop
+
+   MsgBox "共发送" & iTotal & "个，成功发送邮件" & iCount & "个！"
+End Sub
+
+Sub 滞期费表发送催收邮件()
+    Dim sht_title As String
+    Dim ierr As Integer
+    Dim iCount As Integer, iTotal As Integer
+    
+
+    Cells(2, 1).Select
+    iCount = 0
+    iTotal = 0
+    
+    Do While ActiveCell.Value <> ""
+        ro = ActiveCell.row
+        Cells(ro, 7).Value = ""
+        ierr = SendMail(ActiveCell.Value, ActiveCell.Offset(0, 1).Value, ActiveCell.Offset(0, 2).Value, ActiveCell.Offset(0, 3).Value, ActiveCell.Offset(0, 4).Value, ActiveCell.Offset(0, 5).Value)
+        If ierr = 0 Then
+            iCount = iCount + 1
+            Cells(ro, 7).Value = "OK"
+        Else
+            Cells(ro, 7).Value = "Fail"
+        End If
+        iTotal = iTotal + 1
+        ActiveCell.Offset(1, 0).Select
+    Loop
+
+    MsgBox "共发送" & iTotal & "个，成功发送邮件" & iCount & "个！"
+    Sheets("催收工作进度").Activate
+    ro = Cells(666, 2).End(xlUp).row + 1
+    Cells(ro, 1) = Date ', "m月d日"
+    
+End Sub
+Function 滞期费催收邮件准备()
+    Dim ro As Integer
+    Dim co As Integer
+    Dim row
+    Dim col
+    Dim startRow As Integer
+    Dim endRow As Integer
+    Dim startCol As Integer
+    Dim endCol As Integer
+    
+    Dim demurragePath As String
+    Dim shipName As String
+    Dim shipNameShort As String
+    Dim voy As String
+    Dim route As String
+    Dim cargo As String
+    Dim laycan As String
+    Dim charterer As String
+    Dim amount As String
+    Dim name As String
+    Dim broker As String
+    Dim progress As String
+
+    Dim strSender As String
+    Dim strTo As String
+    Dim strCC As String
+    Dim strSubject As String
+    Dim strBody As String
+    Dim strAttachment As String
+
+    Dim colShipName As Integer
+    Dim colVoy As Integer
+    Dim colRoute As Integer
+    Dim colCargo As Integer
+    Dim colLaycan As Integer
+    Dim colCharterer As Integer
+    Dim colAmount As Integer
+    Dim colName As Integer
+    Dim colBroker As Integer
+    Dim colProgress As Integer
+    Dim arSkip
+    
+    demurragePath = ""
+    startCol = 1
+    endCol = Cells(1, 1).End(xlToRight).Column
+    
+    For co = startCol To endCol
+        If Cells(1, co).Value = "船名" Then
+            colShipName = co
+        ElseIf Cells(1, co).Value = "航次" Then
+            colVoy = co
+        ElseIf Cells(1, co).Value = "航线" Then
+            colRoute = co
+        ElseIf Cells(1, co).Value Like "货*" Then
+            colCargo = co
+        ElseIf Cells(1, co).Value = "收票人" Or Cells(1, co).Value = "租家" Then
+            colCharterer = co
+        ElseIf Cells(1, co).Value Like "*金*额*" Then
+            colAmount = co
+        ElseIf Cells(1, co).Value = "姓名" Then
+            colName = co
+        ElseIf Cells(1, co).Value = "broker" Then
+            colBroker = co
+        ElseIf Cells(1, co).Value = "进展" Then
+            colProgress = co
+            Exit For
+        End If
+    Next co
+    
+    startRow = 2
+    endRow = Cells(2, 2).End(xlDown).row
+    arSkip = Array("合作", "等")
+    
+    For ro = startRow To endRow
+        shipName = Cells(ro, colShipName).Value
+        shipNameShort = Cells(ro, colShipName).Value
+        shipName = 船名缩写转英文全称(shipName)
+        
+        voy = UCase(Cells(ro, colVoy).Value)
+        If Left(voy, 1) <> "V" Then
+            voy = "V" & voy
+        End If
+        route = Cells(ro, colRoute).Value
+        cargo = Cells(ro, colCargo).Value
+        charterer = Cells(ro, colCharterer).Value
+        amount = Cells(ro, colAmount).Value
+        broker = Cells(ro, colBroker).Value
+        progress = Cells(ro, colProgress).Value
+        
+        If progress Like "*合作*" Then
+            GoTo nextro
+        ElseIf progress Like "*以前*" Then
+            GoTo nextro
+        Else
+            strSender = ""
+            strTo = broker
+            strCC = ""
+            strSubject = "[DEMURRAGE]" & shipName & " " & voy & " " & route & " " & laycan & " " & "USD" & amount
+            strBody = 滞期费催收邮件正文(progress, name, broker, strSubject, charterer)
+            strAttachment = demurragePath & shipNameShort & voy & "\" & shipNameShort & voy & ".rar"
+
+        End If
+        
+nextro:
+    Next ro
+End Function
+Function 滞期费催收邮件正文(progress, broker, strSubject, charterer)
+Dim paraStart
+Dim paraEnd
+Dim text As String
+text = "<p style=""font-family:verdana;color:black"">"
+text = text & "Dear " & Mid(broker, 1, InStr(1, broker, "@") - 1) & ","
+text = text & "<br />"
+text = text & "<br />Good day!"
+text = text & "<br />"
+text = text & "<br />Please check with charterer [" & charterer & "]"
+text = text & "<br />to advise the demurrage confirmation of the attached demurrage case of"
+text = text & "<br />" & "[" & Right(strSubject, Len(strSubject) - 11) & "]."
+text = text & "<br />"
+text = text & "<br />Kindly please forward them to charterer and send back the e-mail that you forward to the charterer as attachment."
+text = text & "<br />If you do not forward this email to the charterer, you will be bear all possible consequences arising therefrom."
+text = text & "<br />If the charterer wish to discuss further, please feel free to contact us."
+text = text & "</p>"
+
+滞期费催收邮件正文 = text
+End Function
+Function te()
+Dim ro
+    ro = Cells(666, 2).End(xlUp).row + 1
+    Cells(ro, 1) = Date ', "m月d日"
+End Function
+'*******************************************************************'
+'经测试在OUTLOOK 2000中不会显示警告窗口.
+'引用：Microseft Outlook *.0 Object Library
+'需要注意一点 , 邮件的标题, 否则不能自动放送!
+'**********************************************************************
+Public Function SendMail(strTo As String, strSubject As String, strBody As String, Optional strAttachment As String = "", Optional strCC As String = "", Optional strBCC As String = "") As Integer
+'String:strTo,strSubject,strBody(html),[strAttachment](fullname), [strCC],[strBCC]
+
+'    If MsgBox("请确保已在OUTLOOK内编程访问中设置“从不向我发出可疑活动警告（不推荐）”", vbYesNo) = vbNo Then
+'        MsgBox "请前往outlook,2007:工具-信任中心,编程访问" & vbCrLf & "2016:左上角文件-选项-信任中心"
+'        Stop
+'    End If
+    
+'   On Error GoTo errHandler
+   '定义outlook的对象变量
+   Dim objOutlook As New Outlook.Application
+   '定义outlook邮件的对象变量
+   Dim objMail As MailItem
+    Dim i As Integer
+   '创建objOutlook为Outlook应用程序对象
+   Set objOutlook = New Outlook.Application
+   '创建objMail为一个邮件对象
+   Set objMail = objOutlook.CreateItem(olMailItem)
+    '创建签名
+    Dim SigString As String
+    Dim Signature As String
+   '循环添加附件
+   Dim strArray
+   strArray = Split(strAttachment, "|")
+   For i = 0 To UBound(strArray)
+       objMail.Attachments.Add strArray(i) 'ThisWorkbook.Path & "\" & strArray(I) '如果有多个附件，分别添加
+   Next
+
+   objMail.To = strTo '设置收信人的邮箱
+   'If ChkEmail(strCC) = 0 Then
+       objMail.CC = strCC '设置抄送的邮箱
+   'End If
+
+   If ChkEmail(strBCC) = 0 Then
+       objMail.BCC = strBCC '设置密送的邮箱
+   End If
+
+   '设置邮件的主题
+   If strSubject <> "" Then
+       objMail.Subject = strSubject
+   Else
+       objMail.Subject = "主题"
+   End If
+'
+'   '设置邮件正文
+'   objMail.Body = strBody
+   '设置邮件签名
+   '签名（.rtf、.txt、.htm）
+'Windows 7 和 Windows Vista 驱动器:\Users\用户\AppData\Roaming\Microsoft\Signatures
+'Windows XP 驱动器:\Documents and Settings\用户\Application Data\Microsoft\Signatures
+'大多数签名使用htm格式，因此只需编辑htm文件即可改变Outlook中签名的呈现方式。
+'   SigString = Environ("appdata") & _
+'     "\Microsoft\Signatures\cyh.htm"
+    SigString = "C:\Users\Administrator\AppData\Roaming\Microsoft\Signatures\cyh.htm"
+    If Dir(SigString) <> "" Then
+        Signature = GetBoiler(SigString)
+    Else
+    
+        Signature = ""
+    End If
+    
+    '设置邮件正文带签名
+    strBody = "<FONT SIZE = 3><font face=verdana>船长：<br><br>    晚上好。<br><br>    随附件发来了新版的航次报表，请后续按照此航次报表填写。<br>    其中关于在港时间、装卸货情况、洗舱时间等考核的指标、判定及计算以船员部的表为主，本表作为辅助。<br>在填写船员部业务管理计划表时可以只写相关航次号，我会填写该航次。<br><br>    请在发来公司的同时附上电子版的时间表(excel推荐,word也可)<br>    填写中有任何问题请联系我，电话或邮箱都可。<br><br>祝一切顺利。"
+    objMail.HTMLBody = strBody & "<br><br>" & Signature
+
+    
+   With objMail
+       '新建邮件窗口显示，如果不熟练可以取消注释
+       .Display
+       '邮件发送
+       Stop
+       .Send
+   End With
+   '销毁objMail对象
+   Set objMail = Nothing
+   '销毁objOutlook对象
+   Set objOutlook = Nothing
+   SendMail = 0
+   Exit Function
+
+errHandler:
+   SendMail = 1
+End Function
+'检查邮件是否规范
+Function ChkEmail(str As String)
+   Dim reg
+   Set reg = CreateObject("vbscript.regexp")
+   reg.Pattern = "^[\w.-]+@[\w.-]+$"
+   If reg.test(str) Then
+       ChkEmail = 0
+   Else
+       ChkEmail = 1
+   End If
+End Function
+Sub Send_Email()
+        Dim i     As Integer
+        Dim MyOutlookApp     As Outlook.Application
+        Dim MyFolder     As Outlook.MAPIFolder
+        Dim MyNewMail     As Outlook.MailItem
+        Dim MyAttachments     As Outlook.Attachments                   '附件
+        
+        Set MyOutlookApp = New Outlook.Application
+        
+        Set MyFolder = MyOutlookApp.GetNamespace("MAPI ").GetDefaultFolder(olFolderInbox).Folders("我的邮件文件夹 ")
+        
+        Set MyNewMail = MyOutlookApp.CreateItem(olMailItem)
+        With MyNewMail
+                .To = "YourFridentMail@sina.com "                         '目标邮件地址
+                .CC = "aaa@qq.com"
+                .Subject = "test "                                         '标题
+                .HTMLBody = " <p> <b> This </b>   is   <font   color= '#ff000 '> red </font> </p> "
+                .AlternateRecipientAllowed = True         '此邮件可转发
+                .AutoForwarded = True                                 '此邮件允许自动转发
+                .DeleteAfterSubmit = False                         '发送后保留副本
+                '发送之后移动到指定文件夹
+                .SaveSentMessageFolder = MyOutlookApp.GetNamespace("MAPI ").GetDefaultFolder(olFolderInbox).Folders("备份文件夹 ")
+                .ReadReceiptRequested = True                     '要求收件人回执
+                'SaveSentMessageFolder
+        End With
+        '附件
+        Set MyAttachments = MyNewMail.Attachments
+        MyAttachments.Add "c:\win\abc.txt ", olByValue
+        MyNewMail.Save         '保存
+        MyNewMail.Send         '发送
+        
+        MyFolder.Display         '显示office   outlook
+End Sub
+Function GetBoiler(ByVal sFile As String) As String
+'获取签名
+    Dim fso As Object
+    Dim ts As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set ts = fso.GetFile(sFile).OpenAsTextStream(1, -2)
+    GetBoiler = ts.readall
+    ts.Close
+End Function
+Function ConvertRangeIntoHTMLFormat(fnrng)
+'不好用
+Dim ro, co As Integer
+Dim startRow As Integer
+Dim endRow As Integer
+Dim startCol As Integer
+Dim endCol As Integer
+
+Dim roText As String '每一行转为一行html表格
+
+startRow = 1
+endRow = fnrng.Rows.Count
+startCol = 1
+endCol = fnrng.Rows.Count
+
+Dim arRoText
+ReDim arRoText(1 To endRow) As String '把一行行roText放进去
+
+
+For ro = 1 To endRow
+    For co = 1 To endCol
+        roText = roText & "<td>" & fnrng.Cells(ro, co) & "</td>"
+    Next co
+    arRoText(ro) = "<tr>" & Trim(roText) & "</tr>"
+    roText = ""
+Next ro
+
+'拼接成表
+Dim wholeText As String
+For ro = 1 To UBound(arRoText)
+    wholeText = wholeText & arRoText(ro)
+Next ro
+
+'加上html格式
+wholeText = "<table border=" & Chr(34) & "1" & Chr(34) & _
+            "cellspacing=" & Chr(34) & "-0.5" & Chr(34) & _
+            "cellpadding=" & Chr(34) & "10" & Chr(34) & _
+            "bgcolor=" & Chr(34) & "yellow" & Chr(34) & _
+            "bordercolor=" & Chr(34) & "palegreen" & Chr(34) & _
+            ">" & wholeText & "</table>"
+            
+ConvertRangeIntoHTMLFormat = wholeText
+End Function
+Function 船名全称转缩写(funcShipName)
+Dim shipLongNameArr
+Dim funcShipNameArr
+Dim arFilter
+Dim strFilter As String
+
+Dim i As Integer
+'shipLongNameArr = Array("鼎衡1", "鼎衡2", "鼎衡3", "鼎衡5", "鼎衡9", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17*", "鼎衡18*", "鼎衡7", "建兴32", "鼎衡A", "鼎衡E", "天使1", "天使2", "天使3", "天使11")
+'funcShipNameArr = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "DH7", "JX32", "DHA", "DHE", "AG1", "AG2", "AG3", "AG11")
+
+arFilter = Array(" ", "轮", "月", "度")
+arTrans = Array("DINGHENG", "GOLDEN", "鼎衡")
+arDH = Array("DINGHENG", "鼎衡")
+arGD = Array("GOLDEN", "金色")
+arAG = Array("AngelNo.", "天使", "安吉")
+funcShipName = UCase(funcShipName)
+
+'格式化funcShipName
+For i = 0 To UBound(arFilter)
+    If InStr(1, funcShipName, arFilter(i)) > 0 Then
+        funcShipName = Replace(funcShipName, arFilter(i), "")
+    End If
+Next i
+
+    If Left(funcShipName, 1) = "鼎" Then
+        If funcShipName Like "鼎衡17*" Then
+            funcShipName = "DH17"
+        ElseIf funcShipName = "鼎衡18*" Then
+            funcShipName = "DH18"
+        Else
+            funcShipName = Replace(funcShipName, "鼎衡", "DH")
+        End If
+    ElseIf funcShipName = "建兴32" Then
+        funcShipName = "JX32"
+    ElseIf funcShipName = "恒信HX" Then
+        funcShipName = "HX"
+    ElseIf Left(funcShipName, 1) = "天" Then
+        funcShipName = Replace(funcShipName, "天使", "AG")
+    ElseIf Left(funcShipName, 1) = "安" Then
+        funcShipName = Replace(funcShipName, "安吉", "AG")
+    End If
+    船名全称转缩写 = funcShipName
+End Function
+Function 船名缩写转英文全称(funcShipName As String)
+    Dim initialName As String
+    funcShipName = UCase(funcShipName)
+    initialName = UCase(Left(funcShipName, 1))
+    If initialName = "D" Then
+        funcShipName = Replace(funcShipName, "DH", "DING HENG ")
+    ElseIf initialName = "A" Then
+        funcShipName = Replace(funcShipName, "AG", "ANGEL NO.")
+    ElseIf initialName = "H" Then
+        funcShipName = "HENG XIN"
+    ElseIf initialName = "J" Then
+        funcShipName = "JIAN XING 32"
+    ElseIf initialName = "G" Then
+        If funcShipName = "GB" Then
+            funcShipName = "GOLDEN BLESS"
+        End If
+    End If
+    船名缩写转英文全称 = funcShipName
+End Function
