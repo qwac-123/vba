@@ -1,0 +1,200 @@
+Option Explicit
+Sub 输入装卸货港数量()
+'
+
+'
+Dim countLoadports As Integer
+Dim countDiscports As Integer
+Dim ld_hidden As Integer
+Dim ds_hidden As Integer
+Dim i As Integer
+
+Dim loadportformu As String
+Dim discportformu As String
+
+countLoadports = CInt(InputBox("几个装货港？（输入正整数<=5）", "装货港数量"))
+countDiscports = CInt(InputBox("几个卸货港？（输入正整数<=5）", "卸货港数量"))
+Sheets(1).Activate
+ld_hidden = 5 - countLoadports
+ds_hidden = 5 - countDiscports
+
+Rows((31 - ld_hidden * 5 + 1) & ":31").Hidden = True
+Rows("7:" & (7 + countLoadports * 5 - 1)).Hidden = False
+Rows((56 - ds_hidden * 5 + 1) & ":56").Hidden = True
+Rows("31:" & (31 + countDiscports * 5 - 1)).Hidden = False
+
+Rows((68 - ld_hidden + 1) & ":68").Hidden = True
+Rows("64:" & (64 + countLoadports - 1)).Hidden = False
+Rows((73 - ds_hidden + 1) & ":73").Hidden = True
+Rows("69:" & (69 + countDiscports - 1)).Hidden = False
+
+Rows((81 - ld_hidden + 1) & ":81").Hidden = True
+Rows("77:" & (77 + countLoadports - 1)).Hidden = False
+Rows((86 - ds_hidden + 1) & ":86").Hidden = True
+Rows("82:" & (82 + countDiscports - 1)).Hidden = False
+
+
+loadportformu = "='laytime analysis'!B7"
+discportformu = "='laytime analysis'!B32"
+For i = 2 To countLoadports Step 1
+    loadportformu = loadportformu & "&CHAR(10)&'laytime analysis'!B" & (2 + i * 5)
+Next i
+Sheets(2).Cells(14, 2).Formula = loadportformu
+    
+For i = 2 To countDiscports Step 1
+    discportformu = discportformu & "&CHAR(10)&'laytime analysis'!B" & (27 + i * 5)
+Next i
+Sheets(2).Cells(15, 2).Formula = discportformu
+Sheets(2).Rows("14:15").EntireRow.AutoFit
+
+    ActiveWindow.SmallScroll up:=55
+End Sub
+Sub 滞期费表发布()
+'
+' 滞期费表发布 Macro
+'
+
+'
+Dim shipName As String
+Dim shipNameShort As String
+Dim voy As String
+Dim product As String
+Dim quantity As String
+
+Dim path As String
+Dim pdfLaytime As String
+Dim pdfDemu As String
+
+Dim wbfullname As String
+
+Dim wb As Workbook
+Dim shtLaytime As Worksheet
+Dim shtDemu As Worksheet
+
+    Set wb = ActiveWorkbook
+    Set shtLaytime = wb.Sheets("laytime analysis")
+    Set shtDemu = wb.Sheets("demurrage invoice")
+    
+    shipName = shtLaytime.Cells(6, 2).Value
+    shipNameShort = 船名全称转缩写(shipName)
+    voy = UCase(shtLaytime.Cells(6, 3).Value)
+    If Left(voy, 1) <> "V" Then
+        voy = "V" & voy
+    End If
+    
+    product = shtDemu.Cells(13, 2).Value
+    quantity = shtDemu.Cells(16, 2).Value
+    If Right(quantity, 1) <> "T" Then
+        quantity = quantity & "MT"
+    End If
+    
+    pdfLaytime = shipName & " " & voy & " laytime analysis.pdf"
+    pdfDemu = shipName & " " & voy & " demurrage invoice(" & product & " " & quantity & ").pdf"
+    
+    path = "\\192.168.0.223\航运在线\3.1、业务部\19、滞期费\" & shipNameShort & voy & "\"
+    If Dir(path, 16) = Empty Then
+        MkDir path
+    End If
+    
+    shtLaytime.ExportAsFixedFormat Type:=xlTypePDF, Filename:= _
+        path & pdfLaytime, _
+        Quality:=xlQualityStandard, IncludeDocProperties:=True, IgnorePrintAreas _
+        :=False, OpenAfterPublish:=True
+    
+    
+    shtDemu.ExportAsFixedFormat Type:=xlTypePDF, Filename:= _
+        path & pdfDemu _
+        , Quality:=xlQualityStandard, IncludeDocProperties:=True, IgnorePrintAreas _
+        :=False, OpenAfterPublish:=True
+    
+    wb.SaveAs Filename:= _
+        path & shipNameShort & voy & "laytime analysis&demurrage invoice.xlsm" _
+        , FileFormat:=xlOpenXMLWorkbookMacroEnabled, CreateBackup:=False
+    
+    If MsgBox("是否存回一键制作", vbYesNo) = vbYes Then
+        wb.SaveAs Filename:= _
+        "\\192.168.0.223\航运在线\3.1、业务部\19、滞期费\一键制作laytime analysis&demurrage invoice.xlsm" _
+        , FileFormat:=xlOpenXMLWorkbookMacroEnabled, CreateBackup:=False
+    End If
+'
+'    FileCopy wb.FullName, path & shipNameShort & voy & "laytime&demurr.xlsm"
+    
+End Sub
+Function tes()
+船名全称转缩写 ("轮DING HENG 5月度")
+End Function
+Function 船名全称转缩写(funcShipName)
+Dim shipLongNameArr
+Dim funcShipNameArr
+Dim arFrom
+Dim arTo
+Dim arFilter
+Dim strFilter As String
+
+Dim i As Integer
+
+
+    Dim reg
+'
+'shipLongNameArr = Array("鼎衡1", "鼎衡2", "鼎衡3", "鼎衡5", "鼎衡9", "鼎衡10", "鼎衡15", "鼎衡16", "鼎衡17*", "鼎衡18*", "鼎衡7", "建兴32", "鼎衡A", "鼎衡E", "天使1", "天使2", "天使3", "天使11")
+'funcShipNameArr = Array("DH1", "DH2", "DH3", "DH5", "DH9", "DH10", "DH15", "DH16", "DH17", "DH18", "DH7", "JX32", "DHA", "DHE", "AG1", "AG2", "AG3", "AG11")
+'
+'arFilter = Array(" ", "轮", "月", "度")
+'arFrom = Array("DINGHENG", "鼎衡", "GOLDEN", "金色", "Angel", "天使", "安吉")
+'arTo = Array("DH", "G", "AG", "AG", "AG", "AG")
+funcShipName = UCase(funcShipName)
+
+
+    Set reg = CreateObject("vbscript.regexp")
+    reg.Global = True
+    reg.Pattern = "[ 轮月度（）()常春藤万年青]|NO" '剔除字符串中的" ", "轮", "月", "度"等[ 轮月度\.（）()+-_常春藤万年青]
+    船名全称转缩写 = reg.Replace(funcShipName, "")
+    reg.Pattern = "[.]"
+    船名全称转缩写 = reg.Replace(船名全称转缩写, "")
+    
+    reg.Pattern = "DINGHENG|鼎衡"
+    船名全称转缩写 = reg.Replace(船名全称转缩写, "DH")
+    reg.Pattern = "JIANXIN|JIANXING|建兴"
+    船名全称转缩写 = reg.Replace(船名全称转缩写, "JX")
+    reg.Pattern = "HENXIN|HENGXIN|恒信"
+    船名全称转缩写 = reg.Replace(船名全称转缩写, "HX")
+    reg.Pattern = "GOLDEN|金色"
+    船名全称转缩写 = reg.Replace(船名全称转缩写, "G")
+    reg.Pattern = "ANGEL|天使|安吉"
+    船名全称转缩写 = reg.Replace(船名全称转缩写, "AG")
+    reg.Pattern = "ADMIRAL"
+    船名全称转缩写 = reg.Replace(船名全称转缩写, "A")
+    reg.Pattern = "EPOCH"
+    船名全称转缩写 = reg.Replace(船名全称转缩写, "E")
+    Debug.Print 船名全称转缩写
+'
+'
+''格式化funcShipName
+''
+''
+''    .Replace "HENGXIN", "HX", xlPart
+''    .Replace "AngelNo.", "AG", xlPart
+''    .Replace "Epoch", "E", xlPart
+''    .Replace "Golden", "G", xlPart
+'
+''
+'
+'    If Left(funcShipName, 1) = "鼎" Then
+'        If funcShipName Like "鼎衡17*" Then
+'            funcShipName = "DH17"
+'        ElseIf funcShipName = "鼎衡18*" Then
+'            funcShipName = "DH18"
+'        Else
+'            funcShipName = Replace(funcShipName, "鼎衡", "DH")
+'        End If
+'    ElseIf funcShipName = "建兴32" Then
+'        funcShipName = "JX32"
+'    ElseIf funcShipName = "恒信HX" Then
+'        funcShipName = "HX"
+'    ElseIf Left(funcShipName, 1) = "天" Then
+'        funcShipName = Replace(funcShipName, "天使", "AG")
+'    ElseIf Left(funcShipName, 1) = "安" Then
+'        funcShipName = Replace(funcShipName, "安吉", "AG")
+'    End If
+'    船名全称转缩写 = funcShipName
+End Function
