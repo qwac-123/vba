@@ -1,67 +1,9 @@
 Option Explicit
-
-Sub 发送邮件()
-    Dim sht_title As String
-   Dim ierr As Integer
-   Dim iCount As Integer, iTotal As Integer
-    Dim ro As Integer
-   Worksheets("Sheet1").Select
-   Range("A2").Select
-    
-   iCount = 0
-   iTotal = 0
-   Do While ActiveCell.Value <> ""
-        ro = ActiveCell.row
-        Cells(ro, 7).Value = ""
-       ierr = SendMail(ActiveCell.Value, ActiveCell.Offset(0, 1).Value, ActiveCell.Offset(0, 2).Value, ActiveCell.Offset(0, 3).Value, ActiveCell.Offset(0, 4).Value, ActiveCell.Offset(0, 5).Value)
-        If ierr = 0 Then
-            iCount = iCount + 1
-            Cells(ro, 7).Value = "OK"
-        Else
-            Cells(ro, 7).Value = "Fail"
-       End If
-       iTotal = iTotal + 1
-       ActiveCell.Offset(1, 0).Select
-   Loop
-
-   MsgBox "共发送" & iTotal & "个，成功发送邮件" & iCount & "个！"
-End Sub
-
-Sub 滞期费表发送催收邮件()
-    Dim sht_title As String
-    Dim ierr As Integer
-    Dim iCount As Integer, iTotal As Integer
-    
-
-    Cells(2, 1).Select
-    iCount = 0
-    iTotal = 0
-    
-    Do While ActiveCell.Value <> ""
-        ro = ActiveCell.row
-        Cells(ro, 7).Value = ""
-        ierr = SendMail(ActiveCell.Value, ActiveCell.Offset(0, 1).Value, ActiveCell.Offset(0, 2).Value, ActiveCell.Offset(0, 3).Value, ActiveCell.Offset(0, 4).Value, ActiveCell.Offset(0, 5).Value)
-        If ierr = 0 Then
-            iCount = iCount + 1
-            Cells(ro, 7).Value = "OK"
-        Else
-            Cells(ro, 7).Value = "Fail"
-        End If
-        iTotal = iTotal + 1
-        ActiveCell.Offset(1, 0).Select
-    Loop
-
-    MsgBox "共发送" & iTotal & "个，成功发送邮件" & iCount & "个！"
-    Sheets("催收工作进度").Activate
-    ro = Cells(666, 2).End(xlUp).row + 1
-    Cells(ro, 1) = Date ', "m月d日"
-    
-End Sub
 Function 滞期费催收邮件准备()
     Dim ro As Integer
     Dim co As Integer
-    Dim row
-    Dim col
+    Dim row As Integer
+    Dim col As Integer
     Dim startRow As Integer
     Dim endRow As Integer
     Dim startCol As Integer
@@ -71,9 +13,12 @@ Function 滞期费催收邮件准备()
     Dim shipName As String
     Dim shipNameShort As String
     Dim voy As String
+    Dim loadPort As String
+    Dim discPort As String
     Dim route As String
     Dim cargo As String
     Dim laycan As String
+    Dim owner As String
     Dim charterer As String
     Dim amount As String
     Dim name As String
@@ -89,17 +34,25 @@ Function 滞期费催收邮件准备()
 
     Dim colShipName As Integer
     Dim colVoy As Integer
+    Dim colLoadPort As Integer
+    Dim colDiscPort As Integer
     Dim colRoute As Integer
     Dim colCargo As Integer
     Dim colLaycan As Integer
+    Dim colOwner As Integer
     Dim colCharterer As Integer
     Dim colAmount As Integer
     Dim colName As Integer
     Dim colBroker As Integer
+    Dim colCC As Integer
     Dim colProgress As Integer
     Dim arSkip
     
-    demurragePath = ""
+    Dim countSent As Integer
+    
+    Dim isSuccess As Boolean
+    
+    demurragePath = "\\192.168.0.223\航运在线\3.1、业务部\19、滞期费\"
     startCol = 1
     endCol = Cells(1, 1).End(xlToRight).Column
     
@@ -108,18 +61,26 @@ Function 滞期费催收邮件准备()
             colShipName = co
         ElseIf Cells(1, co).Value = "航次" Then
             colVoy = co
-        ElseIf Cells(1, co).Value = "航线" Then
-            colRoute = co
-        ElseIf Cells(1, co).Value Like "货*" Then
+        ElseIf Cells(1, co).Value = "laycan" Then
+            colLaycan = co
+        ElseIf Cells(1, co).Value = "装港" Then
+            colLoadPort = co
+        ElseIf Cells(1, co).Value = "卸港" Then
+            colDiscPort = co
+        ElseIf Cells(1, co).Value Like "货名" Then
             colCargo = co
+        ElseIf Cells(1, co).Value Like "owner" Then
+            colOwner = co
         ElseIf Cells(1, co).Value = "收票人" Or Cells(1, co).Value = "租家" Then
             colCharterer = co
-        ElseIf Cells(1, co).Value Like "*金*额*" Then
+        ElseIf Cells(1, co).Value = "金额" Then
             colAmount = co
         ElseIf Cells(1, co).Value = "姓名" Then
             colName = co
         ElseIf Cells(1, co).Value = "broker" Then
             colBroker = co
+        ElseIf Cells(1, co).Value = "抄送" Then
+            colCC = co
         ElseIf Cells(1, co).Value = "进展" Then
             colProgress = co
             Exit For
@@ -129,7 +90,7 @@ Function 滞期费催收邮件准备()
     startRow = 2
     endRow = Cells(2, 2).End(xlDown).row
     arSkip = Array("合作", "等")
-    
+    countSent = 0
     For ro = startRow To endRow
         shipName = Cells(ro, colShipName).Value
         shipNameShort = Cells(ro, colShipName).Value
@@ -139,11 +100,17 @@ Function 滞期费催收邮件准备()
         If Left(voy, 1) <> "V" Then
             voy = "V" & voy
         End If
-        route = Cells(ro, colRoute).Value
+        name = Cells(ro, colName).Value
+        laycan = "laycan: " & Cells(ro, colLaycan).Value
+        loadPort = Cells(ro, colLoadPort).Value
+        discPort = Cells(ro, colDiscPort).Value
+        route = loadPort & "-" & discPort
         cargo = Cells(ro, colCargo).Value
+        owner = Cells(ro, colOwner).Value
         charterer = Cells(ro, colCharterer).Value
-        amount = Cells(ro, colAmount).Value
+        amount = Format(Cells(ro, colAmount).Value, "#,##0.00")
         broker = Cells(ro, colBroker).Value
+        strCC = Cells(ro, colCC).Value
         progress = Cells(ro, colProgress).Value
         
         If progress Like "*合作*" Then
@@ -151,24 +118,29 @@ Function 滞期费催收邮件准备()
         ElseIf progress Like "*以前*" Then
             GoTo nextro
         Else
-            strSender = ""
+            
             strTo = broker
-            strCC = ""
-            strSubject = "[DEMURRAGE]" & shipName & " " & voy & " " & route & " " & laycan & " " & "USD" & amount
+            
+            strSubject = "[DEMURRAGE]" & shipName & " " & voy & " " & route & " " & laycan & " " & "USD " & amount
             strBody = 滞期费催收邮件正文(progress, name, broker, strSubject, charterer)
             strAttachment = demurragePath & shipNameShort & voy & "\" & shipNameShort & voy & ".rar"
-
+            isSuccess = 滞期费发送邮件(owner, strTo, strSubject, strBody, strAttachment, strCC)
+            If isSuccess Then
+                countSent = countSent + 1
+            End If
         End If
         
 nextro:
     Next ro
+    MsgBox "已发送: " & countSent
+    Debug.Print "已发送: " & countSent
 End Function
-Function 滞期费催收邮件正文(progress, broker, strSubject, charterer)
+Function 滞期费催收邮件正文(progress, name, broker, strSubject, charterer)
 Dim paraStart
 Dim paraEnd
 Dim text As String
 text = "<p style=""font-family:verdana;color:black"">"
-text = text & "Dear " & Mid(broker, 1, InStr(1, broker, "@") - 1) & ","
+text = text & "Dear " & name & ","
 text = text & "<br />"
 text = text & "<br />Good day!"
 text = text & "<br />"
@@ -183,17 +155,12 @@ text = text & "</p>"
 
 滞期费催收邮件正文 = text
 End Function
-Function te()
-Dim ro
-    ro = Cells(666, 2).End(xlUp).row + 1
-    Cells(ro, 1) = Date ', "m月d日"
-End Function
 '*******************************************************************'
 '经测试在OUTLOOK 2000中不会显示警告窗口.
 '引用：Microseft Outlook *.0 Object Library
 '需要注意一点 , 邮件的标题, 否则不能自动放送!
 '**********************************************************************
-Public Function SendMail(strTo As String, strSubject As String, strBody As String, Optional strAttachment As String = "", Optional strCC As String = "", Optional strBCC As String = "") As Integer
+Function 滞期费发送邮件(owner As String, strTo As String, strSubject As String, strBody As String, Optional strAttachment As String = "", Optional strCC As String = "", Optional strBCC As String = "") As Integer
 'String:strTo,strSubject,strBody(html),[strAttachment](fullname), [strCC],[strBCC]
 
 '    If MsgBox("请确保已在OUTLOOK内编程访问中设置“从不向我发出可疑活动警告（不推荐）”", vbYesNo) = vbNo Then
@@ -212,69 +179,92 @@ Public Function SendMail(strTo As String, strSubject As String, strBody As Strin
    '创建objMail为一个邮件对象
    Set objMail = objOutlook.CreateItem(olMailItem)
     '创建签名
+    Dim iSender As Integer '发信账号序号2:dhclaims,3:fcclaims
+    Dim ownerCC As String
     Dim SigString As String
+    Dim signaturefrom As String
     Dim Signature As String
    '循环添加附件
    Dim strArray
-   strArray = Split(strAttachment, "|")
-   For i = 0 To UBound(strArray)
-       objMail.Attachments.Add strArray(i) 'ThisWorkbook.Path & "\" & strArray(I) '如果有多个附件，分别添加
-   Next
+    If InStr(1, strAttachment, "|") > 0 Or Dir(strAttachment) <> "" Then
+        strArray = Split(strAttachment, "|")
+        For i = 0 To UBound(strArray)
+            objMail.Attachments.Add strArray(i) 'ThisWorkbook.Path & "\" & strArray(I) '如果有多个附件，分别添加
+        Next
+    End If
+    
+    If Left(owner, 1) = "D" Then 'INGHENG" Then
+        iSender = 2 '"dhclaims" '"claims@dinghengshipping.com"
+        ownerCC = "shipping@dinghengshipping.com;legal@dinghengshipping.com"
+        signaturefrom = "dhclaims.htm"
+    'If onwer = "FOCUS" Then
+    Else
+        iSender = 3 '"fcclaims" '"claims@focus-shipping.com"
+        ownerCC = "shipping@focus-shipping.com;legal@focus-shipping.com"
+        signaturefrom = "fcclaims.htm"
+    End If
+            
+    If strCC = "" Then
+        strCC = ownerCC
+    Else
+        strCC = strCC & ";" & ownerCC
+    End If
+    
+'   objMail.To = strTo '设置收信人的邮箱
+'   'If ChkEmail(strCC) = 0 Then
+'       objMail.CC = strCC '设置抄送的邮箱
+'   'End If
 
-   objMail.To = strTo '设置收信人的邮箱
-   'If ChkEmail(strCC) = 0 Then
-       objMail.CC = strCC '设置抄送的邮箱
-   'End If
-
-   If ChkEmail(strBCC) = 0 Then
-       objMail.BCC = strBCC '设置密送的邮箱
-   End If
+'   If ChkEmail(strBCC) = 0 Then
+'       objMail.BCC = strBCC '设置密送的邮箱
+'   End If
 
    '设置邮件的主题
-   If strSubject <> "" Then
-       objMail.Subject = strSubject
-   Else
-       objMail.Subject = "主题"
-   End If
+'    If strSubject <> "" Then
+'        objMail.Subject = strSubject
+'    Else
+'        objMail.Subject = "主题"
+'    End If
 '
 '   '设置邮件正文
 '   objMail.Body = strBody
-   '设置邮件签名
-   '签名（.rtf、.txt、.htm）
+
+'设置邮件签名
+'签名（.rtf、.txt、.htm）
 'Windows 7 和 Windows Vista 驱动器:\Users\用户\AppData\Roaming\Microsoft\Signatures
 'Windows XP 驱动器:\Documents and Settings\用户\Application Data\Microsoft\Signatures
 '大多数签名使用htm格式，因此只需编辑htm文件即可改变Outlook中签名的呈现方式。
-'   SigString = Environ("appdata") & _
-'     "\Microsoft\Signatures\cyh.htm"
-    SigString = "C:\Users\Administrator\AppData\Roaming\Microsoft\Signatures\cyh.htm"
+    'SigString = "C:\Users\Administrator\AppData\Roaming\Microsoft\Signatures\"
+    SigString = Environ("appdata") & "\Microsoft\Signatures\" 'cyh.htm"
+    SigString = SigString & signaturefrom
     If Dir(SigString) <> "" Then
         Signature = GetBoiler(SigString)
     Else
     
         Signature = ""
     End If
-    
+    With objMail
+        .SendUsingAccount = objOutlook.Session.Accounts.Item(iSender) '设置发件账户1:dingheng,2:dhclaims,3:fcclaims
+        .To = strTo '设置收信人的邮箱
+        .CC = strCC '设置抄送的邮箱
+   '设置邮件的主题
+        .Subject = strSubject
     '设置邮件正文带签名
-    strBody = "<FONT SIZE = 3><font face=verdana>船长：<br><br>    晚上好。<br><br>    随附件发来了新版的航次报表，请后续按照此航次报表填写。<br>    其中关于在港时间、装卸货情况、洗舱时间等考核的指标、判定及计算以船员部的表为主，本表作为辅助。<br>在填写船员部业务管理计划表时可以只写相关航次号，我会填写该航次。<br><br>    请在发来公司的同时附上电子版的时间表(excel推荐,word也可)<br>    填写中有任何问题请联系我，电话或邮箱都可。<br><br>祝一切顺利。"
-    objMail.HTMLBody = strBody & "<br><br>" & Signature
-
-    
-   With objMail
-       '新建邮件窗口显示，如果不熟练可以取消注释
-       .Display
-       '邮件发送
-       Stop
-       .Send
-   End With
+        .HTMLBody = strBody & "<br><br>" & Signature  '新建邮件窗口显示，如果不熟练可以取消注释
+       
+        .Display
+        Stop
+        .Send '邮件发送
+    End With
    '销毁objMail对象
    Set objMail = Nothing
    '销毁objOutlook对象
    Set objOutlook = Nothing
-   SendMail = 0
+   滞期费发送邮件 = 1
    Exit Function
 
 errHandler:
-   SendMail = 1
+   滞期费发送邮件 = 0
 End Function
 '检查邮件是否规范
 Function ChkEmail(str As String)
@@ -434,3 +424,79 @@ Function 船名缩写转英文全称(funcShipName As String)
     End If
     船名缩写转英文全称 = funcShipName
 End Function
+Function newmail()
+Const cdoSendUsingMethod = "http://schemas.microsoft.com/cdo/configuration/sendusing"
+  Const cdoSendUsingPort = 2
+  Const cdoSMTPServer = "http://schemas.microsoft.com/cdo/configuration/smtpserver"
+  Const cdoSMTPServerPort = "http://schemas.microsoft.com/cdo/configuration/smtpserverport"
+  Const cdoSMTPConnectionTimeout = "http://schemas.microsoft.com/cdo/configuration/smtpconnectiontimeout"
+  Const cdoSMTPAuthenticate = "http://schemas.microsoft.com/cdo/configuration/smtpauthenticate"
+  Const cdoBasic = 1
+  Const cdoSendUserName = "http://schemas.microsoft.com/cdo/configuration/sendusername"
+  Const cdoSendPassword = "http://schemas.microsoft.com/cdo/configuration/sendpassword"
+  
+  Dim objConfig
+  Dim objMessage
+  Dim Fields
+  
+  Set objConfig = Server.CreateObject("CDO.Configuration")
+  Set Fields = objConfig.Fields
+  
+  With Fields
+  .Item(cdoSendUsingMethod) = cdoSendUsingPort
+  .Item(cdoSMTPServer) = "smtp.163.com"  '  <smtp邮件发送服务器>
+  .Item(cdoSMTPServerPort) = 25
+  .Item(cdoSMTPConnectionTimeout) = 10
+  .Item(cdoSMTPAuthenticate) = cdoBasic
+  .Item(cdoSendUserName) = "test@163.com" '   <发送者邮件地址>
+  .Item(cdoSendPassword) = "123456" '   '        <发送者邮件密码>
+  .Update
+  End With
+  
+  Set objMessage = Server.CreateObject("CDO.Message")
+  Set objMessage.Configuration = objConfig
+  
+  With objMessage
+  .BodyPart.Charset = "shift-jis" '                      <邮件内容编码>
+  .To = UserName '                                             <接收者邮件地址>
+  .From = "biz@noonenet.cn" '                           <发送者邮件地址,与上面设置相同>
+  .Subject = "メールアドレスのご確認" '                    <邮件主题>
+  .HTMLBody = "TEST -- cdo.message" '               <邮件内容>
+  .Send
+  End With
+  
+  Set Fields = Nothing
+  Set objMessage = Nothing
+  Set objConfig = Nothing
+
+End Function
+'Sub 滞期费表发送催收邮件()
+'    Dim sht_title As String
+'    Dim ierr As Integer
+'    Dim iCount As Integer, iTotal As Integer
+'
+'
+'    Cells(2, 1).Select
+'    iCount = 0
+'    iTotal = 0
+'
+'    Do While ActiveCell.Value <> ""
+'        ro = ActiveCell.row
+'        Cells(ro, 7).Value = ""
+'        ierr = SendMail(ActiveCell.Value, ActiveCell.Offset(0, 1).Value, ActiveCell.Offset(0, 2).Value, ActiveCell.Offset(0, 3).Value, ActiveCell.Offset(0, 4).Value, ActiveCell.Offset(0, 5).Value)
+'        If ierr = 0 Then
+'            iCount = iCount + 1
+'            Cells(ro, 7).Value = "OK"
+'        Else
+'            Cells(ro, 7).Value = "Fail"
+'        End If
+'        iTotal = iTotal + 1
+'        ActiveCell.Offset(1, 0).Select
+'    Loop
+'
+'    MsgBox "共发送" & iTotal & "个，成功发送邮件" & iCount & "个！"
+'    Sheets("催收工作进度").Activate
+'    ro = Cells(666, 2).End(xlUp).row + 1
+'    Cells(ro, 1) = Date ', "m月d日"
+'
+'End Sub
