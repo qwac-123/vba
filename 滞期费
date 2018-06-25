@@ -92,14 +92,6 @@ Function 滞期费催收邮件准备()
     arSkip = Array("合作", "等")
     countSent = 0
     For ro = startRow To endRow
-        shipName = Cells(ro, colShipName).Value
-        shipNameShort = Cells(ro, colShipName).Value
-        shipName = 船名缩写转英文全称(shipName)
-        
-        voy = UCase(Cells(ro, colVoy).Value)
-        If Left(voy, 1) <> "V" Then
-            voy = "V" & voy
-        End If
         name = Cells(ro, colName).Value
         laycan = "laycan: " & Cells(ro, colLaycan).Value
         loadPort = Cells(ro, colLoadPort).Value
@@ -108,7 +100,7 @@ Function 滞期费催收邮件准备()
         cargo = Cells(ro, colCargo).Value
         owner = Cells(ro, colOwner).Value
         charterer = Cells(ro, colCharterer).Value
-        amount = Format(Cells(ro, colAmount).Value, "#,##0.00")
+        amount = Cells(ro, colAmount).text 'Format(x, "#,##0.00")
         broker = Cells(ro, colBroker).Value
         strCC = Cells(ro, colCC).Value
         progress = Cells(ro, colProgress).Value
@@ -117,11 +109,21 @@ Function 滞期费催收邮件准备()
             GoTo nextro
         ElseIf progress Like "*以前*" Then
             GoTo nextro
+        ElseIf progress Like "*等待*" Then
+            GoTo nextro
         Else
             
+            shipName = Cells(ro, colShipName).Value
+            shipNameShort = Cells(ro, colShipName).Value
+            shipName = 船名缩写转英文全称(shipName)
+            
+            voy = UCase(Cells(ro, colVoy).Value)
+            If Left(voy, 1) <> "V" Then
+                voy = "V" & voy
+            End If
             strTo = broker
             
-            strSubject = "[DEMURRAGE]" & shipName & " " & voy & " " & route & " " & laycan & " " & "USD " & amount
+            strSubject = "[DEMURRAGE]" & shipName & " " & voy & " " & route & " " & laycan & " " & amount
             strBody = 滞期费催收邮件正文(progress, name, broker, strSubject, charterer)
             strAttachment = demurragePath & shipNameShort & voy & "\" & shipNameShort & voy & ".rar"
             isSuccess = 滞期费发送邮件(owner, strTo, strSubject, strBody, strAttachment, strCC)
@@ -134,6 +136,8 @@ nextro:
     Next ro
     MsgBox "已发送: " & countSent
     Debug.Print "已发送: " & countSent
+    ro = Sheets("催收工作进度").Cells(666, 2).End(xlUp) + 1
+    Sheets("催收工作进度").Cells(ro, 2).Value = "已发送: " & countSent
 End Function
 Function 滞期费催收邮件正文(progress, name, broker, strSubject, charterer)
 Dim paraStart
@@ -184,13 +188,27 @@ Function 滞期费发送邮件(owner As String, strTo As String, strSubject As S
     Dim SigString As String
     Dim signaturefrom As String
     Dim Signature As String
+    Dim isOK As Boolean
    '循环添加附件
    Dim strArray
+REATTACH:
     If InStr(1, strAttachment, "|") > 0 Or Dir(strAttachment) <> "" Then
+    ElseIf Dir(Left(strAttachment, Len(strAttachment) - 4) & ".zip") <> "" Then
+        strAttachment = Left(strAttachment, Len(strAttachment) - 4) & ".zip"
         strArray = Split(strAttachment, "|")
         For i = 0 To UBound(strArray)
+'            If Dir(strArray(i)) = "" Then
+'                MsgBox strArray(i)
+'                Stop
+'            End If
+                
             objMail.Attachments.Add strArray(i) 'ThisWorkbook.Path & "\" & strArray(I) '如果有多个附件，分别添加
         Next
+    Else
+        MsgBox strAttachment
+        Stop
+        strAttachment = Left(strAttachment, Len(strAttachment) - 4) & ".rar"
+        GoTo REATTACH
     End If
     
     If Left(owner, 1) = "D" Then 'INGHENG" Then
@@ -204,6 +222,17 @@ Function 滞期费发送邮件(owner As String, strTo As String, strSubject As S
         signaturefrom = "fcclaims.htm"
     End If
             
+    
+    If strTo Like "*@peijunmarine.com*" Then
+        If InStr(1, strCC, "general@peijunmarine.com") = 0 Then
+            ownerCC = "general@peijunmarine.com" & ownerCC
+        End If
+    ElseIf strTo Like "*@eastport.cn*" Then
+        If InStr(1, strCC, "Chartering@eastport.cn") = 0 Then
+            ownerCC = "Chartering@eastport.cn" & ownerCC
+        End If
+    End If
+    
     If strCC = "" Then
         strCC = ownerCC
     Else
@@ -251,16 +280,28 @@ Function 滞期费发送邮件(owner As String, strTo As String, strSubject As S
         .Subject = strSubject
     '设置邮件正文带签名
         .HTMLBody = strBody & "<br><br>" & Signature  '新建邮件窗口显示，如果不熟练可以取消注释
+        If strTo = "" Then
+            Stop
+        End If
+       isOK = MsgBox("TO:" & strTo & vbCrLf & "CC:" & strCC & vbCrLf & "SUB:" & strSubject & vbCrLf & objOutlook.Session.Accounts.Item(iSender).UserName, vbOKCancel) = vbOK
        
-        .Display
-        Stop
-        .Send '邮件发送
+       
+        '.Display
+        'Stop
+        If isOK Then
+            .Display
+            Stop
+            .Send '邮件发送
+            滞期费发送邮件 = 1
+        Else
+            滞期费发送邮件 = 0
+            Stop
+        End If
     End With
    '销毁objMail对象
    Set objMail = Nothing
    '销毁objOutlook对象
    Set objOutlook = Nothing
-   滞期费发送邮件 = 1
    Exit Function
 
 errHandler:
