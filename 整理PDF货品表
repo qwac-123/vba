@@ -1,0 +1,130 @@
+Option Explicit
+
+Function 链接数字()
+Dim ro As Integer
+Dim countSpace As Integer
+Dim tempa As String
+Dim crt As String
+Dim isnotNumARFS As Boolean
+
+For ro = 8960 To 12121 Step 1 '8520
+    countSpace = 0
+    If ro Mod 3000 = 0 Then
+        Cells(ro, 1).Select
+        Stop
+    End If
+nxtro:
+    'Cells(ro, 1).Select
+    crt = Cells(ro, 1).Value
+    isnotNumARFS = iscrtok(crt)
+    If isnotNumARFS Then
+        tempa = crt
+        Do
+            countSpace = countSpace + 1
+            
+            ro = ro + 1
+            crt = Cells(ro, 1).Value
+            isnotNumARFS = iscrtok(crt)
+            'Debug.Print crt, isnotNumARFS
+            tempa = tempa & " " & crt
+'            End If
+        Loop While (isnotNumARFS)
+        Cells(ro, 5).Value = tempa
+'        Cells(roe, 6).Value = tempa
+        
+        'GoTo nxtro
+    Else
+        Cells(ro, 5).Value = crt
+    End If
+    If countSpace > 4 Then
+        Cells(ro, 1).Select
+        If MsgBox(tempa, vbYesNo) = vbNo Then
+        'If MsgBox(countSpace & vbCrLf & "crt:" & tempa & vbCrLf & "dwn1:" & Cells(ro + 1, 1).Value & vbCrLf & "dwn2:" & Cells(ro + 2, 1).Value, vbYesNo) = vbNo Then
+            Stop
+        End If
+    End If
+    
+Next ro
+
+End Function
+Function iscrtok(crt As String) As Boolean
+'结尾不是空格1位数字，空格2位数字，空格NR/R/FSNR
+Dim endcrt As String
+Dim end2crt As String
+Dim end3crt As String
+Dim end5crt As String
+
+Dim lencrt As Integer
+
+Dim isnum As Boolean
+Dim isnotnum As Boolean
+Dim isA As Boolean
+Dim isR As Boolean
+Dim isnotAorR As Boolean
+Dim isnotFS As Boolean
+Dim isnotNumARFS As Boolean
+    
+    isnotnum = True
+    isnotAorR = True
+    isnotFS = True
+
+    lencrt = Len(crt)
+    endcrt = Right(crt, 1)
+    
+    If Len(crt) < 3 Then
+        If endcrt = "R" Then
+            isnotNumARFS = False
+        Else
+            isnotNumARFS = True
+        End If
+    Else
+        end5crt = Right(crt, 5)
+        end3crt = Mid(end5crt, Len(end5crt) - 2, 1)
+        end2crt = Mid(end5crt, Len(end5crt) - 1, 1)
+        isnum = IsNumeric(endcrt)
+        
+        If isnum Then
+            ' 1, 16
+            If end2crt = " " Then
+            'ABC 1
+                isnum = True
+            ElseIf IsNumeric(end2crt) And end3crt = " " Then
+            'ABC 16
+                isnum = True
+            Else
+                isnum = False
+            End If
+            
+        Else
+            'isA|R|NR|NT/FS
+            isA = endcrt = "A"
+            isR = endcrt = "R"
+            
+            If isA Or isR Then
+                If end2crt = " " Then
+                    ' A, R
+                    isnotAorR = False
+                ElseIf IsNumeric(end2crt) And end3crt = " " Then
+                    ' 1A
+                    isnotAorR = False
+                ElseIf isR And end3crt = " " Then
+                    ' NR
+                    isnotAorR = False
+                Else
+                    isnotAorR = True
+                End If
+            Else
+                isnotFS = end5crt <> "NT/FS"
+            End If
+        End If
+        
+        
+        
+        isnotnum = Not isnum
+        isnotNumARFS = isnotnum And isnotAorR And isnotFS
+
+
+    End If
+    
+iscrtok = isnotNumARFS
+End Function
