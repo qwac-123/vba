@@ -1,0 +1,44 @@
+Sub 拆字()
+
+'要求：除了编号是数字中间不能出现数字
+'例： 1 张飞 丈八蛇矛 2 关羽 青龙刀 3 刘备 雌雄对剑
+Dim num As Integer
+Dim strName
+Dim strLike
+Dim strWay
+Dim strThree
+Dim strRequest
+Dim strCurrent
+Dim ro As Integer
+Dim countDelete As Integer
+Dim strC
+Dim i As Integer
+Dim j As Integer
+Dim lenA As Integer
+Dim ilst As Integer
+Dim a
+
+a = Cells(1, 1).Value
+ro = 3
+lenA = Len(a)
+
+    For i = 1 To lenA
+        
+        strC = Mid(a, i, 1)
+            
+        If IsNumeric(strC) Then
+            ilst = i + 9
+            For j = ilst To lenA
+                strC = Mid(a, j, 1)
+                If IsNumeric(strC) Then
+                    j = j - 1
+                    Cells(ro, 1).Value = Mid(a, i, j - i)
+                    ro = ro + 1
+                    i = j
+                    Exit For
+                End If
+            Next j
+        End If
+            
+    Next i
+End Sub
