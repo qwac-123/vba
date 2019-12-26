@@ -1,0 +1,31 @@
+Sub practise()
+Dim note
+Dim arRndNote(20)
+Dim ro
+
+
+Randomize
+Range([a1], [a25]).Value = ""
+arNote = Array("C", "D", "E", "F", "G", "A", "B", "C#", "D#", "E#", "F#", "G#", "A#", "B#", "Cb", "Db", "Eb", "Fb", "Gb", "Ab", "Bb")
+
+uBond = 21
+For k = 0 To 20  '循环产生21个不重复随机数
+    If uBond > 0 Then
+        paixu = Int(Rnd(Timer) * uBond)   '[0,uBond-1] 之间随机整数
+        arRndNote(k) = arNote(paixu) '随机到的值一个个放到新数组里
+        arNote(paixu) = arNote(uBond - 1) '把最后一个值挪到随机到的位置
+        uBond = uBond - 1                  '舍弃掉最后一个数
+    End If
+Next k
+
+ro = 1
+For Each note In arRndNote()
+    
+    Cells(ro, 1).Value = note
+    Cells(ro, 1).Select
+    Application.Wait (Now + TimeValue("00:00:02"))
+    'MsgBox note
+    ro = ro + 1
+    
+Next
+End Sub
