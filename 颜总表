@@ -50,6 +50,7 @@ For r = 1 To rend
 Next r
 Range(Cells(2, 10), Cells(i * 2 - 1, 10)).Copy
 End Sub
+
 Sub 颜总表转为证书PS用TXT()
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
@@ -101,6 +102,38 @@ End With
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Sub
+
+Sub 人员集合到TXT()
+
+For ro = 2 To 60
+    If Cells(ro, 1).Value = "" Then
+        Exit For
+    Else
+        'strr = strr & Cells(ro, 1).Value
+        strr = Cells(ro, 1).Value
+    End If
+    
+    For co = 2 To 13
+        人员 = Cells(ro, co).Value
+        If 人员 = "" Then
+            Exit For
+        ElseIf co = 2 Then
+        
+            strr = strr & ":" & (co - 1) & "." & 人员 & " "
+        Else
+            strr = strr & (co - 1) & "." & 人员 & " "
+        End If
+    Next co
+    
+    'strr = strr & vbCrLf
+    Cells(70 + ro, 1).Value = strr
+Next ro
+
+'Cells(70, 1).Value = strr
+
+End Sub
+
+
 Sub 处理颜总的接龙报名()
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
