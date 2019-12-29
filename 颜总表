@@ -132,12 +132,20 @@ Next ro
 'Cells(70, 1).Value = strr
 
 End Sub
-
+Sub 处理颜总的座次表()
+For ro = 1 To 120
+    If Cells(ro, 1).Value = "" Then
+        Exit For
+    Else
+        处理各式分隔符并分列 (Cells(ro, 1))
+    End If
+Next ro
+End Sub
 
 Sub 处理颜总的接龙报名()
 Application.ScreenUpdating = False
 Application.DisplayAlerts = False
-Set rngHead = selection
+Set rngHead = Selection
 
 If Len(rngHead) > 100 Then '这一串是长城长
     Call 处理单个长名单(rngHead)
@@ -149,23 +157,32 @@ Call 添加班级编号(rngHead)
 Application.ScreenUpdating = 1
 Application.DisplayAlerts = 1
 End Sub
+Function 处理各式分隔符并分列(rngHead, Optional sep = " ")
+
+    With rngHead
+        rngHead.Value = 替换数字与各类分隔符为空格(rngHead.Value)
+        
+        
+    
+    .TextToColumns DataType:=xlDelimited, _
+         ConsecutiveDelimiter:=True, Space:=True '以空格分列
+         '因为第一个格子很可能是空的，空格子无法关闭分列
+        
+    End With
+    If rngHead = "" Then '第一格空着的情况下分列会导致出问题
+        fnro = rngHead.Row
+        fnco = rngHead.Column
+        rngHead.Delete Shift:=xlToLeft
+        Set rngHead = Cells(fnro, fnco)
+    End If
+         
+    rngHead.TextToColumns DataType:=xlDelimited, _
+         ConsecutiveDelimiter:=True, Space:=False '关闭分列
+End Function
 Function 处理单个长名单(rngHead)
 
     With rngHead
-        rngHead.Value = 剔除数字(rngHead.Value)
-        .Replace What:="(", Replacement:=" ", lookat:=xlPart
-        .Replace What:="（", Replacement:=" "
-        .Replace What:=")", Replacement:=" "
-        .Replace What:="）", Replacement:=" "
-        .Replace What:="，", Replacement:=" "
-        .Replace What:="，", Replacement:=" "
-        .Replace What:=",", Replacement:=" "
-        .Replace What:=".", Replacement:=" "
-        .Replace What:="．", Replacement:=" "
-        .Replace What:="、", Replacement:=" "
-        .Replace What:="。", Replacement:=" "
-        .Replace What:="：", Replacement:=" "
-        .Replace What:=":", Replacement:=" "
+        rngHead.Value = 替换数字与各类分隔符为空格(rngHead.Value)
         
         .TextToColumns DataType:=xlDelimited, _
          ConsecutiveDelimiter:=True, Space:=True '以空格分列
@@ -200,17 +217,6 @@ Loop
 
 With Range(rngHead, rngEnd)
     .Replace What:="，", Replacement:=" ", lookat:=xlPart
-    .Replace What:=".", Replacement:=" "
-    .Replace What:="．", Replacement:=" "
-    .Replace What:="(", Replacement:=" "
-    .Replace What:="（", Replacement:=" "
-    .Replace What:=")", Replacement:=" "
-    .Replace What:="）", Replacement:=" "
-    .Replace What:="、", Replacement:=" "
-    .Replace What:="。", Replacement:=" "
-    .Replace What:="，", Replacement:=" "
-    .Replace What:="：", Replacement:=" "
-    .Replace What:=":", Replacement:=" "
     .Replace What:="旗袍已领", Replacement:="已领旗袍"
     .Replace What:="已", Replacement:=" 已"
     .Replace What:="费", Replacement:=" "
@@ -267,7 +273,7 @@ Cells(i, 1).Select
     '插入空行，加入序列号，加入人名
         For cishu = 1 To b - a - 1
             Rows(i + 1).Select
-            selection.Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
+            Selection.Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
             Cells(i + 1, 1).Value = Cells(i, 1).Value + 1
             Cells(i + 1, 2).Value = Cells(crtRow, 3).Value
             Cells(crtRow, 3).Delete Shift:=xlToLeft
@@ -314,14 +320,16 @@ Function 添加班级编号(rngHead)
         End If
     Next i
 End Function
-Function 剔除数字(s As String)
+Function 替换数字与各类分隔符为空格(s As String)
+'
     Dim reg
     Set reg = CreateObject("vbscript.regexp")
-    reg.Pattern = "\d|\w"
+    reg.Pattern = "\d|\w|[（）()，，,.．、。：:；;]"
     reg.Global = True
     reg.MultiLine = True
-    sd = reg.Replace(s, ".") '整个文本的每行的开头或结尾处替换为@
-    剔除数字 = sd
+    sd = reg.Replace(s, " ") '整个文本的每行的开头或结尾处替换为@
+    替换数字与各类分隔符为空格 = sd
+
 End Function
 Sub 综合分表()
 renshu = 0
@@ -347,7 +355,7 @@ For i = 1 To 8
     rowzb = Worksheets(9).Range("a99999").End(xlUp).Row
     Worksheets(i).Select
     Range(Cells(rngHeadrow, 1), Cells(rngEndrow, 5)).Select
-    selection.Copy
+    Selection.Copy
     Worksheets(9).Select
     Cells(rowzb + 1, 1).Select
     ActiveSheet.Paste
@@ -381,19 +389,19 @@ Function 检查各表名字重复()
 For Each sht In Sheets
     sht.Select
     Columns("B:B").Select
-    selection.FormatConditions.AddUniqueValues
-    selection.FormatConditions(selection.FormatConditions.Count).SetFirstPriority
-    selection.FormatConditions(1).DupeUnique = xlDuplicate
-    With selection.FormatConditions(1).Font
-        .color = -16383844
+    Selection.FormatConditions.AddUniqueValues
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    Selection.FormatConditions(1).DupeUnique = xlDuplicate
+    With Selection.FormatConditions(1).Font
+        .Color = -16383844
         .TintAndShade = 0
     End With
-    With selection.FormatConditions(1).Interior
+    With Selection.FormatConditions(1).Interior
         .PatternColorIndex = xlAutomatic
-        .color = 13551615
+        .Color = 13551615
         .TintAndShade = 0
     End With
-    selection.FormatConditions(1).StopIfTrue = False
+    Selection.FormatConditions(1).StopIfTrue = False
 Next sht
 End Function
 Function fhxy()
